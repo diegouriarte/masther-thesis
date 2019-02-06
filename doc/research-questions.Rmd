@@ -1,0 +1,86 @@
+---
+title: "Research questions"
+author: "Diego Uriarte"
+date: "29 de enero de 2019"
+output: word_document
+---
+
+1. What is the research question?
+
+    ¿Cómo influye la competencia cercana a una estación de combustible en su estrategia de colocar precios, y cómo cambia esto por tipo de estación ( (propia, abanderada o independiente) y por región donde se ubique?
+
+2. Why is this interesting/important? 
+
+    Es una pregunta que interesa ya que de manera recurrente hay quejas que los precios de combustibles a usuarios finales no reflejan las caídas del precio de crudo a nivel mundial, y esto podría estar relacionado con el poder de mercado de los grifos locales.
+
+3. How does this project contribute to the existing economic literature? 
+
+    A la literatura peruana, no existe un estudios que revisen esta dinámica de fijación de precios en combustibles líquidos. Existe una tesis que analiza el mercado local de venta de GNV, pero la realidad es completamente distinta ya que el GN tiene fijación de precios de venta (a diferencia del crudo). 
+
+    A la literatura en general, en adición a lo que estudian otros trabajos, se puede aprovechar para revisar cómo cambian los patrones de competencia cuando se introduce una ley ambiental que limita el tipo de combustible ofertado (en particular, la ley que obliga a usar menos azufre en el diésel y que se ha implementado de manera parcial y por regiones).
+
+4. What is the current state of the literature relating to this project? 
+
+    Existen estudios con data de países OECD. En latinoamérica no se ha encontrado un proyecto similar. Los estudios revisados plantean variaciones de un mismo esquema, plantear el modelo de competencia en estaciones cercanas y obtener parámetros que indiquen tipo de competencia en base a precios observados (no utilizan cantidades vendidas). Normalmente no utiliza cantidades vendidas por estación.
+
+5. What industry are you thinking about? 
+
+    El trabajo se centra en etapa de comercialización de combustibles líquidos minorista en estaciones de servicio.
+
+6. How does that industry work? 
+
+    Las refinerías producen combustible líquido a partir del crudo cuyo precio es fijado por mercados internacionales. Venden cierto tipo de combustibles de acuerdo a su tecnología. La venta de combustible es en terminales donde se acercan mayoristas que compran a granel y venden el combustible a grifos.
+    
+    Los grifos se pueden clasificar en cadenas propias, abanderados e independientes. Los grifos propios son lo que están integrados 
+
+7. Have other people worked on this industry? what have they done? 
+
+    - Hay literatura bastante rica que intenta estudiar las asimetrías en la transmisión de precios de crudo a los combustibles comerciales, usando modelos de corección de errores y también data panel. 
+    - A su vez, también han estudiado efectos de regulaciones en la calidad de combustible. 
+    - Modelos de demanda también han sido estimados usando data de ventas de combustibles. Esta data normalmente es difícil de conseguir en el país. Muchos estudios son con data que los mismos investigadores recolectaron en un mercado en particular
+    
+    
+8. What data is available? 
+
+    Se tiene disponible un panel de datos desde el año 2007 (antes de la implementación de la ley que reduce el contenido de azufre en el diésel). La data incluye los precios de cada grifo en el Perú que deben ser reportados cada vez que lo actualicen por un aplicativo. 
+    
+    La data incluye lo siguiente:
+    - Código de Osinergmin
+    - Razón Social
+    - RUC
+    - Departamento Provincia	Distrito
+    - Dirección
+    - Fecha de Registro
+    - Hora de Registro
+    - Producto
+    - Precio de Venta
+    - Unidad
+    
+    Data de los precios de venta mayoristas también la tengo disponible (para Lima, ambos mayoristas, para provincias solo Petroperú). Data en pdf que requiere ser scrapeada. Data de precios de crudos es fácilmente obtenible. Geolocalización de grifos es sencilla con Google Maps (se puede escribir script)
+
+
+9. How do you plan to structure an answer to your research question? 
+
+    Definir mercados, es decir, estaciones lo suficientemente cerca para considerar que pueden influir entre sí. Derivar un modelo de competencia entre estaciones en el mercado y estimar parámetros. 
+
+10. What kind of model do you have in mind? 
+    
+    Se ha pensado en un modelo de competencia espacial (spatial lag model). Tengo una referencia que lo aplica con data de corte transversal, falta investigar como puedo mejorar esa aplicación con data panel (que ventajas adicionales tengo)
+
+    Por espacial lag encontré que es aplicar el concepto de lag de time-series pero a espacios multidimensionales (distancia): 
+    
+    >Instead of the notion of shift, a spatial lag operator is used, which is a weighted average of random variables at “neighboring” locations. Essential in this concept is the definition of a neighborhood set for each location. This is obtained by specifying for each location i (as the row) the neighbors as the columns corresponding to non-zero elements in a fixed (non-stochastic) and
+positive N by N spatial weights matrix W.
+
+
+11. (if emprical) What is the basic empirical approach you have in mind? reduced form? structural? a mix? what are the steps that you think might be involved? 
+    
+    El enfoque empírico sería una forma reducida establecida a partir de un modelo estructural. 
+    
+12. How does the data fit in with that? 
+
+    Se tiene la data de precios lista de combustibles. Se requiere construir datasets con distancias entre grifos para definir mercados, distancias a terminales de venta a mayoristas, y otras características de los grifos (que tipo son, si son de una cadena, número de productos vendidos, ¿tamaño con google maps?, etc)
+
+13. What are the likely challenges that you think you will confront?
+    - Derivar el modelo y plantear variaciones a los existentes en la literatura. 
+    - Aplicar la econometría espacial, será un desafío interesante
