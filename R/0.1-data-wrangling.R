@@ -45,9 +45,14 @@ data_2005_2017 <- data_2005_2017 %>% drop_na(ruc)
 
 skim(data_2005_2017)
 
-#' Now, unidades has a lot of missing values:
+#' Now, unidades is completely missing, so I drop it:
 #' 
-data_2005_2017 %>% filter(is.na(unidades)) %>%
-    select(codigo_osinerg, empresa, unidades)
+data_2005_2017 <- data_2005_2017 %>% 
+    select(-unidades, departamento = 'nomdepa',
+           provincia = 'nomprov', distrito = 'nomdist')
+
+data_2005_2017
 
 
+    
+    
