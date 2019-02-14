@@ -94,3 +94,17 @@ data_2005_2017 <- data_2005_2017 %>%
                                 correct_price))
 
 skim(data_2005_2017)
+
+
+data_2005_2017 %>% count(descripcion_producto)
+
+data_2005_2017 %>%
+    filter(departamento == "LIMA", provincia == "LIMA", distrito == "BREÑA") %>%
+    mutate(ano = year(fecha_hora)) %>%
+    select(codigo_osinerg, empresa, direccion, ano) %>%
+    distinct()
+
+data_2005_2017 %>%
+    filter(departamento == "LIMA", provincia == "LIMA") %>%
+    count(distrito, direccion) %>%
+    count(distrito) %>% View()
