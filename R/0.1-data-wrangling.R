@@ -5,7 +5,8 @@
 #' output: github_document
 #' ---
 #'
-#'Now, we assign correct format to data and correct obvious mistakes
+#'The purpose of this R file is to clean the database from mistakes such as product
+#'names, incorrect prices. Also, I drop observations from LPG and Natural Gas
 #'
 #'
 
@@ -49,7 +50,7 @@ skim(data_2005_2018)
 #' We only keep informatio about liquid fuels
 #' 
 data_2005_2018 %>%
-    count(producto, sort = TRUE) %>% View()
+    count(producto, sort = TRUE) 
 
 productos <- data_2005_2018 %>%
     count(producto, sort = TRUE) %>%
@@ -82,8 +83,7 @@ level_key <- c("GASOHOL 90 PLUS" = "GASOHOL 90",
 
 data_2005_2018 %>%
     mutate(producto = recode(producto, !!!level_key)) %>%
-    count(producto, sort = TRUE) %>% 
-    View()
+    count(producto, sort = TRUE)
 
 
 data_2005_2018_clean_products <- data_2005_2018 %>%
@@ -116,7 +116,7 @@ data_2005_2018_clean_products %>%
            year = year(fecha_hora)) %>%
     select(-2:-8,year) %>%
     filter(diff == FALSE ) %>%
-    arrange(precio_de_venta) %>% View()
+    arrange(precio_de_venta)
 
 
 data_2005_2018_clean_products %>% 
@@ -130,9 +130,10 @@ data_2005_2018_clean_products %>%
 #' 
 #' 
 data_2005_2018_corrected_prices <- data_2005_2018_clean_products %>% 
-    mutate(precio_venta = map_dbl(data_2005_2018_clean_products$precio_de_venta, 
+    mutate(precio_de_venta = map_dbl(data_2005_2018_clean_products$precio_de_venta, 
                                 correct_price))
 
 skim(data_2005_2018_corrected_prices)
 
+saveRDS(data_2005_2018_corrected_prices, file = here::here("data","processed","data_2005_2018_clean.rds"))
 
