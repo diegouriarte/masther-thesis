@@ -5,6 +5,7 @@ library(here)
 library(tidyverse)
 library(ggplot2)
 library(ggrepel)
+library(lubridate)
 
 prices <- readRDS(here::here("data","processed","data_2005_2018_clean.rds"))
 
@@ -16,7 +17,7 @@ prices_lima <- prices %>%
 prices_distritos <- prices_lima %>%
     filter(distrito %in% distritos)
 
-year <- 2017
+year <- 2018
 
 #' determinemos la frecuencia de actualización de precios
 #' 
@@ -29,7 +30,13 @@ prices_lima %>%
     count(codigo_de_osinergmin, direccion, distrito, sort = TRUE) %>% View()
 
 prices %>%
-    filter(year(fecha_hora) == year, codigo_de_osinergmin == "8332", 
-           producto == "DIESEL B5 S-50 UV") %>% View()
+    filter(year(fecha_hora) == year, codigo_de_osinergmin == "62240",
+           producto == "DIESEL B5 S-50 UV")
 
-           
+prices_raw <- readRDS(here::here("data","processed","data_2005_2018.rds"))
+
+  
+prices_raw %>%
+    filter(year(fecha_hora) == year, `Código de Osinergmin` == "62240") %>%
+    count(Producto)
+

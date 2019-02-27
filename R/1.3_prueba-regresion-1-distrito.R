@@ -97,10 +97,47 @@ prices_lima %>%
 #' Pasemos a semanal toda la data disponible en Breña para el grifo 17944 
 #' 
 #' 
-prices_lima %>%
-    filter(distrito == "BREÑA", producto %in% productos) %>%
+#' 
+#' Si en la semana hay dos o más nos quedamos con el promedio
+#' 
+grifo_17944 <- prices_lima %>%
+    filter(distrito == "BREÑA", producto == "DIESEL B5 S-50 UV") %>%
     select(-ruc:-provincia,-direccion, -unidad) %>%
-    mutate(semana = week(fecha_hora)) %>%
+    mutate(semana = week(fecha_hora), `año` = year(fecha_hora),
+           semana_inicio = semana + (`año` - 2010)*52) %>%
     arrange(codigo_de_osinergmin, fecha_hora,producto) %>%
     filter(codigo_de_osinergmin== "17944") %>%
-    distinct()
+    distinct() %>%
+    group_by_at(.vars = vars(-precio_de_venta,-fecha_hora)) %>%
+    summarize(precio_de_venta = mean(precio_de_venta)) %>%
+    ungroup()
+
+grifo_17944 %>% arrange(codigo_de_osinergmin, `año`, semana)
+
+
+#' Prueba para tener precios x semana
+for (year in min(grifo_17944$`año`):2018) {
+    for (week in 1:52) {
+        if (week %ni% (filter(grifo_17944, `año` == year) %>% pull(semana))) {
+            grifo_17944<- bind_rows(grifo_17944,
+                                    filter(grifo_17944, `año` == year,semana == week-1) %>% 
+                                        mutate(semana = week))
+            
+        }
+    }  
+}
+
+#' Otra prueba para tener precios x semana
+for (week in min(grifo_17944$semana_inicio):max(grifo_17944$semana_inicio)) {
+        if (week %ni% grifo_17944$semana_inicio) {
+            grifo_17944<- bind_rows(grifo_17944,
+                                    filter(grifo_17944, semana_inicio == week-1) %>% 
+                                        mutate(semana_inicio = week, 
+                                               semana = week - (`año` - 2010)*52))
+            
+        }
+    }  
+
+
+grifo_17944 %>% arrange(codigo_de_osinergmin, `año`, semana) %>% View()
+
