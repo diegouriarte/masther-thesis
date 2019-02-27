@@ -19,7 +19,7 @@ library(ggrepel)
 
 prices <- readRDS(here::here("data","processed","data_2005_2018_clean.rds"))
 
-#' número de grifos de jesus maría
+#' nÃºmero de grifos de jesus marÃ­a
 #' 
 
 glimpse(prices)
@@ -69,37 +69,37 @@ distritos
 prices %>% 
     filter(departamento == "LIMA", provincia == "LIMA", producto == "GASOHOL 90",
            distrito %in% c("JESUS MARIA", "SAN ISIDRO", "COMAS")) %>%
-    group_by(distrito, "año" = year(fecha_hora), direccion) %>%
+    group_by(distrito, "aÃ±o" = year(fecha_hora), direccion) %>%
     summarize(precio_promedio = mean(precio_de_venta)) %>% 
     summarize(precio_promedio_G90 = mean(precio_promedio), num_grifos = n()) %>%
     ggplot(aes(x = num_grifos, y = precio_promedio_G90, label = distrito)) + 
     geom_point() +
     geom_text(aes(label = distrito), hjust = 0, vjust=0)+
-    facet_wrap(~`año`)
+    facet_wrap(~`aÃ±o`)
 
 prices %>% 
     filter(departamento == "LIMA", provincia == "LIMA", producto == "GASOHOL 90",
            distrito %in% c("JESUS MARIA", "SAN ISIDRO", "COMAS",
-                           "BREÑA", "LINCE", "ATE", "SAN MARTIN DE PORRES",
+                           "BREÃ‘A", "LINCE", "ATE", "SAN MARTIN DE PORRES",
                            "LOS OLIVOS", "SURCO", "MIRAFLORES", "SURQUILLO",
                            "PUEBLO LIBRE"),
            year(fecha_hora) >= 2010) %>%
-    group_by(distrito, "año" = year(fecha_hora), direccion) %>%
+    group_by(distrito, "aÃ±o" = year(fecha_hora), direccion) %>%
     summarize(precio_promedio = mean(precio_de_venta)) %>% 
     summarize(precio_promedio_G90 = mean(precio_promedio), num_grifos = n()) %>%
     ggplot(aes(x = num_grifos, y = precio_promedio_G90, label = distrito)) + 
     geom_point() +
     geom_text_repel(aes(label = distrito), hjust = 0, vjust=0, size = 1.5)+
-    labs(y = "Precio promedio G90", x = "Número de grifos",
-         title = "Relación entre precio promedio de la Gasolina de 90 octanos
-         y el número de grifos") +
-    facet_wrap(~`año`)
+    labs(y = "Precio promedio G90", x = "NÃºmero de grifos",
+         title = "RelaciÃ³n entre precio promedio de la Gasolina de 90 octanos
+         y el nÃºmero de grifos") +
+    facet_wrap(~`aÃ±o`)
 
 
 ggsave(here::here("doc","plots","g90_grifos_precio_2010-2017.png"))
 
 prices%>%
-    filter(distrito == "BREÑA") %>%
+    filter(distrito == "BREÃ‘A") %>%
     distinct(direccion)
 
 prices%>%
