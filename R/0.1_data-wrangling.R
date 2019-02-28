@@ -27,7 +27,6 @@ data_2005_2018 <- readRDS(file = here::here("data","processed","data_2005_2018.r
 
 #' clean names using janitor package
 data_2005_2018 <- data_2005_2018 %>% clean_names()
-skim(data_2005_2018)
 
 
 #' We found 5 missing values in `fecha_hora`, let's see which they are:
@@ -44,8 +43,6 @@ data_2005_2018 %>% filter(is.na(ruc))
 #' We see that is a fuel station without ruc than only appears twice in the dataset.
 #' Another one appears one time. I keep this observations.
 
-
-skim(data_2005_2018)
 
 #' We only keep informatio about liquid fuels
 #' 
@@ -65,10 +62,6 @@ estaciones_venden_DIESEL2BA <- data_2005_2018 %>%
     filter(producto == "DIESEL2 BA") %>%
     distinct(codigo_de_osinergmin) %>% pull()
 
-data_2005_2018 %>%
-    filter(codigo_de_osinergmin %in% estaciones_venden_DIESEL2BA,
-           producto %in% c("DIESEL 2", "DIESEL2 BA")) %>%
-    arrange(codigo_de_osinergmin, fecha_hora, producto) %>%
     
 
 level_key <- c("GASOHOL 90 PLUS" = "G90", 
