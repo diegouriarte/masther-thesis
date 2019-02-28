@@ -141,3 +141,32 @@ for (week in min(grifo_17944$semana_inicio):max(grifo_17944$semana_inicio)) {
 
 grifo_17944 %>% arrange(codigo_de_osinergmin, `año`, semana) %>% View()
 
+#' Escribimos una primera función para quedarnos con un precio por semana, 
+#' promediando en caso haya más de uno:
+
+name <- function(df) {
+    df %>%
+        select(-ruc:-provincia,-direccion, -unidad) %>%
+        mutate(semana = week(fecha_hora), `año` = year(fecha_hora),
+               semana_inicio = semana + (`año` - 2010)*52) %>%
+        arrange(codigo_de_osinergmin, fecha_hora, producto) %>%
+        filter(codigo_de_osinergmin== "17944") %>%
+        distinct() %>%
+        group_by_at(.vars = vars(-precio_de_venta,-fecha_hora)) %>%
+        summarize(precio_de_venta = mean(precio_de_venta)) %>%
+        ungroup()
+}
+
+prices_lima %>%
+    filter(distrito == "BREÑA") %>%
+    select(-ruc:-provincia,-direccion, -unidad) %>%
+    mutate(semana = week(fecha_hora), `año` = year(fecha_hora),
+           semana_inicio = semana + (`año` - 2005)*52) %>%
+    arrange(codigo_de_osinergmin, fecha_hora,producto) %>%
+    distinct() %>%
+    group_by_at(.vars = vars(-precio_de_venta,-fecha_hora)) %>%
+    summarize(precio_de_venta = mean(precio_de_venta)) %>%
+    arrange(codigo_de_osinergmin, producto, semana_inicio) %>%
+    filter(codigo_de_osinergmin == "17944")
+    ungroup()
+

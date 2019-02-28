@@ -50,35 +50,48 @@ skim(data_2005_2018)
 #' We only keep informatio about liquid fuels
 #' 
 data_2005_2018 %>%
-    count(producto, sort = TRUE) 
+    filter(departamento == "LIMA", provincia == "LIMA",
+           year(fecha_hora) < 2011) %>%
+    count(producto, sort = TRUE) %>% View()
+
+
 
 productos <- data_2005_2018 %>%
     count(producto, sort = TRUE) %>%
     pull(producto)
 
-level_key <- c("GASOHOL 90 PLUS" = "GASOHOL 90", 
-               "GASOHOL 84 PLUS" = "GASOHOL 84",
-               "GASOHOL 95 PLUS" = "GASOHOL 95",
-               "GASOLINA 84"  = "GASOHOL 84",
-               "GASOHOL 97 PLUS" = "GASOHOL 97",
-               "GASOLINA 90"  = "GASOHOL 90",
-               "GASOHOL 98 PLUS"  = "GASOHOL 98",
-               "Diesel B5 S-50" = "DIESEL B5 S-50 UV",
-               "DIESEL 2" = "DIESEL B2",
-               "GASOLINA 95" = "GASOHOL 95",
-               "GASOLINA 97" = "GASOHOL 97",
-               "DIESEL B5" = "DIESEL B5 UV",
-               "Diesel B5 S-50 UV" = "DIESEL B5 S-50 UV",
-               "GASOLINA 98 BA" = "GASOHOL 98",
-               "Diesel B2 S-50" = "DIESEL B5 S-50 UV",
-               "DIESEL2 BA" = "DIESEL B2",
-               "Diesel B2 S-50 UV" = "DIESEL B5 S-50 UV",
-               "DIESEL B2 BA" = "DIESEL B2",
-               "Diesel 2 S-50 UV" = "DIESEL B5 S-50 UV",
-               "DIESEL 2 UV" = "DIESEL B2",
-               "DIESEL B2 UV" = "DIESEL B2",
-               "DIESEL B5 S-50" = "DIESEL B5 S-50 UV",
-               "GASOLINA 98" = "GASOHOL 98")
+estaciones_venden_DIESEL2BA <- data_2005_2018 %>% 
+    filter(departamento == "LIMA", provincia == "LIMA") %>%
+    filter(producto == "DIESEL2 BA") %>%
+    distinct(codigo_de_osinergmin) %>% pull()
+
+data_2005_2018 %>%
+    filter(codigo_de_osinergmin %in% estaciones_venden_DIESEL2BA,
+           producto %in% c("DIESEL 2", "DIESEL2 BA")) %>%
+    arrange(codigo_de_osinergmin, fecha_hora, producto) %>%
+    
+
+level_key <- c("GASOHOL 90 PLUS" = "G90", 
+               "GASOHOL 84 PLUS" = "G84",
+               "GASOHOL 95 PLUS" = "G95",
+               "GASOLINA 84"  = "G84",
+               "GASOHOL 97 PLUS" = "G97",
+               "GASOLINA 90"  = "G90",
+               "GASOHOL 98 PLUS"  = "G98",
+               "Diesel B5 S-50" = "DIESEL",
+               "DIESEL 2" = "DIESEL",
+               "GASOLINA 95" = "G95",
+               "GASOLINA 97" = "G97",
+               "DIESEL B5" = "DIESEL",
+               "Diesel B5 S-50 UV" = "DIESEL",
+               "GASOLINA 98 BA" = "G98",
+               "Diesel B2 S-50" = "DIESEL",
+               "Diesel B2 S-50 UV" = "DIESEL",
+               "Diesel 2 S-50 UV" = "DIESEL",
+               "DIESEL 2 UV" = "DIESEL",
+               "DIESEL B2 UV" = "DIESEL",
+               "DIESEL B5 S-50" = "DIESEL",
+               "GASOLINA 98" = "G98")
 
 
 data_2005_2018 %>%
@@ -92,7 +105,9 @@ data_2005_2018_clean_products <- data_2005_2018 %>%
            producto != "GLP - G",
            producto != "KEROSENE (DOMÉSTICO)",
            producto != "GAS NATURAL VEHICULAR",
-           producto != "GAS LICUADO DE PETROLEO")
+           producto != "GAS LICUADO DE PETROLEO",
+           producto != "DIESEL2 BA", 
+           producto != "DIESEL B2 BA")
 
 
 data_2005_2018_clean_products %>% 
