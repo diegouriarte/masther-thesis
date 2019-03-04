@@ -40,3 +40,7 @@ prices_raw %>%
     filter(year(fecha_hora) == year, `Código de Osinergmin` == "62240") %>%
     count(Producto)
 
+prices %>% filter(ruc == 20330033313, departamento == "LIMA", provincia == "LIMA") %>%
+  distinct(direccion, distrito) %>%
+  count(distrito)
+max(prices$fecha_hora)
