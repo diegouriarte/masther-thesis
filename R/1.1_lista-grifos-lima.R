@@ -30,3 +30,9 @@ prices %>%
     filter(codigo_de_osinergmin == 7047) %>%
     arrange((fecha_hora))
 
+
+prices %>% 
+    filter(departamento == "LIMA", provincia == "LIMA",
+           year(fecha_hora) >= 2015) %>%
+    count(codigo_de_osinergmin, razon_social, ruc, direccion, distrito) %>%
+    write_csv(path = here::here("data","processed","grifos_lima_2015_2018.csv"))
