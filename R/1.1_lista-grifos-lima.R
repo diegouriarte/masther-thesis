@@ -7,6 +7,8 @@ library(ggplot2)
 
 prices <- readRDS(here::here("data","processed","data_2005_2018_clean.rds"))
 
+prices %>% filter(codigo_de_osinergmin == "14646") %>%
+    count(razon_social,year(fecha_hora))
 
 prices %>% 
     filter(departamento == "LIMA", provincia == "LIMA") %>%
