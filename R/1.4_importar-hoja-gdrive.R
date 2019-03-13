@@ -29,29 +29,29 @@ saveRDS(grifos_datos_coding, file = here::here("data","processed","grifo_coding_
 
 #' Hacemos el cruce solo con aquellos abiertos a partir del 2015
 
-prices <- readRDS(here::here("data","processed","data_2005_2018_clean.rds"))
-
-
-grifos_abiertos <- prices %>% 
-    filter(departamento == "LIMA", provincia == "LIMA",
-           year(fecha_hora) >= 2015) %>%
-    group_by(codigo_de_osinergmin, direccion) %>%
-    mutate(ultimo = max(year(fecha_hora))) %>%
-    count(codigo_de_osinergmin, razon_social, ruc, direccion, distrito, ultimo) %>%
-    filter(ultimo >= 2017)
-
-grifos_datos_coding %>% 
-    mutate(codigo_de_osinergmin = as.character(codigo_de_osinergmin)) %>%
-    semi_join(grifos_abiertos, by = c("codigo_de_osinergmin",
-                                    "direccion") ) %>%
-    write_excel_csv(path = here::here("data","processed","grifos_gsheet_consolidad.csv"),
-              na = "")
-
-
-grifos_datos_coding %>% 
-    mutate(codigo_de_osinergmin = as.character(codigo_de_osinergmin)) %>%
-    semi_join(grifos_abiertos, by = c("codigo_de_osinergmin",
-                                      "direccion") ) %>%
-    count(distrito) %>%
-    write_excel_csv(path = here::here("data","processed","grifos_gsheet_consolidado_distrito.csv"),
-                    na = "")
+# prices <- readRDS(here::here("data","processed","data_2005_2018_clean.rds"))
+# 
+# 
+# grifos_abiertos <- prices %>% 
+#     filter(departamento == "LIMA", provincia == "LIMA",
+#            year(fecha_hora) >= 2015) %>%
+#     group_by(codigo_de_osinergmin, direccion) %>%
+#     mutate(ultimo = max(year(fecha_hora))) %>%
+#     count(codigo_de_osinergmin, razon_social, ruc, direccion, distrito, ultimo) %>%
+#     filter(ultimo >= 2017)
+# 
+# grifos_datos_coding %>% 
+#     mutate(codigo_de_osinergmin = as.character(codigo_de_osinergmin)) %>%
+#     semi_join(grifos_abiertos, by = c("codigo_de_osinergmin",
+#                                     "direccion") ) %>%
+#     write_excel_csv(path = here::here("data","processed","grifos_gsheet_consolidad.csv"),
+#               na = "")
+# 
+# 
+# grifos_datos_coding %>% 
+#     mutate(codigo_de_osinergmin = as.character(codigo_de_osinergmin)) %>%
+#     semi_join(grifos_abiertos, by = c("codigo_de_osinergmin",
+#                                       "direccion") ) %>%
+#     count(distrito) %>%
+#     write_excel_csv(path = here::here("data","processed","grifos_gsheet_consolidado_distrito.csv"),
+#                     na = "")

@@ -54,7 +54,7 @@ grifo_datos_con_tipo <- grifos_datos_coding_nombres %>%
         con_gnv = if_else(!is.na(gnv), 1, 0),
         ruc = as.character(ruc)
     ) %>%
-    separate(coordenadas)
+    separate(coordenadas, into = c("lat", "lon"), sep = ",",convert = TRUE)
 
 grifo_datos_con_tipo %>%
     count(bandera, tipo)
@@ -66,6 +66,27 @@ glimpse(grifo_datos_con_tipo)
 #' Filtramos solo aquellos filtros con coordenadas
 
 grifos_con_datos <- grifo_datos_con_tipo %>%
-    filter(!is.na(coordenadas))
+    filter(!is.na(lat))
 
 grifos_con_datos
+
+#' Hallamos la distancia al grifo más cercano
+#'
+matriz_distancias <- grifos_con_datos %>%
+    select("name" = codigo_de_osinergmin , lat, lon) %>%
+    distinct() %>%
+    GeoDistanceInMetresMatrix(.) / 1000
+
+matriz_distancias[1,]
+
+as_tibble(matriz_distancias, rownames = "codigo_de_osinergmin") %>%
+    gather(key = "grifo_distancia", value = "distancia", -codigo_de_osinergmin)%>%
+    filter(distancia != 0) %>%
+    group_by(codigo_de_osinergmin) %>%
+    mutate(distancia_min = min(distancia)) %>%
+    ungroup() %>%
+    arrange(as.numeric(codigo_de_osinergmin)) %>%
+    filter(distancia == distancia_min) %>%
+    arrange(distancia_min) %>%
+    write_excel_csv(path = here::here("data", "processed","grifos-distancia.csv"))
+    
