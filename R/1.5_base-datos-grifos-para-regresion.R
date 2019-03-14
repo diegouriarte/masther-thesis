@@ -9,6 +9,9 @@ suppressMessages(library(dplyr))
 suppressMessages(library(tidyverse))
 library(lubridate)
 library(stringr)
+source(file = "R/1.5.1_funcion-auxiliar-distancia.R")
+
+distancia_competencia <- 3
 
 grifos_datos_coding <- readRDS(here::here("data","processed","grifo_coding_raw.rds"))
 
@@ -27,7 +30,7 @@ grifos_datos_coding_nombres <- grifos_datos_coding %>%
                                    "PETROPERU" = "PETROPERU",
                                    "PETROPERÚ" = "PETROPERU",
                                    "REPSOL-GAZEL" = "REPSOL",
-                                   "PetroPerú" = "",
+                                   "PetroPerú" = "PETROPERU",
                                    .default = "INDEPENDIENTE"))
 
 grifos_datos_coding_nombres %>%   count(bandera)
@@ -79,8 +82,10 @@ matriz_distancias <- grifos_con_datos %>%
 
 matriz_distancias[1,]
 
+#' Generamos un archivo con las distancias para revisar manualmente errores de
+#' codificación
 as_tibble(matriz_distancias, rownames = "codigo_de_osinergmin") %>%
-    gather(key = "grifo_distancia", value = "distancia", -codigo_de_osinergmin)%>%
+    gather(key = "grifo_distancia", value = "distancia", -codigo_de_osinergmin) %>%
     filter(distancia != 0) %>%
     group_by(codigo_de_osinergmin) %>%
     mutate(distancia_min = min(distancia)) %>%
@@ -89,4 +94,44 @@ as_tibble(matriz_distancias, rownames = "codigo_de_osinergmin") %>%
     filter(distancia == distancia_min) %>%
     arrange(distancia_min) %>%
     write_excel_csv(path = here::here("data", "processed","grifos-distancia.csv"))
-    
+
+#' Creamos variable con distancia mínima al grifo competidor más cercano
+#' Pendiente, como hacer para que no considere si el grifo más cercano tiene el mismo ruc
+grifos_distancia_minima <- as_tibble(matriz_distancias, rownames = "codigo_de_osinergmin") %>%
+    gather(key = "grifo_distancia", value = "distancia", -codigo_de_osinergmin) %>%
+    filter(distancia != 0) %>%
+    group_by(codigo_de_osinergmin) %>%
+    mutate(distancia_min = min(distancia)) %>%
+    ungroup() %>%
+    arrange(as.numeric(codigo_de_osinergmin)) %>%
+    filter(distancia == distancia_min) %>%
+    select(-distancia)
+
+#' Distancia promedio a grifos a menos de `distancia_competencia`
+#' 
+grifos_distancia_promedio <- as_tibble(matriz_distancias, rownames = "codigo_de_osinergmin") %>%
+    gather(key = "grifo_distancia", value = "distancia", -codigo_de_osinergmin) %>%
+    filter(distancia != 0, distancia < distancia_competencia) %>%
+    group_by(codigo_de_osinergmin) %>%
+    mutate(distancia_avg = mean(distancia),
+           num_grifos_cerc = n()) %>%
+    ungroup() %>%
+    arrange(as.numeric(codigo_de_osinergmin)) %>%
+    distinct(codigo_de_osinergmin, distancia_avg, num_grifos_cerc) %>%
+    arrange(desc(distancia_avg))
+
+#' Lo agregamos al archivo anterior
+grifos_distancias <- full_join(grifos_distancia_minima, grifos_distancia_promedio,
+          by = "codigo_de_osinergmin") %>%
+    rename("grifo_mas_cercano" = grifo_distancia) %>%
+    mutate(codigo_de_osinergmin = as.numeric(codigo_de_osinergmin))
+
+grifos_distancias %>% arrange(num_grifos_cerc)
+
+grifo_full <-
+    full_join(grifos_con_datos,
+              grifos_distancias,
+              by = c("codigo_de_osinergmin"))
+
+saveRDS(grifo_full, file = here::here("data","processed","grifo_coding_clean.rds"))
+
