@@ -51,7 +51,7 @@ GeoDistanceInMetresMatrix <- function(df.geopoints){
 
 
 ############EJEMPLO###############
-df.cities <- data.frame(name = c("New York City", "Chicago", "Los Angeles", "Atlanta"),
-                                                   lat  = c(       40.75170,  41.87440,      34.05420,  33.75280),
-                                                   lon  = c(      -73.99420, -87.63940,    -118.24100, -84.39360))
-round(GeoDistanceInMetresMatrix(df.cities) / 1000)
+# df.cities <- data.frame(name = c("New York City", "Chicago", "Los Angeles", "Atlanta"),
+#                                                    lat  = c(       40.75170,  41.87440,      34.05420,  33.75280),
+#                                                    lon  = c(      -73.99420, -87.63940,    -118.24100, -84.39360))
+# round(GeoDistanceInMetresMatrix(df.cities) / 1000)

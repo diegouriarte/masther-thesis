@@ -19,7 +19,8 @@ sheet_grifos_coding <- gs_title("grifos_lima_2006_2017")
 
 grifos_datos_coding <- gs_read(ss=sheet_grifos_coding, ws = "grifos_lima_2006_2017") %>%
     clean_names() %>%
-    select(-starts_with("x"))
+    select(-starts_with("x")) %>%
+    separate(coordenadas, into = c("lat", "lon"), sep = ",",convert = TRUE)
 
 glimpse(grifos_datos_coding)
 

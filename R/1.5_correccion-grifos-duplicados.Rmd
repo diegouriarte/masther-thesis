@@ -1,0 +1,346 @@
+---
+title: "Corrección grifos duplicados"
+output: html_notebook
+---
+```{r}
+library(lubridate)
+suppressMessages(library(tidyverse))
+prices <- readRDS(here::here("data","processed","data_2005_2018_clean.rds"))
+grifos <- readRDS(here::here("data","processed","grifo_coding_raw.rds"))
+
+```
+
+
+Corregerimos los grifos duplicados, ayudandonos con la data de precios y la data geolocalizada.
+
+
+
+Primero hallamos los duplicados y los guardamos en csv
+```{r}
+grifos %>% 
+    filter(!is.na(lat)) %>%
+    group_by(lat,lon) %>%
+    filter(n()>1) %>%
+    ungroup() %>%
+    select(codigo_de_osinergmin, 
+           razon_social,
+           direccion,
+           bandera,
+           lat,lon) %>%
+    arrange(lat,codigo_de_osinergmin)
+```
+
+Vamos corrigiendo, primero grifo 42769
+
+
+```{r}
+prices %>% 
+    filter(codigo_de_osinergmin == "42769", 
+           year(fecha_hora)>=2017) %>%
+    arrange(fecha_hora) %>%
+    select(razon_social, fecha_hora,producto, precio_de_venta)
+```
+
+Ese grifo de Repsol no existe, así que lo dropeamos de la base de datos de precios y de grifos, (está repetido con el grifo argus)
+
+```{r}
+prices_1 <- prices %>%
+    filter(razon_social != "REPSOL COMERCIAL S.A.C." |
+               codigo_de_osinergmin != "42769")
+
+grifos_1 <- grifos %>%
+    filter(razon_social != "REPSOL COMERCIAL S.A.C." |
+               codigo_de_osinergmin != "42769")
+```
+
+
+```{r}
+grifos_1 %>% 
+    filter(!is.na(lat))  %>%
+    group_by(lat) %>%
+    filter(n()>1) %>%
+    ungroup() %>%
+    select(codigo_de_osinergmin, 
+           razon_social,
+           direccion,
+           bandera,
+           lat) %>%
+    arrange(lat) %>%
+    distinct(razon_social, .keep_all = TRUE)
+```
+
+Arreglemos el primero 96646
+
+```{r}
+
+grifos_1[grifos_1$codigo_de_osinergmin == "96646",]$direccion <-
+    grifos_1[grifos_1$codigo_de_osinergmin == "96646",]$direccion[1]
+
+prices_1[prices_1$codigo_de_osinergmin == "96646",]$direccion <-
+    prices_1[prices_1$codigo_de_osinergmin == "96646",]$direccion[1]
+
+```
+
+18828
+
+
+```{r}
+grifos_1[grifos_1$codigo_de_osinergmin == "18828",]$razon_social <-
+    grifos_1[grifos_1$codigo_de_osinergmin == "18828",]$razon_social[1]
+
+prices_1[prices_1$codigo_de_osinergmin == "18828",]$razon_social <-
+    grifos_1[grifos_1$codigo_de_osinergmin == "18828",]$razon_social[1]
+```
+
+Vemos que funciona, así que hacemos una función para corregir:
+
+
+21032
+
+```{r}
+grifos_1[grifos_1$codigo_de_osinergmin == "21032",]$direccion <-
+    grifos_1[grifos_1$codigo_de_osinergmin == "21032",]$direccion[1]
+
+prices_1[prices_1$codigo_de_osinergmin == "21032",]$direccion <-
+    prices_1[prices_1$codigo_de_osinergmin == "21032",]$direccion[1]
+```
+
+Mismo grifo Repsol con dos codigos distintos y direcciones distintas: 14633 21036
+
+```{r}
+grifos_1[grifos_1$codigo_de_osinergmin == "14633",]$direccion <-
+    grifos_1[grifos_1$codigo_de_osinergmin == "21036",]$direccion[2]
+
+prices_1[prices_1$codigo_de_osinergmin == "14633",]$direccion <-
+    grifos_1[grifos_1$codigo_de_osinergmin == "21036",]$direccion[2]
+
+grifos_1[grifos_1$codigo_de_osinergmin == "21036",]$direccion <-
+    grifos_1[grifos_1$codigo_de_osinergmin == "21036",]$direccion[2]
+
+prices_1[prices_1$codigo_de_osinergmin == "21036",]$direccion <-
+    grifos_1[grifos_1$codigo_de_osinergmin == "21036",]$direccion[2]
+
+grifos_1[grifos_1$codigo_de_osinergmin == "14633",]$codigo_de_osinergmin <- 21036
+
+prices_1[prices_1$codigo_de_osinergmin == "14633",]$codigo_de_osinergmin <-
+    21036
+```
+
+Ahora grifo que cambió de razón social. Cod 9488
+
+
+```{r}
+grifos_1[grifos_1$codigo_de_osinergmin == "9488",]$razon_social <-
+    grifos_1[grifos_1$codigo_de_osinergmin == "9488",]$razon_social[2]
+
+prices_1[prices_1$codigo_de_osinergmin == "9488",]$razon_social <-
+    grifos_1[grifos_1$codigo_de_osinergmin == "9488",]$razon_social[2]
+```
+
+Ahora grifo 6818 razon social
+
+```{r}
+cod <- "6818"
+
+grifos_1[grifos_1$codigo_de_osinergmin == cod,]$razon_social <-
+    grifos_1[grifos_1$codigo_de_osinergmin == cod,]$razon_social[2]
+
+prices_1[prices_1$codigo_de_osinergmin == cod,]$razon_social <-
+    grifos_1[grifos_1$codigo_de_osinergmin == cod,]$razon_social[2]
+
+grifos_1[grifos_1$codigo_de_osinergmin == cod,]$razon_social  %>% unique()
+prices_1[prices_1$codigo_de_osinergmin == cod,]$razon_social %>% unique()
+```
+
+Grifo 16670 con problema de direccion:
+
+```{r}
+cod <- "16670"
+
+grifos_1[grifos_1$codigo_de_osinergmin == cod,]$direccion <-
+    grifos_1[grifos_1$codigo_de_osinergmin == cod,]$direccion[2]
+
+prices_1[prices_1$codigo_de_osinergmin == cod,]$direccion <-
+    grifos_1[grifos_1$codigo_de_osinergmin == cod,]$direccion[2]
+
+grifos_1[grifos_1$codigo_de_osinergmin == cod,]$direccion  %>% unique()
+prices_1[prices_1$codigo_de_osinergmin == cod,]$direccion %>% unique()
+```
+
+Grifo 6765 con problema de direccion:
+
+```{r}
+cod <- "6765"
+
+grifos_1[grifos_1$codigo_de_osinergmin == cod,]$direccion <-
+    grifos_1[grifos_1$codigo_de_osinergmin == cod,]$direccion[2]
+
+prices_1[prices_1$codigo_de_osinergmin == cod,]$direccion <-
+    grifos_1[grifos_1$codigo_de_osinergmin == cod,]$direccion[2]
+
+grifos_1[grifos_1$codigo_de_osinergmin == cod,]$direccion  %>% unique()
+prices_1[prices_1$codigo_de_osinergmin == cod,]$direccion %>% unique()
+```
+
+9113, direccion
+
+```{r}
+cod <- "9113"
+
+grifos_1[grifos_1$codigo_de_osinergmin == cod,]$direccion <-
+    grifos_1[grifos_1$codigo_de_osinergmin == cod,]$direccion[2]
+
+prices_1[prices_1$codigo_de_osinergmin == cod,]$direccion <-
+    grifos_1[grifos_1$codigo_de_osinergmin == cod,]$direccion[2]
+
+grifos_1[grifos_1$codigo_de_osinergmin == cod,]$direccion  %>% unique()
+prices_1[prices_1$codigo_de_osinergmin == cod,]$direccion %>% unique()
+```
+
+16643 razon social
+
+```{r}
+
+
+cod <- "16643"
+
+grifos_1[grifos_1$codigo_de_osinergmin == cod,]$razon_social <-
+    grifos_1[grifos_1$codigo_de_osinergmin == cod,]$razon_social[2]
+
+prices_1[prices_1$codigo_de_osinergmin == cod,]$razon_social <-
+    grifos_1[grifos_1$codigo_de_osinergmin == cod,]$razon_social[2]
+
+grifos_1[grifos_1$codigo_de_osinergmin == cod,]$razon_social  %>% unique()
+prices_1[prices_1$codigo_de_osinergmin == cod,]$razon_social %>% unique()
+```
+
+grifos 14693  razon social 
+
+```{r}
+
+cod = "14693"
+
+grifos_1[grifos_1$codigo_de_osinergmin == cod,]$razon_social <-
+    grifos_1[grifos_1$codigo_de_osinergmin == cod,]$razon_social[2]
+
+prices_1[prices_1$codigo_de_osinergmin == cod,]$razon_social <-
+    grifos_1[grifos_1$codigo_de_osinergmin == cod,]$razon_social[2]
+
+
+
+grifos_1[grifos_1$codigo_de_osinergmin == cod,]$razon_social  %>% unique()
+prices_1[prices_1$codigo_de_osinergmin == cod,]$razon_social %>% unique()
+
+```
+Grifo 7042 misma direccion
+```{r}
+cod <- "7042"
+
+grifos_1[grifos_1$codigo_de_osinergmin == cod,]$direccion <-
+    grifos_1[grifos_1$codigo_de_osinergmin == cod,]$direccion[2]
+
+prices_1[prices_1$codigo_de_osinergmin == cod,]$direccion <-
+    grifos_1[grifos_1$codigo_de_osinergmin == cod,]$direccion[2]
+
+grifos_1[grifos_1$codigo_de_osinergmin == cod,]$direccion  %>% unique()
+prices_1[prices_1$codigo_de_osinergmin == cod,]$direccion %>% unique()
+```
+ 9080 razon social
+```{r}
+
+cod = "9080"
+
+grifos_1[grifos_1$codigo_de_osinergmin == cod,]$razon_social <-
+    grifos_1[grifos_1$codigo_de_osinergmin == cod,]$razon_social[2]
+
+prices_1[prices_1$codigo_de_osinergmin == cod,]$razon_social <-
+    grifos_1[grifos_1$codigo_de_osinergmin == cod,]$razon_social[2]
+
+
+
+grifos_1[grifos_1$codigo_de_osinergmin == cod,]$razon_social  %>% unique()
+prices_1[prices_1$codigo_de_osinergmin == cod,]$razon_social %>% unique()
+
+```
+
+7955 direccion
+```{r}
+cod <- "7955"
+
+grifos_1[grifos_1$codigo_de_osinergmin == cod,]$direccion <-
+    grifos_1[grifos_1$codigo_de_osinergmin == cod,]$direccion[2]
+
+prices_1[prices_1$codigo_de_osinergmin == cod,]$direccion <-
+    grifos_1[grifos_1$codigo_de_osinergmin == cod,]$direccion[2]
+
+grifos_1[grifos_1$codigo_de_osinergmin == cod,]$direccion  %>% unique()
+prices_1[prices_1$codigo_de_osinergmin == cod,]$direccion %>% unique()
+```
+63899 cambio razon social
+
+```{r}
+
+cod = "63899"
+
+grifos_1[grifos_1$codigo_de_osinergmin == cod,]$razon_social <-
+    grifos_1[grifos_1$codigo_de_osinergmin == cod,]$razon_social[2]
+
+prices_1[prices_1$codigo_de_osinergmin == cod,]$razon_social <-
+    grifos_1[grifos_1$codigo_de_osinergmin == cod,]$razon_social[2]
+
+
+
+grifos_1[grifos_1$codigo_de_osinergmin == cod,]$razon_social  %>% unique()
+prices_1[prices_1$codigo_de_osinergmin == cod,]$razon_social %>% unique()
+
+```
+
+Vemos que queda con problemas de duplicidad
+
+```{r}
+grifos_1 %>% 
+    filter(!is.na(lat)) %>%
+    group_by(lat,lon) %>%
+    filter(n()>1) %>%
+    ungroup() %>%
+    select(codigo_de_osinergmin, 
+           razon_social,
+           direccion,
+           bandera,
+           lat,lon) %>%
+    arrange(lat, lon, codigo_de_osinergmin) %>%
+    write_excel_csv( here::here("data","processed","problemas_duplicados2.csv"))
+```
+
+Dropeamos los que tienen mismo codigo, razon social y direccion:
+
+```{r}
+grifos_2 <- grifos_1 %>% 
+    distinct(codigo_de_osinergmin, razon_social, direccion, .keep_all = TRUE)
+
+grifos_2 %>% 
+    filter(!is.na(lat)) %>%
+    group_by(lat,lon) %>%
+    filter(n()>1) %>%
+    ungroup() %>%
+    select(codigo_de_osinergmin, 
+           razon_social,
+           direccion,
+           bandera,
+           lat,lon) %>%
+    arrange(lat, lon, codigo_de_osinergmin) %>%
+    write_excel_csv( here::here("data","processed","problemas_duplicados2.csv"))
+```
+Guardamos el file de grifos y precios corregidos:
+
+```{r}
+
+saveRDS(grifos_2,
+        file = here::here("data", "processed", "grifo_coding_raw_no_duplicate.rds"))
+
+saveRDS(prices_1, 
+        file = here::here("data", "processed", "data_prices_2005_2018_no_duplicates.rds"))
+
+```
+
+
