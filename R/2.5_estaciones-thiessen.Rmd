@@ -30,8 +30,8 @@ glimpse(grifos)
 Usamos la función definida previamente para hallar los vecinos
 ```{r}
 grifos_1 <- grifos %>% 
-    select(x = lat, 
-           y = lon, 
+    select(x = lon, 
+           y = lat, 
            codigo_de_osinergmin,
            razon_social,
            ruc,
@@ -95,9 +95,17 @@ grifos_to_join_2 <- grifos %>%
            bandera) %>%
     mutate(rowname = as.integer(rowname))
 
+grifos_to_join_2 %>% filter(rowname == 90)
+
+vec_thiessen_1 <- grifos_1 %>%
+  distinct(x,y, .keep_all = TRUE) %>%
+  vecinos_thiessen(.)
+
+vec_thiessen_1 %>%
+  filter(razon_social == "INVERSIONES MAVU S.A.C.") 
 
 grifos_con_vecinos_2 <- left_join(
-    vec_thiessen,
+    vec_thiessen_1,
     grifos_to_join_2,
     suffix = c(".princ", ".vec"),
     by = c("ind2" = "rowname")
@@ -105,9 +113,11 @@ grifos_con_vecinos_2 <- left_join(
 
 grifos_con_vecinos_2 %>% 
   filter(razon_social.princ == "INVERSIONES MAVU S.A.C.") 
-```
-Noup, sigue hasta el queso la función, por más que ahora 
 
+grifos_con_vecinos_2 %>% 
+  filter(razon_social.princ == "SERVICENTRO Y AFINES LAS AMERICAS E.I.R.L.") 
+```
+Ahora sí
 
 # Mapa en google maps
 Usamos los siguientes recursos:
@@ -257,5 +267,12 @@ leaflet() %>%
               weight = 0.5, 
               color = "grey") %>%
   addTiles()
+```
+
+```{r}
+X
+dX$tiles
+str(dX$tiles)
+
 ```
 
