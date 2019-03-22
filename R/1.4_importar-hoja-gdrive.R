@@ -10,7 +10,6 @@ library(googlesheets)
 suppressMessages(library(dplyr))
 suppressMessages(library(tidyverse))
 library(janitor)
-(my_sheets <- gs_ls())
 
 #' Importamos todo el archivo con los datos
 sheet_grifos_coding <- gs_title("grifos_lima_2006_2017")

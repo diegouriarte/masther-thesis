@@ -309,7 +309,7 @@ grifos_1 %>%
            bandera,
            lat,lon) %>%
     arrange(lat, lon, codigo_de_osinergmin) %>%
-    write_excel_csv( here::here("data","processed","problemas_duplicados2.csv"))
+    write_excel_csv( here::here("data","processed","temporal","problemas_duplicados2.csv"))
 ```
 
 Dropeamos los que tienen mismo codigo, razon social y direccion:
@@ -329,7 +329,7 @@ grifos_2 %>%
            bandera,
            lat,lon) %>%
     arrange(lat, lon, codigo_de_osinergmin) %>%
-    write_excel_csv( here::here("data","processed","problemas_duplicados2.csv"))
+    write_excel_csv( here::here("data","processed","temporal", "problemas_duplicados2.csv"))
 ```
 Guardamos el file de grifos y precios corregidos:
 

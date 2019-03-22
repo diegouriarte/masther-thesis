@@ -1,8 +1,8 @@
 ---
 title: "Polígonos Thiessen para dataset"
 output: 
-  html_document:
-    keep_md: true
+  html_notebook: 
+    code_folding: hide
 ---
 
 ```{r}
@@ -264,15 +264,20 @@ leaflet() %>%
   #             fill = "green") %>%
   addPolygons(data = grifos_thissen,
               fillColor = ~pal(bandera), 
-              weight = 0.5, 
-              color = "grey") %>%
+              weight = 1, 
+              color = "black") %>%
   addTiles()
 ```
 
-```{r}
-X
-dX$tiles
-str(dX$tiles)
+```{r remedy001}
+
+leaflet() %>%
+
+  addPolygons(data = grifos_thissen,
+              fillColor = ~pal(bandera), 
+              weight = 1, 
+              color = "black") %>%
+  addTiles()
 
 ```
 

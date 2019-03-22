@@ -1,0 +1,28 @@
+---
+title: "Libro para pruebas"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(janitor)
+```
+
+
+```{r}
+prices <- readRDS(here::here("data", "processed", "data_2005_2018.rds")) %>%
+    clean_names()
+
+```
+
+```{r}
+prices %>% filter(codigo_de_osinergmin == 16439)%>%
+    select(codigo_de_osinergmin, fecha_hora, producto)%>%
+    arrange(desc(fecha_hora),producto)
+```
+
+```{r}
+prices %>% filter(codigo_de_osinergmin == 16439)%>%
+    select(codigo_de_osinergmin, fecha_hora, producto)%>%
+    count(producto)
+```
