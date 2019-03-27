@@ -119,7 +119,14 @@ grifos_con_vecinos_2 %>%
 ```
 Ahora sí
 
-# Mapa en google maps
+Guardemos ese dataset para utilizarlo en otro archivo cuya función sea sacar las medidas de concentración y otras cosas divertidas
+
+```{r}
+saveRDS(grifos_con_vecinos_2, file = here::here("data","processed","grifo_con_vecinos.RDS"))
+```
+
+
+# Mapa en google maps - Visualización
 Usamos los siguientes recursos:
 - https://stackoverflow.com/questions/43055894/how-to-assign-the-data-of-a-centroid-marker-to-the-voronoi-thiessen-polygon-it
 - https://rpubs.com/walkerke/rstudio_gis
@@ -257,7 +264,7 @@ leaflet() %>%
   addMarkers(data = grifos, 
              lat = ~ lat, 
              lng = ~ lon, 
-             popup = grifos$razon_social,
+             popup = paste0(grifos$razon_social," ",grifos$codigo_de_osinergmin),
              label = grifos$bandera) %>%
   # addPolygons(data = dsp_xy, 
   #             color = "green", 

@@ -7,7 +7,7 @@ output: html_notebook
 library(tidyverse)
 library(janitor)
 ```
-
+Cargamos los precios y grifos de todos los productos (no solo líquidos)
 
 ```{r}
 prices <- readRDS(here::here("data", "processed", "data_2005_2018.rds")) %>%
@@ -16,13 +16,13 @@ prices <- readRDS(here::here("data", "processed", "data_2005_2018.rds")) %>%
 ```
 
 ```{r}
-prices %>% filter(codigo_de_osinergmin == 16439)%>%
-    select(codigo_de_osinergmin, fecha_hora, producto)%>%
-    arrange(desc(fecha_hora),producto)
+prices %>% filter(codigo_de_osinergmin %in% c(82985))%>%
+    select(codigo_de_osinergmin, fecha_hora, producto,razon_social,precio_de_venta)%>%
+    arrange(desc(fecha_hora),producto, codigo_de_osinergmin)
 ```
 
 ```{r}
-prices %>% filter(codigo_de_osinergmin == 16439)%>%
+prices %>% filter(codigo_de_osinergmin == 19942)%>%
     select(codigo_de_osinergmin, fecha_hora, producto)%>%
     count(producto)
 ```
