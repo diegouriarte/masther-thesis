@@ -7,3 +7,4 @@ data/no-sync
 .httr-oauth
 packrat/lib*/
 PER_adm
+*.nb.html

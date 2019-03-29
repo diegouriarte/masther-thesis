@@ -3,13 +3,13 @@ title: "Cálculo de spatial clustering"
 output: html_notebook
 ---
 
-Cargamos librerías 
+# Cargamos librerías 
 
 ```{r}
 suppressMessages(library(tidyverse))
 ```
 
-Cargamos dataset con grifos y vecinos
+# Cargamos dataset con grifos y vecinos
 
 ```{r}
 grifos <- readRDS(here::here("data","processed","grifo_con_vecinos.rds"))
@@ -17,7 +17,7 @@ grifos <- readRDS(here::here("data","processed","grifo_con_vecinos.rds"))
 glimpse(grifos)
 ```
 
-Tomemos un grifo cercano a mi casa y conocido para ver:
+Tomemos un grifo cercano a mi casa y conocido para ver que esté bien la función anterior:
 
 ```{r}
 grifos %>%
@@ -33,88 +33,15 @@ grifos %>%
 ```
 
 
-Obtenemos las razones sociales de los vecinos:
-
-```{r}
-grifos %>%
-    filter(razon_social.princ == "INVERSIONES MAVU S.A.C.") %>%
-    pull(razon_social.vec)
-```
-
-Calculemos el tamaño del mercado:
-
-```{r}
-N <- grifos %>%
-    filter(razon_social.princ == "INVERSIONES MAVU S.A.C.") %>%
-    select(razon_social.princ,
-           bandera.princ,
-           razon_social.vec,
-           bandera.vec) %>%
-    nrow() + 1
-
-N
-
-```
-
-Saquemos cuantos grifos independientes hay:
-
-```{r}
-vec_ind <- grifos %>%
-    filter(razon_social.princ == "INVERSIONES MAVU S.A.C.") %>%
-    filter(bandera.vec == "INDEPENDIENTE") %>%
-    distinct(codigo_de_osinergmin.vec) %>%
-    nrow()
-
-grifo_band <- grifos %>%
-    filter(razon_social.princ == "INVERSIONES MAVU S.A.C.") %>%
-    distinct(bandera.princ) %>%
-    pull()
-clust_ind <- vec_ind + if_else(grifo_band == "INDEPENDIENTE", 1, 0)
-clust_ind
-```
-Ya tenemos los tres clúster independientes. Ahora, saquemos los clusteres que no son vecinos:
-
-```{r}
-grifos_no_indp <- grifos %>%
-    filter(razon_social.princ == "INVERSIONES MAVU S.A.C.") %>%
-    select(razon_social.princ,
-           bandera.princ,
-           razon_social.vec,
-           codigo_de_osinergmin.vec,
-           bandera.vec) %>%
-    filter(bandera.vec != "INDEPENDIENTE") %>%
-    pull(codigo_de_osinergmin.vec)
-
-grifos_no_indp
-```
-
-
-Con ese grifo, veamos si tiene vecinos de su mismo tipo:
-
-```{r}
- grifos_vecinos <- grifos %>%
-    filter(codigo_de_osinergmin.princ == grifos_no_indp[1]) %>%
-    pull(bandera.vec)
-
-grifos_vecinos
-
-grifo_vec_bandera <- unique(grifos[grifos$codigo_de_osinergmin.princ == grifos_no_indp[1],]$bandera.princ) 
-
-```
-## Funciones
-
-Escribiremos las funciones que necesitamos:
-
-```{r}
-grifos %>% filter(codigo_de_osinergmin.princ == 14665) %>%
-    select(codigo_de_osinergmin.vec, razon_social.vec, bandera.vec)
-```
-
+# Funciones
 
 
 ```{r}
 
 hallar_bandera <- function(cod1) {
+    # se debe tener cargado el ouput de 2.5 estaciones thiessen
+    #input: codigo del grifo
+    #ouput: bandera del grifo
     grifos %>% 
         filter(codigo_de_osinergmin.princ == cod1) %>%
         distinct(bandera.princ) %>% 
@@ -122,67 +49,25 @@ hallar_bandera <- function(cod1) {
 }
 
 hallar_lista_vecinos <- function(cod1) {
+    # se debe tener cargado el ouput de 2.5 estaciones thiessen
+    #input: codigo del grifo
+    #ouput: vector con codigos de vecinos    
     grifos[grifos$codigo_de_osinergmin.princ == cod1, ]$codigo_de_osinergmin.vec
 }
 
 
-indicar_vecinos <- function(cod1, cod2) {
-    if (cod2 %in% hallar_lista_vecinos(cod1)) {
-        return(1)
-    }
-    0
-}
-
-
-
-hallar_g_marca <- function(cod1){
-    #función que retorne los grifos de marca vecinos a la estación cod1
-    marcas <- c("REPSOL", "PECSA", "PETROPERU", "PRIMAX")
-    l <- vector()
-    for (estacion in hallar_lista_vecinos(cod1)) {
-        if (hallar_bandera(estacion) %in% marcas) {
-            l <- append(l, estacion)  
-        }
-    }
-    l
-}
-
 hallar_lista_vecinos(17947)
-indicar_vecinos(14665, 17947)
-indicar_vecinos(14665,6754)
 hallar_lista_vecinos(14665)
-hallar_g_marca(6754)
-```
-```{r}
-grifos %>% filter(codigo_de_osinergmin.princ == 14665) %>%
-    select(codigo_de_osinergmin.vec, razon_social.vec, bandera.vec)
-
-#hallamos los grifos con alguna marca asociada:
-hallar_g_marca(14665)
-
-#El unico grifo vecino con marca es 17947 (PECSA). Revisamos que cada grifo de marca tenga vecinos de la misma marca
-
-hallar_lista_vecinos(hallar_g_marca(14665)[1])
-
-
-#Buscamos los vecinos de la misma marca:
-
-for (grif in hallar_lista_vecinos(hallar_g_marca(14665)[1]) ) {
-    list <- c()
-    if (hallar_bandera(grif) == hallar_bandera(17947)) {
-        list <- append(list, grif)
-    }
-    list
-}
-list
 ```
 
-```{r}
-grifos %>% filter(codigo_de_osinergmin.princ == 17947) %>%
-    select(codigo_de_osinergmin.vec, razon_social.vec, bandera.vec)
-```
+
 ```{r}
 hallar_cluster <- function(cod) {
+    #halla todas las estaciones en el mismo cluster que la estación cod
+    #input: codigo de la estación
+    #output: dataframe que tiene todas las estacioens del cluster de cod,
+    #        incluida cod, con razón social y bandera
+    
     df1 <- filter(grifos, codigo_de_osinergmin.princ == cod) %>%
         distinct(codigo_de_osinergmin.princ,
                  razon_social.princ,
@@ -190,8 +75,8 @@ hallar_cluster <- function(cod) {
     bandera <- hallar_bandera(cod)
     lista_vecinos <- hallar_lista_vecinos(cod)
     df2 <- filter(grifos,
-           codigo_de_osinergmin.princ %in% lista_vecinos,
-           bandera.princ == bandera) %>%
+                  codigo_de_osinergmin.princ %in% lista_vecinos,
+                  bandera.princ == bandera) %>%
         distinct(codigo_de_osinergmin.princ,
                  razon_social.princ,
                  bandera.princ)
@@ -200,51 +85,6 @@ hallar_cluster <- function(cod) {
 
 hallar_cluster(8153)
 
-vec_bandera <- function(cod) {
-    hallar_cluster(cod) %>%
-        filter(codigo_de_osinergmin.princ != cod)
-}
-
-vec_bandera(8153)
-
-hallar_cluster(9146)
-hallar_cluster(8101)
-
-bind_rows(hallar_cluster(8153), hallar_cluster(9146), hallar_cluster(8101)) %>%
-    distinct() %>%
-    bind_rows(hallar_cluster(8336)) %>% distinct() %>%
-    bind_rows(hallar_cluster(6806)) %>% distinct() %>%
-    bind_rows(hallar_cluster(14693)) %>% distinct() %>%
-    bind_rows(hallar_cluster(9220)) %>% distinct() %>%
-    bind_rows(hallar_cluster(18567)) %>% distinct() %>%
-    bind_rows(hallar_cluster(6788)) %>% distinct() %>%
-    bind_rows(hallar_cluster(16640)) %>% distinct()
-
-i <- 1
-df <- hallar_cluster(8153)
-
-while (i < nrow(df)) {
-    df <- bind_rows(df, hallar_cluster(df$codigo_de_osinergmin.princ[i+1])) %>%
-    distinct() 
-    i <- i + 1
-}
-    
-df
-
-hallar_cluster(7124)
-
-
-
-i <- 1
-df <- hallar_cluster(7177)
-
-while (i < nrow(df)) {
-    df <- bind_rows(df, hallar_cluster(df$codigo_de_osinergmin.princ[i+1])) %>%
-    distinct() 
-    i <- i + 1
-}
-    
-df
 ```
 
 ```{r}
