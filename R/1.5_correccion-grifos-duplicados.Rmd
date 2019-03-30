@@ -1,5 +1,5 @@
 ---
-title: "Corrección grifos duplicados"
+title: "Correcci?n grifos duplicados"
 output: html_notebook
 ---
 ```{r}
@@ -41,7 +41,7 @@ prices %>%
     select(razon_social, fecha_hora,producto, precio_de_venta)
 ```
 
-Ese grifo de Repsol no existe, así que lo dropeamos de la base de datos de precios y de grifos, (está repetido con el grifo argus)
+Ese grifo de Repsol no existe, as? que lo dropeamos de la base de datos de precios y de grifos, (est? repetido con el grifo argus)
 
 ```{r}
 prices_1 <- prices %>%
@@ -92,7 +92,7 @@ prices_1[prices_1$codigo_de_osinergmin == "18828",]$razon_social <-
     grifos_1[grifos_1$codigo_de_osinergmin == "18828",]$razon_social[1]
 ```
 
-Vemos que funciona, así que hacemos una función para corregir:
+Vemos que funciona, as? que hacemos una funci?n para corregir:
 
 
 21032
@@ -126,7 +126,7 @@ prices_1[prices_1$codigo_de_osinergmin == "14633",]$codigo_de_osinergmin <-
     21036
 ```
 
-Ahora grifo que cambió de razón social. Cod 9488
+Ahora grifo que cambi? de raz?n social. Cod 9488
 
 
 ```{r}
