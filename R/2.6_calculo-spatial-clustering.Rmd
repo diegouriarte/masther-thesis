@@ -63,7 +63,7 @@ hallar_lista_vecinos(14665)
 
 ```{r}
 hallar_cluster <- function(cod) {
-    #halla todas las estaciones en el mismo cluster que la estación cod
+    #halla todas las estaciones vecinas que tienen la misma bandera
     #input: codigo de la estación
     #output: dataframe que tiene todas las estacioens del cluster de cod,
     #        incluida cod, con razón social y bandera
@@ -89,6 +89,11 @@ hallar_cluster(8153)
 
 ```{r}
 hallar_todos_cluster <- function(cod) {
+    #halla todas las que están en mismo cluster (a nivel de banderas) que cod,
+    #sin importar el nivel
+    #input: codigo de la estación
+    #output: dataframe que tiene todas las estaciones del cluster de cod,
+    #        incluida cod, con razón social y bandera
     if (hallar_bandera(cod) == "INDEPENDIENTE") {
         df1 <- filter(grifos, codigo_de_osinergmin.princ == cod) %>%
             distinct(codigo_de_osinergmin.princ,
@@ -119,36 +124,14 @@ hallar_todos_cluster(62240)
 
 ```
 
-Hagamos el cálculo para un grifo cualquiera 19956, que tiene 9 vecinos, es de 
-
-```{r}
-df1 <- grifos %>% filter(codigo_de_osinergmin.princ == 19956) %>%
-    select(codigo = codigo_de_osinergmin.princ, 
-           razon_social = razon_social.princ, 
-           bandera = bandera.princ) %>% distinct()
-df2 <- grifos %>% filter(codigo_de_osinergmin.princ == 19956) %>%
-    select(codigo = codigo_de_osinergmin.vec, 
-           razon_social = razon_social.vec, 
-           bandera = bandera.vec)
-
-grifo19956 <- bind_rows(df1, df2)
-#creamos lista con cluster de cada grifo (pueden haber repetidos)
-
-lista <- list()
-
-
-for (grifo in grifo19956$codigo) {
-    lista[[as.character(grifo)]] <- hallar_todos_cluster(grifo)    
-}
-for(i in lista){print(i)}
-
-
-```
-
 ```{r}
 #hacemos un loop para quedarnos solo con los que no son repetidos
 
 comprobar_df_dup <- function(df1, df2) {
+    #Funcionar para comprobar si dos dataframes son iguales. Es para elimitar los 
+    #dataframes de vecinos del mismo cluster que se generan
+    #input: dos df con codigo | razon_social | bandera
+    #output: TRUE si son iguales, FALSE de lo contrario
     if (is.null(df1) | is.null(df2)) {
         return(FALSE)
     }
@@ -175,26 +158,16 @@ comprobar_df_dup(NULL, hallar_todos_cluster(19956))
 
 ```
 
-```{r}
-for (i in 1:(length(lista)-1)) {
-    for (j in (i+1):length(lista)) {
-        if(comprobar_df_dup(lista[[i]], lista[[j]])) {
-            lista[j] <- list(NULL)
-        }
-    }
-}
-
-lista[sapply(lista, is.null)] <- NULL
-
-for(i in lista){print(i)}
-
-```
 
 Vemos que funciona, así que empaquetemos en una función:
 
 ```{r}
 
 hallar_clusteres_mercado <- function(cod) {
+    #halla todos clusteres del mercado que genera el grifo cod
+    #input: codigo de la estación
+    #output: lista que contiene dataframes con cada cluster que rodea a la 
+    #estación cod
     df1 <- grifos %>% filter(codigo_de_osinergmin.princ == cod) %>%
         select(codigo = codigo_de_osinergmin.princ,
                razon_social = razon_social.princ,
@@ -232,35 +205,8 @@ str(hallar_clusteres_mercado(14665))
 
 ```
 
-Ahora, hallamos la medida de spatial clustering para grifo 14665:
 
-```{r}
-#número de estaciones en el mercado (vecinos + 1)
-(N <- length(hallar_lista_vecinos(14665)) + 1)
-#número de clusteres
-(M <- length(hallar_clusteres_mercado(14665)))
-#suma número de estaciones en cada cluster
-suma_clusteres <- sum(sapply(hallar_clusteres_mercado(14665), nrow))
-suma_clusteres
-sc <- suma_clusteres/M/N
-sc
-
-```
-Ahora, hallamos la medida de spatial clustering para grifo 19956:
-
-```{r}
-#número de estaciones en el mercado (vecinos + 1)
-(N <- length(hallar_lista_vecinos(14645)) + 1)
-#número de clusteres
-(M <- length(hallar_clusteres_mercado(14645)))
-#suma número de estaciones en cada cluster
-suma_clusteres <- sum(sapply(hallar_clusteres_mercado(14645), nrow))
-suma_clusteres
-sc <- suma_clusteres/M/N
-sc
-
-```
-Empaquetamos en una función
+Creamos función de spatial clustering (a nivel de banderas):
 
 ```{r}
 calcular_sc <- function(cod) {
@@ -276,8 +222,29 @@ calcular_sc <- function(cod) {
     sc
 }
 
+calcular_sc(14665)
 calcular_sc(19956)
-calcular_sc(14645)
 
+```
+
+# Test de la función
+
+La prueba la haremos con el grifo 14645 (Pecsa en el cruce de Cuba con Arenales). A la fecha de hoy (2019-03-29), se tiene para el grifo:
+- N = 8
+- M = 5 (Primax, dos de Pecsa, Repsol, Independiente):
+    * k_repsol = 9
+    * k_primax_1 = 1
+    * k_primax_2 = 5
+    * k_pecsa = 1
+    * k_independiente = 1
+Por tanto el valor de sc es $sc = \frac{(9+1+5+1+1)/5}{8} = 0.425$. Verificamos que sea el mismo valor
+
+```{r}
+if (all.equal(calcular_sc(14645), 0.425)) {
+    "Función calcular_sc pasa la prueba"
+} else {
+    stop("Función calcular_sc no pasa la prueba")
+
+}
 ```
 
