@@ -1,0 +1,80 @@
+---
+title: "Creación de database con spatial_clustering a nivel de banderas"
+output: html_notebook
+---
+
+#Cargamos librerias necesarias y funciones
+
+```{r}
+suppressMessages(library(tidyverse))
+source(here::here("R","2.6_calculo-spatial-clustering_funciones.R"))
+```
+
+#Cargamos dataset con grifos y vecinos de Thiessen
+Cargamos dos archivos generados previamente:
+ - File con los vecinos de Thiessen generado en `r "2.5_estaciones-thiessen.Rmd"`. 
+ - File con la lista de grifos y sus características generado en `r "1.6_base-datos-grifos-para-regresion.R"`
+
+```{r}
+grifos <- readRDS(here::here("data","processed","grifo_con_vecinos.RDS"))
+grifos_coding_clean <- readRDS(here::here("data","processed","grifo_coding_clean.rds"))
+
+glimpse(grifos)
+glimpse(grifos_coding_clean)
+```
+
+
+#Calculo de SC para la muestra
+
+
+Hacemos un left join para tener file con info repetida pero completa de cada grifo:
+
+```{r}
+left_join(grifos, grifos_coding_clean, 
+          by = c("codigo_de_osinergmin.princ" = "codigo_de_osinergmin"))
+```
+```{r}
+lista_grifos <- grifos %>%
+    distinct(codigo_de_osinergmin.princ) %>% 
+    pull()
+
+calcular_sc(14645)
+grifos_sc <- grifos %>%
+    select(codigo_de_osinergmin.princ) %>%
+    distinct() %>%
+    mutate(sc = calcular_sc(codigo_de_osinergmin.princ))
+
+grifos_sc <- grifos %>%
+    distinct(codigo_de_osinergmin.princ) %>%
+    mutate(sc = NA)
+
+
+for (grifo in grifos_sc$codigo_de_osinergmin.princ) {
+    grifos_sc[grifo_sc$codigo_de_osinergmin.princ == grifo, ]$sc = calcular_sc(grifo)
+}
+
+```
+
+```{r}
+library(purrr)
+ptm <- proc.time()
+sc_vector <- map_dbl(grifos_sc$codigo_de_osinergmin.princ, calcular_sc)
+proc.time() - ptm
+
+grifos_sc$sc <- sc_vector
+
+grifos_sc
+
+```
+
+
+Hacemos merge con el dataset anterior:
+
+```{r}
+grifos_con_sc <- left_join(grifos_coding_clean, 
+                           grifos_sc, 
+                           c("codigo_de_osinergmin" = "codigo_de_osinergmin.princ")) 
+
+  
+```
+
