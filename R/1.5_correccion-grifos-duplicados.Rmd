@@ -119,10 +119,24 @@ grifos_3 %>%
 ```
 OK, son grifos distintos, de un lado al otro de la avenida.
 
+En adición, los grifos 83435 y 137688 son los mismos (compra de Repsol, dir AV. BAUZATE Y MEZA N° 1050). Nos quedamos con 137688
+
+```{r}
+grifos_4 <- grifos_3 %>%
+    filter(codigo_de_osinergmin != 83435)
+
+prices_1 <- prices %>%
+    mutate(codigo_de_osinergmin = as.numeric(codigo_de_osinergmin),
+           codigo_de_osinergmin = if_else(codigo_de_osinergmin == 83435, 
+                                          137688, 
+                                          codigo_de_osinergmin))
+```
+
+
 ## Verificamos que no hay grifos con las mismas coordenadas
 
 ```{r}
-grifos_3 %>%
+grifos_4 %>%
     filter(!is.na(lat)) %>%
     group_by(lat, lon) %>%
     filter(n()>1) %>%
@@ -136,24 +150,24 @@ Los grifos 37795 y 132204 en realidad son los mismos (compra de Repsol). Por tan
 
 
 ```{r}
-prices %>%
+prices_1 %>%
     filter(codigo_de_osinergmin == 37795)
 
-prices_1 <- prices %>%
+prices_2 <- prices %>%
     mutate(codigo_de_osinergmin = as.numeric(codigo_de_osinergmin),
            codigo_de_osinergmin = if_else(codigo_de_osinergmin == 37795, 
                                           132204, 
                                           codigo_de_osinergmin))
 
-prices_1 %>%
+prices_2 %>%
     filter(codigo_de_osinergmin == 37795)
 
 #eliminamos de grifos:
 
-grifos_4 <- grifos_3 %>%
+grifos_5 <- grifos_4 %>%
     filter(codigo_de_osinergmin != 37795)
 
-grifos_4 %>%
+grifos_5 %>%
     filter(!is.na(lat)) %>%
     group_by(lat, lon) %>%
     filter(n()>1) %>%
@@ -164,24 +178,24 @@ grifos_4 %>%
 Los grifos 9630 y 128675 en realidad son los mismos cambian de razón social. Nos quedamos con Delta Chocas (128675), por ser el nombre más reciente:
 
 ```{r}
-prices_1 %>%
+prices_2 %>%
     filter(codigo_de_osinergmin == 9630)
 
-prices_2 <- prices_1 %>%
+prices_3 <- prices_2 %>%
     mutate(codigo_de_osinergmin = as.numeric(codigo_de_osinergmin),
            codigo_de_osinergmin = if_else(codigo_de_osinergmin == 9630, 
                                           128675, 
                                           codigo_de_osinergmin))
 
-prices_2 %>%
+prices_3 %>%
     filter(codigo_de_osinergmin == 9630)
 
 #eliminamos de grifos:
 
-grifos_5 <- grifos_4 %>%
+grifos_6 <- grifos_5 %>%
     filter(codigo_de_osinergmin != 9630)
 
-grifos_5 %>%
+grifos_6 %>%
     filter(!is.na(lat)) %>%
     group_by(lat, lon) %>%
     filter(n()>1) %>%
@@ -204,7 +218,7 @@ prices %>%
 Verifiquemso que todos los grifos de Repsol estén bien codificados:
 
 ```{r}
-grifos_5 %>% 
+grifos_6 %>% 
     filter(str_detect(razon_social,"REPSOL")) %>%
     select(codigo_de_osinergmin,razon_social, direccion, bandera) %>%
     mutate(bandera = str_to_upper(bandera)) %>%
@@ -215,16 +229,24 @@ grifos_5 %>%
 Este es un caso super raro, en el que el grifo físicamente dice Pecsa pero está registrado a nombre de RECOSAC. Cambiaré el nombre de la bandera:
 
 ```{r}
-grifos_6 <- grifos_5 %>%
+grifos_7 <- grifos_6 %>%
     mutate(bandera = if_else(codigo_de_osinergmin == 31927, "REPSOL", bandera))
 
-grifos_6 %>% 
+grifos_7 %>% 
     filter(str_detect(razon_social,"REPSOL")) %>%
     select(codigo_de_osinergmin,razon_social, direccion, bandera) %>%
     mutate(bandera = str_to_upper(bandera)) %>%
     filter(bandera != "REPSOL")
 ```
 
+# Drop de grifos
+
+Eliminamos el grifo 88228 EMPRESA DE TRANSPORTES EDILBERTO RAMOS S.A.C. por no tener observaciones:
+
+```{r}
+grifos_8 <- grifos_7 %>%
+    filter(codigo_de_osinergmin != 88228)
+```
 
 
 
@@ -232,10 +254,10 @@ Guardamos el file de grifos y precios corregidos:
 
 ```{r}
 
-saveRDS(grifos_6,
+saveRDS(grifos_8,
         file = here::here("data", "processed", "grifo_coding_raw_no_duplicate.rds"))
 
-saveRDS(prices_2, 
+saveRDS(prices_3, 
         file = here::here("data", "processed", "data_prices_2005_2018_no_duplicates.rds"))
 
 ```
