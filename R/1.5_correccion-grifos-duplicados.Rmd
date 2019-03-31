@@ -28,11 +28,6 @@ grifos_repetidos <- grifos %>%
     ungroup() %>%
     arrange(lat,codigo_de_osinergmin) %>%
     distinct(codigo_de_osinergmin, .keep_all = TRUE)
-```
-
-
-
-```{r}
 
 grifos_sin_marca_repetidos <- grifos %>% 
     filter(!is.na(lat),
@@ -104,7 +99,6 @@ grifos_3 <- anti_join(grifos_2,
                       by = NULL) %>%
     bind_rows(grifos_coesti_depurado)
 ```
-Ahora solo hay observaciones relacioandas a COESTI que debemos resolver.
 
 ```{r}
 grifos_3 %>% 
@@ -115,335 +109,133 @@ grifos_3 %>%
 
 Ahora ya no hay duplicados por `codigo_de_osinerming` en la base de datos.
 
-Verifiquemos duplicados directos por dirección
-2
+## Verificamos por dirección duplicada
 
-
-Primero hallamos los duplicados y los guardamos en csv
 ```{r}
-grifos %>% 
+grifos_3 %>%
     filter(!is.na(lat)) %>%
-    group_by(lat,lon) %>%
+    group_by(direccion) %>%
+    filter(n()>1)
+```
+OK, son grifos distintos, de un lado al otro de la avenida.
+
+## Verificamos que no hay grifos con las mismas coordenadas
+
+```{r}
+grifos_3 %>%
+    filter(!is.na(lat)) %>%
+    group_by(lat, lon) %>%
     filter(n()>1) %>%
+    arrange(lat, lon) %>%
     ungroup() %>%
-    select(codigo_de_osinergmin, 
-           razon_social,
-           direccion,
-           bandera,
-           lat,lon) %>%
-    arrange(lat,codigo_de_osinergmin) %>%
-    filter(codigo_de_osinergmin == "42769")
+    select(codigo_de_osinergmin, razon_social, direccion, distrito, bandera)
 ```
+Debemos tener cuidado con estos, y corregir la base de datos de precios, solo en este caso es necesario, (eliminaremos codigos de osinerming en grifos que son iguales.)
 
-Vamos corrigiendo, primero grifo 42769
+Los grifos 37795 y 132204 en realidad son los mismos (compra de Repsol). Por tanto, con quedamos con el código de Repsol y cambiamos en al base de datos de precios el código 37795 por 132204.
 
 
 ```{r}
-prices %>% 
-    filter(codigo_de_osinergmin == "42769", 
-           year(fecha_hora)>=2017) %>%
-    arrange(fecha_hora) %>%
-    select(razon_social, fecha_hora,producto, precio_de_venta)
-```
+prices %>%
+    filter(codigo_de_osinergmin == 37795)
 
-Ese grifo de Repsol no existe, as? que lo dropeamos de la base de datos de precios y de grifos, (est? repetido con el grifo argus)
-
-```{r}
 prices_1 <- prices %>%
-    filter(razon_social != "REPSOL COMERCIAL S.A.C." |
-               codigo_de_osinergmin != "42769")
+    mutate(codigo_de_osinergmin = as.numeric(codigo_de_osinergmin),
+           codigo_de_osinergmin = if_else(codigo_de_osinergmin == 37795, 
+                                          132204, 
+                                          codigo_de_osinergmin))
 
-grifos_1 <- grifos %>%
-    filter(razon_social != "REPSOL COMERCIAL S.A.C." |
-               codigo_de_osinergmin != "42769")
-```
+prices_1 %>%
+    filter(codigo_de_osinergmin == 37795)
 
+#eliminamos de grifos:
 
-```{r}
-grifos_1 %>% 
-    filter(!is.na(lat))  %>%
-    group_by(lat) %>%
-    filter(n()>1) %>%
-    ungroup() %>%
-    select(codigo_de_osinergmin, 
-           razon_social,
-           direccion,
-           bandera,
-           lat) %>%
-    arrange(lat) %>%
-    distinct(razon_social, .keep_all = TRUE)
-```
+grifos_4 <- grifos_3 %>%
+    filter(codigo_de_osinergmin != 37795)
 
-Arreglemos el primero 96646
-
-```{r}
-
-grifos_1[grifos_1$codigo_de_osinergmin == "96646",]$direccion <-
-    grifos_1[grifos_1$codigo_de_osinergmin == "96646",]$direccion[1]
-
-prices_1[prices_1$codigo_de_osinergmin == "96646",]$direccion <-
-    prices_1[prices_1$codigo_de_osinergmin == "96646",]$direccion[1]
-
-```
-
-18828
-
-
-```{r}
-grifos_1[grifos_1$codigo_de_osinergmin == "18828",]$razon_social <-
-    grifos_1[grifos_1$codigo_de_osinergmin == "18828",]$razon_social[1]
-
-prices_1[prices_1$codigo_de_osinergmin == "18828",]$razon_social <-
-    grifos_1[grifos_1$codigo_de_osinergmin == "18828",]$razon_social[1]
-```
-
-Vemos que funciona, as? que hacemos una funci?n para corregir:
-
-
-21032
-
-```{r}
-grifos_1[grifos_1$codigo_de_osinergmin == "21032",]$direccion <-
-    grifos_1[grifos_1$codigo_de_osinergmin == "21032",]$direccion[1]
-
-prices_1[prices_1$codigo_de_osinergmin == "21032",]$direccion <-
-    prices_1[prices_1$codigo_de_osinergmin == "21032",]$direccion[1]
-```
-
-Mismo grifo Repsol con dos codigos distintos y direcciones distintas: 14633 21036
-
-```{r}
-grifos_1[grifos_1$codigo_de_osinergmin == "14633",]$direccion <-
-    grifos_1[grifos_1$codigo_de_osinergmin == "21036",]$direccion[2]
-
-prices_1[prices_1$codigo_de_osinergmin == "14633",]$direccion <-
-    grifos_1[grifos_1$codigo_de_osinergmin == "21036",]$direccion[2]
-
-grifos_1[grifos_1$codigo_de_osinergmin == "21036",]$direccion <-
-    grifos_1[grifos_1$codigo_de_osinergmin == "21036",]$direccion[2]
-
-prices_1[prices_1$codigo_de_osinergmin == "21036",]$direccion <-
-    grifos_1[grifos_1$codigo_de_osinergmin == "21036",]$direccion[2]
-
-grifos_1[grifos_1$codigo_de_osinergmin == "14633",]$codigo_de_osinergmin <- 21036
-
-prices_1[prices_1$codigo_de_osinergmin == "14633",]$codigo_de_osinergmin <-
-    21036
-```
-
-Ahora grifo que cambi? de raz?n social. Cod 9488
-
-
-```{r}
-grifos_1[grifos_1$codigo_de_osinergmin == "9488",]$razon_social <-
-    grifos_1[grifos_1$codigo_de_osinergmin == "9488",]$razon_social[2]
-
-prices_1[prices_1$codigo_de_osinergmin == "9488",]$razon_social <-
-    grifos_1[grifos_1$codigo_de_osinergmin == "9488",]$razon_social[2]
-```
-
-Ahora grifo 6818 razon social
-
-```{r}
-cod <- "6818"
-
-grifos_1[grifos_1$codigo_de_osinergmin == cod,]$razon_social <-
-    grifos_1[grifos_1$codigo_de_osinergmin == cod,]$razon_social[2]
-
-prices_1[prices_1$codigo_de_osinergmin == cod,]$razon_social <-
-    grifos_1[grifos_1$codigo_de_osinergmin == cod,]$razon_social[2]
-
-grifos_1[grifos_1$codigo_de_osinergmin == cod,]$razon_social  %>% unique()
-prices_1[prices_1$codigo_de_osinergmin == cod,]$razon_social %>% unique()
-```
-
-Grifo 16670 con problema de direccion:
-
-```{r}
-cod <- "16670"
-
-grifos_1[grifos_1$codigo_de_osinergmin == cod,]$direccion <-
-    grifos_1[grifos_1$codigo_de_osinergmin == cod,]$direccion[2]
-
-prices_1[prices_1$codigo_de_osinergmin == cod,]$direccion <-
-    grifos_1[grifos_1$codigo_de_osinergmin == cod,]$direccion[2]
-
-grifos_1[grifos_1$codigo_de_osinergmin == cod,]$direccion  %>% unique()
-prices_1[prices_1$codigo_de_osinergmin == cod,]$direccion %>% unique()
-```
-
-Grifo 6765 con problema de direccion:
-
-```{r}
-cod <- "6765"
-
-grifos_1[grifos_1$codigo_de_osinergmin == cod,]$direccion <-
-    grifos_1[grifos_1$codigo_de_osinergmin == cod,]$direccion[2]
-
-prices_1[prices_1$codigo_de_osinergmin == cod,]$direccion <-
-    grifos_1[grifos_1$codigo_de_osinergmin == cod,]$direccion[2]
-
-grifos_1[grifos_1$codigo_de_osinergmin == cod,]$direccion  %>% unique()
-prices_1[prices_1$codigo_de_osinergmin == cod,]$direccion %>% unique()
-```
-
-9113, direccion
-
-```{r}
-cod <- "9113"
-
-grifos_1[grifos_1$codigo_de_osinergmin == cod,]$direccion <-
-    grifos_1[grifos_1$codigo_de_osinergmin == cod,]$direccion[2]
-
-prices_1[prices_1$codigo_de_osinergmin == cod,]$direccion <-
-    grifos_1[grifos_1$codigo_de_osinergmin == cod,]$direccion[2]
-
-grifos_1[grifos_1$codigo_de_osinergmin == cod,]$direccion  %>% unique()
-prices_1[prices_1$codigo_de_osinergmin == cod,]$direccion %>% unique()
-```
-
-16643 razon social
-
-```{r}
-
-
-cod <- "16643"
-
-grifos_1[grifos_1$codigo_de_osinergmin == cod,]$razon_social <-
-    grifos_1[grifos_1$codigo_de_osinergmin == cod,]$razon_social[2]
-
-prices_1[prices_1$codigo_de_osinergmin == cod,]$razon_social <-
-    grifos_1[grifos_1$codigo_de_osinergmin == cod,]$razon_social[2]
-
-grifos_1[grifos_1$codigo_de_osinergmin == cod,]$razon_social  %>% unique()
-prices_1[prices_1$codigo_de_osinergmin == cod,]$razon_social %>% unique()
-```
-
-grifos 14693  razon social 
-
-```{r}
-
-cod = "14693"
-
-grifos_1[grifos_1$codigo_de_osinergmin == cod,]$razon_social <-
-    grifos_1[grifos_1$codigo_de_osinergmin == cod,]$razon_social[2]
-
-prices_1[prices_1$codigo_de_osinergmin == cod,]$razon_social <-
-    grifos_1[grifos_1$codigo_de_osinergmin == cod,]$razon_social[2]
-
-
-
-grifos_1[grifos_1$codigo_de_osinergmin == cod,]$razon_social  %>% unique()
-prices_1[prices_1$codigo_de_osinergmin == cod,]$razon_social %>% unique()
-
-```
-Grifo 7042 misma direccion
-```{r}
-cod <- "7042"
-
-grifos_1[grifos_1$codigo_de_osinergmin == cod,]$direccion <-
-    grifos_1[grifos_1$codigo_de_osinergmin == cod,]$direccion[2]
-
-prices_1[prices_1$codigo_de_osinergmin == cod,]$direccion <-
-    grifos_1[grifos_1$codigo_de_osinergmin == cod,]$direccion[2]
-
-grifos_1[grifos_1$codigo_de_osinergmin == cod,]$direccion  %>% unique()
-prices_1[prices_1$codigo_de_osinergmin == cod,]$direccion %>% unique()
-```
- 9080 razon social
-```{r}
-
-cod = "9080"
-
-grifos_1[grifos_1$codigo_de_osinergmin == cod,]$razon_social <-
-    grifos_1[grifos_1$codigo_de_osinergmin == cod,]$razon_social[2]
-
-prices_1[prices_1$codigo_de_osinergmin == cod,]$razon_social <-
-    grifos_1[grifos_1$codigo_de_osinergmin == cod,]$razon_social[2]
-
-
-
-grifos_1[grifos_1$codigo_de_osinergmin == cod,]$razon_social  %>% unique()
-prices_1[prices_1$codigo_de_osinergmin == cod,]$razon_social %>% unique()
-
-```
-
-7955 direccion
-```{r}
-cod <- "7955"
-
-grifos_1[grifos_1$codigo_de_osinergmin == cod,]$direccion <-
-    grifos_1[grifos_1$codigo_de_osinergmin == cod,]$direccion[2]
-
-prices_1[prices_1$codigo_de_osinergmin == cod,]$direccion <-
-    grifos_1[grifos_1$codigo_de_osinergmin == cod,]$direccion[2]
-
-grifos_1[grifos_1$codigo_de_osinergmin == cod,]$direccion  %>% unique()
-prices_1[prices_1$codigo_de_osinergmin == cod,]$direccion %>% unique()
-```
-63899 cambio razon social
-
-```{r}
-
-cod = "63899"
-
-grifos_1[grifos_1$codigo_de_osinergmin == cod,]$razon_social <-
-    grifos_1[grifos_1$codigo_de_osinergmin == cod,]$razon_social[2]
-
-prices_1[prices_1$codigo_de_osinergmin == cod,]$razon_social <-
-    grifos_1[grifos_1$codigo_de_osinergmin == cod,]$razon_social[2]
-
-
-
-grifos_1[grifos_1$codigo_de_osinergmin == cod,]$razon_social  %>% unique()
-prices_1[prices_1$codigo_de_osinergmin == cod,]$razon_social %>% unique()
-
-```
-
-Vemos que queda con problemas de duplicidad
-
-```{r}
-grifos_1 %>% 
+grifos_4 %>%
     filter(!is.na(lat)) %>%
-    group_by(lat,lon) %>%
+    group_by(lat, lon) %>%
     filter(n()>1) %>%
+    arrange(lat, lon) %>%
     ungroup() %>%
-    select(codigo_de_osinergmin, 
-           razon_social,
-           direccion,
-           bandera,
-           lat,lon) %>%
-    arrange(lat, lon, codigo_de_osinergmin) %>%
-    write_excel_csv( here::here("data","processed","temporal","problemas_duplicados2.csv"))
+    select(codigo_de_osinergmin, razon_social, direccion, distrito, bandera)
 ```
-
-Dropeamos los que tienen mismo codigo, razon social y direccion:
+Los grifos 9630 y 128675 en realidad son los mismos cambian de razón social. Nos quedamos con Delta Chocas (128675), por ser el nombre más reciente:
 
 ```{r}
-grifos_2 <- grifos_1 %>% 
-    distinct(codigo_de_osinergmin, razon_social, direccion, .keep_all = TRUE)
+prices_1 %>%
+    filter(codigo_de_osinergmin == 9630)
 
-grifos_2 %>% 
+prices_2 <- prices_1 %>%
+    mutate(codigo_de_osinergmin = as.numeric(codigo_de_osinergmin),
+           codigo_de_osinergmin = if_else(codigo_de_osinergmin == 9630, 
+                                          128675, 
+                                          codigo_de_osinergmin))
+
+prices_2 %>%
+    filter(codigo_de_osinergmin == 9630)
+
+#eliminamos de grifos:
+
+grifos_5 <- grifos_4 %>%
+    filter(codigo_de_osinergmin != 9630)
+
+grifos_5 %>%
     filter(!is.na(lat)) %>%
-    group_by(lat,lon) %>%
+    group_by(lat, lon) %>%
     filter(n()>1) %>%
+    arrange(lat, lon) %>%
     ungroup() %>%
-    select(codigo_de_osinergmin, 
-           razon_social,
-           direccion,
-           bandera,
-           lat,lon) %>%
-    arrange(lat, lon, codigo_de_osinergmin) %>%
-    write_excel_csv( here::here("data","processed","temporal", "problemas_duplicados2.csv"))
+    select(codigo_de_osinergmin, razon_social, direccion, distrito, bandera)
 ```
+
+
+```{r}
+prices %>%
+    filter(codigo_de_osinergmin %in% c(9630,128675),
+           year(fecha_hora) >= 2017) %>%
+    ggplot2::ggplot(aes(x = fecha_hora, y = precio_de_venta, color = producto)) +
+    ggplot2::geom_point() + 
+    ggplot2::facet_wrap(~razon_social)
+```
+## Verificamos que no hay grifos evidentemente mal codificados con respecto a bandera
+
+Verifiquemso que todos los grifos de Repsol estén bien codificados:
+
+```{r}
+grifos_5 %>% 
+    filter(str_detect(razon_social,"REPSOL")) %>%
+    select(codigo_de_osinergmin,razon_social, direccion, bandera) %>%
+    mutate(bandera = str_to_upper(bandera)) %>%
+    filter(bandera != "REPSOL")
+```
+
+
+Este es un caso super raro, en el que el grifo físicamente dice Pecsa pero está registrado a nombre de RECOSAC. Cambiaré el nombre de la bandera:
+
+```{r}
+grifos_6 <- grifos_5 %>%
+    mutate(bandera = if_else(codigo_de_osinergmin == 31927, "REPSOL", bandera))
+
+grifos_6 %>% 
+    filter(str_detect(razon_social,"REPSOL")) %>%
+    select(codigo_de_osinergmin,razon_social, direccion, bandera) %>%
+    mutate(bandera = str_to_upper(bandera)) %>%
+    filter(bandera != "REPSOL")
+```
+
+
+
+
 Guardamos el file de grifos y precios corregidos:
 
 ```{r}
 
-saveRDS(grifos_2,
+saveRDS(grifos_6,
         file = here::here("data", "processed", "grifo_coding_raw_no_duplicate.rds"))
 
-saveRDS(prices_1, 
+saveRDS(prices_2, 
         file = here::here("data", "processed", "data_prices_2005_2018_no_duplicates.rds"))
 
 ```
