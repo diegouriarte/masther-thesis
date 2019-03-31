@@ -1,5 +1,5 @@
 ---
-title: "Polígonos Thiessen para dataset"
+title: "PolÃ­gonos Thiessen para dataset"
 output: 
   html_notebook: 
     code_folding: hide
@@ -17,7 +17,7 @@ source(here::here("R","2.4_funcion-thiessen.R"))
 ```
 
 
-Se construirán los polígonos de Thiesen para todo el dataset, así como se identificarán los vecinos y de que dueño y bandera son. Además, se construirán gráficos de los vecinos
+Se construir?n los pol?gonos de Thiesen para todo el dataset, as? como se identificar?n los vecinos y de que due?o y bandera son. Adem?s, se construir?n gr?ficos de los vecinos
 
 Cargamos la base de datos con grifos y ubicaciones:
 
@@ -25,9 +25,9 @@ Cargamos la base de datos con grifos y ubicaciones:
 grifos <- readRDS(here::here("data","processed","grifo_coding_clean.rds"))
 glimpse(grifos)
 ```
-# Primer intento de sacar los vecinos de manera programática
+# Primer intento de sacar los vecinos de manera programÃ¡tica
 
-Usamos la función definida previamente para hallar los vecinos
+Usamos la funciÃ³n definida previamente para hallar los vecinos
 ```{r}
 grifos_1 <- grifos %>% 
     select(x = lon, 
@@ -42,7 +42,7 @@ vec_thiessen <- vecinos_thiessen(grifos_1)
 ```
 
 
-Hacemos el join para tener los datos de los grifos, me parece está mal
+Hacemos el join para tener los datos de los grifos, me parece estÃ¡ mal
 ```{r}
 grifos_to_join <- grifos %>% 
     rownames_to_column() %>%
@@ -68,7 +68,7 @@ grifos_con_vecinos <- left_join(
 ```
 
 
-Revisamos un grifo cercano para ver si está bien codificado:
+Revisamos un grifo cercano para ver si estÃ¡ bien codificado:
 
 ```{r}
 grifos_con_vecinos %>% 
@@ -76,57 +76,57 @@ grifos_con_vecinos %>%
   select(ends_with("vec"))
 ```
 
-Este grifo está ubicado en Cercado en la avenida Venezuela, por lo que la función está haciendo cualquier cosa.
+<!-- Este grifo est? ubicado en Cercado en la avenida Venezuela, por lo que la funci?n est? haciendo cualquier cosa. -->
 
-Creo que el error está en los grifos duplicados (que cambiaron de dueño en algún momento). Como trabajo preliminar, 
-solo quedarnos con el primero. Luego habrá que limpiar manualmente y definir fechas.
+<!-- Creo que el error est? en los grifos duplicados (que cambiaron de due?o en alg?n momento). Como trabajo preliminar,  -->
+<!-- solo quedarnos con el primero. Luego habr? que limpiar manualmente y definir fechas. -->
 
+
+# ```{r}
+# grifos_to_join_2 <- grifos %>% 
+#     distinct(lat,lon, .keep_all = TRUE) %>%
+#     rownames_to_column() %>%
+#     select(rowname, 
+#            codigo_de_osinergmin,
+#            razon_social,
+#            ruc,
+#            direccion,
+#            distrito,
+#            bandera) %>%
+#     mutate(rowname = as.integer(rowname))
+# 
+# grifos_to_join_2 %>% filter(rowname == 90)
+# 
+# vec_thiessen_1 <- grifos_1 %>%
+#   distinct(x,y, .keep_all = TRUE) %>%
+#   vecinos_thiessen(.)
+# 
+# vec_thiessen_1 %>%
+#   filter(razon_social == "INVERSIONES MAVU S.A.C.") 
+# 
+# grifos_con_vecinos_2 <- left_join(
+#     vec_thiessen_1,
+#     grifos_to_join_2,
+#     suffix = c(".princ", ".vec"),
+#     by = c("ind2" = "rowname")
+# )
+# 
+# grifos_con_vecinos_2 %>% 
+#   filter(razon_social.princ == "INVERSIONES MAVU S.A.C.") 
+# 
+# grifos_con_vecinos_2 %>% 
+#   filter(razon_social.princ == "SERVICENTRO Y AFINES LAS AMERICAS E.I.R.L.") 
+# ```
+<!-- Ahora s? -->
+
+Guardemos ese dataset para utilizarlo en otro archivo cuya funcion sea sacar las medidas de concentraci?n y otras cosas divertidas
 
 ```{r}
-grifos_to_join_2 <- grifos %>% 
-    distinct(lat,lon, .keep_all = TRUE) %>%
-    rownames_to_column() %>%
-    select(rowname, 
-           codigo_de_osinergmin,
-           razon_social,
-           ruc,
-           direccion,
-           distrito,
-           bandera) %>%
-    mutate(rowname = as.integer(rowname))
-
-grifos_to_join_2 %>% filter(rowname == 90)
-
-vec_thiessen_1 <- grifos_1 %>%
-  distinct(x,y, .keep_all = TRUE) %>%
-  vecinos_thiessen(.)
-
-vec_thiessen_1 %>%
-  filter(razon_social == "INVERSIONES MAVU S.A.C.") 
-
-grifos_con_vecinos_2 <- left_join(
-    vec_thiessen_1,
-    grifos_to_join_2,
-    suffix = c(".princ", ".vec"),
-    by = c("ind2" = "rowname")
-)
-
-grifos_con_vecinos_2 %>% 
-  filter(razon_social.princ == "INVERSIONES MAVU S.A.C.") 
-
-grifos_con_vecinos_2 %>% 
-  filter(razon_social.princ == "SERVICENTRO Y AFINES LAS AMERICAS E.I.R.L.") 
-```
-Ahora sí
-
-Guardemos ese dataset para utilizarlo en otro archivo cuya función sea sacar las medidas de concentración y otras cosas divertidas
-
-```{r}
-saveRDS(grifos_con_vecinos_2, file = here::here("data","processed","grifo_con_vecinos.RDS"))
+saveRDS(grifos_con_vecinos, file = here::here("data","processed","grifo_con_vecinos.RDS"))
 ```
 
 
-# Mapa en google maps - Visualización
+# Mapa en google maps - Visualizaci?n
 Usamos los siguientes recursos:
 - https://stackoverflow.com/questions/43055894/how-to-assign-the-data-of-a-centroid-marker-to-the-voronoi-thiessen-polygon-it
 - https://rpubs.com/walkerke/rstudio_gis
@@ -165,44 +165,11 @@ polys %>%
   addPolygons(fillColor = ~pal(bandera), weight = 0.5, color = "grey") %>%
   addCircleMarkers(data = grifos_puntos, label = ~bandera, color = ~pal(bandera))
 ```
-Todo bien, pero al coger un rectángulo toma área del mar y no tiene sentido. Intentaré arreglar eso
+Todo bien, pero al coger un rectÃ¡ngulo toma Ã¡rea del mar y no tiene sentido. IntentarÃ© arreglar eso
 
-# Corrigiendo los límites (para que no sea una caja y no tome el mar)
+# Corrigiendo los lÃ­mites (para que no sea una caja y no tome el mar)
 
-Importamos límites de la costa para área de interés (los saqué manualmente):
-
-```{r}
-coordenadas_costa <-
-    readr::read_csv(here::here("data", "limites_costa.csv"),
-                    col_types = c("cc")) %>%
-    separate(
-        `lat, long`,
-        into = c("x", "y"),
-        sep = ",",
-        convert = TRUE
-    )
-
-coordenadas_costa
-```
-
-
-```{r}
-require(spatstat)
-
-W <- owin(poly=data.frame(x=rev(coordenadas_costa$x), y=rev(coordenadas_costa$y)))
-plot(W)
-
-grifos_coord <- grifos %>% 
-    dplyr::select(x = lat, y = lon)
-
-X <- as.ppp(grifos_coord,W=W) 
-plot(X) # Just to make sure it looks right. 
-dX <- dirichlet(X) 
-plot(dX) # Just to make sure ..... 
-```
-
-
-Importamos límites de la costa para área de interés (los saqué manualmente):
+Importamos l?mites de la costa para ?rea de inter?s (los saqu? manualmente):
 
 ```{r}
 coordenadas_costa <-
@@ -218,7 +185,7 @@ coordenadas_costa <-
 coordenadas_costa
 ```
 
-Creamos un gráfico simple para ver si funciona (ojo primero va la longitud, luego latitud)
+Creamos un gr?fico simple para ver si funciona (ojo primero va la longitud, luego latitud)
 
 ```{r}
 require(spatstat)
@@ -276,15 +243,4 @@ leaflet() %>%
   addTiles()
 ```
 
-```{r remedy001}
-
-leaflet() %>%
-
-  addPolygons(data = grifos_thissen,
-              fillColor = ~pal(bandera), 
-              weight = 1, 
-              color = "black") %>%
-  addTiles()
-
-```
 
