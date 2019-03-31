@@ -127,6 +127,7 @@ saveRDS(grifos_con_vecinos, file = here::here("data","processed","grifo_con_veci
 
 
 # Mapa en google maps - Visualizaci?n
+
 Usamos los siguientes recursos:
 - https://stackoverflow.com/questions/43055894/how-to-assign-the-data-of-a-centroid-marker-to-the-voronoi-thiessen-polygon-it
 - https://rpubs.com/walkerke/rstudio_gis
@@ -182,7 +183,7 @@ coordenadas_costa <-
         convert = TRUE
     )
 
-coordenadas_costa
+
 ```
 
 Creamos un gr?fico simple para ver si funciona (ojo primero va la longitud, luego latitud)
@@ -190,7 +191,6 @@ Creamos un gr?fico simple para ver si funciona (ojo primero va la longitud, lueg
 ```{r}
 require(spatstat)
 
-coordenadas_costa[1:19,]
 W <- owin(poly=data.frame(x=(coordenadas_costa$x), y=(coordenadas_costa$y)))
 plot(W)
 
@@ -225,10 +225,10 @@ grifos_filtrado
 
 grifos_thissen <- merge(dsp_xy, grifos_filtrado, by.x="id", by.y="rowname")
 
-pal <- colorFactor("plasma", grifos_thissen$bandera)
-
+pal <- colorFactor("plasma", unique(grifos_thissen$bandera))
+pal2 <- colorFactor(c("white", "red","green", "orange", "blue"), unique(grifos_thissen$bandera))
 leaflet() %>%
-  addMarkers(data = grifos, 
+  addMarkers(data = grifos_filtrado, 
              lat = ~ lat, 
              lng = ~ lon, 
              popup = paste0(grifos$razon_social," ",grifos$codigo_de_osinergmin),
@@ -237,7 +237,7 @@ leaflet() %>%
   #             color = "green", 
   #             fill = "green") %>%
   addPolygons(data = grifos_thissen,
-              fillColor = ~pal(bandera), 
+              fillColor = ~pal2(bandera), 
               weight = 1, 
               color = "black") %>%
   addTiles()
