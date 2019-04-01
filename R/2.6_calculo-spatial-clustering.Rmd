@@ -68,7 +68,6 @@ hallar_todos_cluster(14665)
 ```
 
 ```{r}
-#hacemos un loop para quedarnos solo con los que no son repetidos
 
 
 #Prueba, debería retornar verdadero
@@ -113,7 +112,6 @@ leaflet() %>%
                label = grifos_coord$bandera)  %>%
     addTiles()
 
-grifos %>% filter(codigo_de_osinergmin.princ == 19966)
 ```
 
 Creamos función de spatial clustering (a nivel de banderas):
@@ -133,14 +131,14 @@ La prueba la haremos con el grifo 14645 (Pecsa en el cruce de Cuba con Arenales)
 - M = 5 (Primax, dos de Pecsa, Repsol, Independiente):
     * `r k_repsol = 9`
     * `r k_primax_1 = 1`
-    * `r k_primax_2 = 13`
+    * `r k_primax_2 = 14`
     * `k_pecsa = 1`
     * `k_independiente = 1`
     
 Por tanto el valor de sc es $sc = \frac{(9+1+14+1+1)/5}{8} = 0.65$. Verificamos que sea el mismo valor
 
 ```{r}
-if (all.equal(calcular_sc(14645), 0.425)) {
+if (all.equal(calcular_sc(14645), 0.65)) {
     "Función calcular_sc pasa la prueba"
 } else {
     stop("Función calcular_sc no pasa la prueba")
