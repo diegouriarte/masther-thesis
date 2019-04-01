@@ -25,56 +25,56 @@ Cargamos la base de datos con grifos y ubicaciones:
 grifos <- readRDS(here::here("data","processed","grifo_coding_clean.rds"))
 glimpse(grifos)
 ```
-# Primer intento de sacar los vecinos de manera programática
+<!-- # Primer intento de sacar los vecinos de manera programática -->
 
-Usamos la función definida previamente para hallar los vecinos
-```{r}
-grifos_1 <- grifos %>% 
-    select(x = lon, 
-           y = lat, 
-           codigo_de_osinergmin,
-           razon_social,
-           ruc,
-           direccion,
-           distrito,
-           bandera)
-vec_thiessen <- vecinos_thiessen(grifos_1)
-```
-
-
-Hacemos el join para tener los datos de los grifos, me parece está mal
-```{r}
-grifos_to_join <- grifos %>% 
-    rownames_to_column() %>%
-    select(rowname, 
-           codigo_de_osinergmin,
-           razon_social,
-           ruc,
-           direccion,
-           distrito,
-           bandera) %>%
-    mutate(rowname = as.integer(rowname))
+<!-- Usamos la función definida previamente para hallar los vecinos -->
+<!-- ```{r} -->
+<!-- grifos_1 <- grifos %>%  -->
+<!--     select(x = lon,  -->
+<!--            y = lat,  -->
+<!--            codigo_de_osinergmin, -->
+<!--            razon_social, -->
+<!--            ruc, -->
+<!--            direccion, -->
+<!--            distrito, -->
+<!--            bandera) -->
+<!-- vec_thiessen <- vecinos_thiessen(grifos_1) -->
+<!-- ``` -->
 
 
-grifos_con_vecinos <- left_join(
-    vec_thiessen,
-    grifos_to_join,
-    suffix = c(".princ", ".vec"),
-    by = c("ind2" = "rowname")
-)
+<!-- Hacemos el join para tener los datos de los grifos, me parece está mal -->
+<!-- ```{r} -->
+<!-- grifos_to_join <- grifos %>%  -->
+<!--     rownames_to_column() %>% -->
+<!--     select(rowname,  -->
+<!--            codigo_de_osinergmin, -->
+<!--            razon_social, -->
+<!--            ruc, -->
+<!--            direccion, -->
+<!--            distrito, -->
+<!--            bandera) %>% -->
+<!--     mutate(rowname = as.integer(rowname)) -->
+
+
+<!-- grifos_con_vecinos <- left_join( -->
+<!--     vec_thiessen, -->
+<!--     grifos_to_join, -->
+<!--     suffix = c(".princ", ".vec"), -->
+<!--     by = c("ind2" = "rowname") -->
+<!-- ) -->
 
 
 
-```
+<!-- ``` -->
 
 
-Revisamos un grifo cercano para ver si está bien codificado:
+<!-- Revisamos un grifo cercano para ver si está bien codificado: -->
 
-```{r}
-grifos_con_vecinos %>% 
-  filter(razon_social.princ == "INVERSIONES MAVU S.A.C.") %>%
-  select(ends_with("vec"))
-```
+# ```{r}
+# grifos_con_vecinos %>%
+#   filter(razon_social.princ == "INVERSIONES MAVU S.A.C.") %>%
+#   select(ends_with("vec"))
+# ```
 
 <!-- Este grifo est? ubicado en Cercado en la avenida Venezuela, por lo que la funci?n est? haciendo cualquier cosa. -->
 
@@ -243,4 +243,129 @@ leaflet() %>%
   addTiles()
 ```
 
+# Pruebas
 
+```{r}
+grifos_thissen$codigo_de_osinergmin
+grifos_thissen[grifos_thissen$codigo_de_osinergmin == 15234,]
+
+for (grifo in grifos_thissen$codigo_de_osinergmin) {
+  raster::intersect(grifos_thissen[grifos_thissen$codigo_de_osinergmin == 15234,], 
+                    grifos_thissen[grifos_thissen$codigo_de_osinergmin == grifo,])
+}
+raster::intersect(grifos_thissen[grifos_thissen$codigo_de_osinergmin == 7709,], 
+                  grifos_thissen[grifos_thissen$codigo_de_osinergmin == 40975,])
+
+rgeos::gIntersection(grifos_thissen[grifos_thissen$codigo_de_osinergmin == 7709,], 
+                  grifos_thissen[grifos_thissen$codigo_de_osinergmin == 40975,])
+
+rgeos::gIntersection(grifos_thissen[grifos_thissen$codigo_de_osinergmin == 7709,], 
+                  grifos_thissen[grifos_thissen$codigo_de_osinergmin == 9536,])
+
+vec_15234 <- vector()
+for (grifo in grifos_thissen$codigo_de_osinergmin) {
+  
+  t <- rgeos::gIntersection(grifos_thissen[grifos_thissen$codigo_de_osinergmin == 15234,], 
+                       grifos_thissen[grifos_thissen$codigo_de_osinergmin == grifo,])
+  
+  if (!is.null(t)) {
+    vec_15234 <- append(vec_15234, grifo)
+  }
+}
+```
+
+```{r}
+
+grifos
+hallar_bandera <- function(cod1) {
+    # se debe tener cargado el ouput de 2.5 estaciones thiessen
+    #input: codigo del grifo
+    #ouput: bandera del grifo
+  unique(grifos[grifos$codigo_de_osinergmin == cod1, ]$bandera)
+    # grifos %>% 
+    #     filter(codigo_de_osinergmin == cod1) %>%
+    #     distinct(bandera) %>% 
+    #     pull()
+}
+
+vec_thiessen_irr <- function(cod) {
+  #función que devuelve un vector con los vecinos del grifo
+  ans <- vector()
+  for (grifo in grifos_thissen$codigo_de_osinergmin) {
+    
+    t <- rgeos::gIntersection(grifos_thissen[grifos_thissen$codigo_de_osinergmin == cod,], 
+                              grifos_thissen[grifos_thissen$codigo_de_osinergmin == grifo,])
+    
+    if (!is.null(t)) {
+      ans <- append(ans, grifo)
+    }
+  }
+  bandera <- hallar_bandera(cod)
+  tibble("codigo_de_osinergmin.princ" = rep(cod, length(ans)), 
+       "codigo_de_osinergmin.vec" = ans) # %>%
+    # distinct() %>%
+    # mutate(bandera.princ = bandera,
+    #        bandera.vec = hallar_bandera(codigo_de_osinergmin.vec))
+}
+
+
+```
+
+
+```{r}
+
+
+vec_thiessen_irr(19963)
+```
+
+Ahora lo hacemos para toda la muestra:
+
+```{r}
+grifos_thiessen_irr <- tibble("codigo_de_osinergmin.princ" =  numeric(), 
+       "codigo_de_osinergmin.vec" = numeric())
+grifos_thiessen_irr
+for (grifo in grifos$codigo_de_osinergmin) {
+  
+  grifos_thiessen_irr <- bind_rows(grifos_thiessen_irr,
+                                   vec_thiessen_irr(grifo) )  
+  
+  }
+
+grifos_thiessen_irr <- grifos_thiessen_irr %>%
+  filter(codigo_de_osinergmin.princ != codigo_de_osinergmin.vec)
+```
+
+Ahora agregamos información sobre las banderas:
+
+```{r}
+grifos_con_vecinos <- left_join(
+  grifos_thiessen_irr,
+  select(
+    grifos,
+    codigo_de_osinergmin,
+    bandera.princ = bandera,
+    razon_social.princ = razon_social
+  ),
+  by = c("codigo_de_osinergmin.princ" = "codigo_de_osinergmin")
+) %>%
+  left_join(
+    select(
+      grifos,
+      codigo_de_osinergmin,
+      bandera.vec = bandera,
+      razon_social.vec = razon_social
+    ),
+    by = c("codigo_de_osinergmin.vec" = "codigo_de_osinergmin")
+  )
+```
+
+```{r}
+grifos_con_vecinos %>%
+  filter(razon_social.princ == "INVERSIONES MAVU S.A.C.") %>%
+  select(ends_with("vec"))
+```
+
+
+```{r}
+saveRDS(grifos_con_vecinos, file = here::here("data","processed","grifo_con_vecinos.RDS"))
+```

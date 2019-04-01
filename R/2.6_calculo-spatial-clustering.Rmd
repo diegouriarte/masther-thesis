@@ -50,6 +50,7 @@ hallar_lista_vecinos(14665)
 
 
 hallar_cluster(8153)
+hallar_cluster(14665)
 
 ```
 
@@ -61,7 +62,7 @@ hallar_todos_cluster(14646)
 #cluster de 2 
 hallar_todos_cluster(19956)
 #cluster independiente
-hallar_todos_cluster(62240)
+hallar_todos_cluster(14665)
 
 
 ```
@@ -91,32 +92,52 @@ Vemos que funciona, así que empaquetemos en una función:
 
 
 hallar_clusteres_mercado(19956)
-str(hallar_clusteres_mercado(14665))
+hallar_clusteres_mercado(14645)
 
 ```
 
+```{r}
+cluster_14645_primax <- hallar_clusteres_mercado(14645)[[2]]
+cluster_14645_primax
+vec_cluster <- pull(cluster_14645_primax, codigo_de_osinergmin.princ)
+
+grifos_coord <- readRDS(here::here("data","processed","grifo_coding_clean.rds")) %>% 
+    filter(codigo_de_osinergmin %in% vec_cluster)
+library(leaflet)
+
+leaflet() %>%
+    addMarkers(data = grifos_coord, 
+               lat = ~ lat, 
+               lng = ~ lon, 
+               popup = paste0(grifos_coord$razon_social," ",grifos_coord$codigo_de_osinergmin),
+               label = grifos_coord$bandera)  %>%
+    addTiles()
+
+grifos %>% filter(codigo_de_osinergmin.princ == 19966)
+```
 
 Creamos función de spatial clustering (a nivel de banderas):
 
 ```{r}
 
 
-calcular_sc(14665)
+calcular_sc(14645)
 calcular_sc(19956)
 
 ```
 
 # Test de la función principal: calcular_sc
 
-La prueba la haremos con el grifo 14645 (Pecsa en el cruce de Cuba con Arenales). A la fecha de hoy (2019-03-29), se tiene para el grifo:
+La prueba la haremos con el grifo 14645 (Pecsa en el cruce de Cuba con Arenales). A la fecha de hoy (2019-03-31), se tiene para el grifo:
 - N = 8
 - M = 5 (Primax, dos de Pecsa, Repsol, Independiente):
-    * k_repsol = 9
-    * k_primax_1 = 1
-    * k_primax_2 = 5
-    * k_pecsa = 1
-    * k_independiente = 1
-Por tanto el valor de sc es $sc = \frac{(9+1+5+1+1)/5}{8} = 0.425$. Verificamos que sea el mismo valor
+    * `r k_repsol = 9`
+    * `r k_primax_1 = 1`
+    * `r k_primax_2 = 13`
+    * `k_pecsa = 1`
+    * `k_independiente = 1`
+    
+Por tanto el valor de sc es $sc = \frac{(9+1+14+1+1)/5}{8} = 0.65$. Verificamos que sea el mismo valor
 
 ```{r}
 if (all.equal(calcular_sc(14645), 0.425)) {

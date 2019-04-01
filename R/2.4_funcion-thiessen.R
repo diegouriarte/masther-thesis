@@ -1,10 +1,10 @@
 library(spatstat)
 suppressMessages(library(tidyverse))
 library(deldir)
-#' Función para determinar los vecinos de thiessen de cada observación del dataset.
+#' Funci?n para determinar los vecinos de thiessen de cada observaci?n del dataset.
 #' Requiere los paquetes spatstat, tidyverse y deldir
 
-#' Esta función retorna una lista indexada de los vecinos pero sin identificarlo
+#' Esta funci?n retorna una lista indexada de los vecinos pero sin identificarlo
 #' 
 #' X es un dataframe donde las dos primeras columnas son la 
 sharededgemod <- function(X) {
@@ -20,12 +20,24 @@ sharededgemod <- function(X) {
     return(ans)
 }
 
-#Acá los identificamos
+#Ac? los identificamos
 vecinos_thiessen <- function(df) {
+    #cargamos archivo con lÃ­mites
+    coordenadas_costa <-
+        readr::read_csv(here::here("data", "limites_costa.csv"),
+                        col_types = c("cc")) %>%
+        separate(
+            `lat, long`,
+            into = c("y", "x"),
+            sep = ",",
+            convert = TRUE
+        )
+    #ventana respetando al mar
+    W <- owin(poly=data.frame(x=(coordenadas_costa$x), y=(coordenadas_costa$y)))
+    
     df <- rownames_to_column(df) %>%
         mutate(rowname = as.integer(rowname)) %>%
         select(x, y, rowname, everything())
-    W <- owin(c(min(df$x)-1, max(df$x)+1), c(min(df$y)-1, max(df$y)+1))
     pp1 <- as.ppp(df, W = W)
     left_join(sharededgemod(pp1), df, by = c("ind1" = "rowname"))
 }
