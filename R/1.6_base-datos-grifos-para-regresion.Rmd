@@ -154,14 +154,6 @@ left_join(
 ```
 
 
-```{r}
-prices %>%
-    filter(codigo_de_osinergmin %in% c(88228, 8524),
-           year(fecha_hora) >= 2017) %>%
-    ggplot2::ggplot(aes(x = fecha_hora, y = precio_de_venta, color = producto)) +
-    ggplot2::geom_point() + 
-    ggplot2::facet_wrap(~razon_social)
-```
 
 Creamos variable con distancia mínima al grifo competidor más cercano
 
@@ -205,21 +197,40 @@ grifos_distancias <- full_join(grifos_distancia_minima, grifos_distancia_promedi
     rename("grifo_mas_cercano" = grifo_distancia) %>%
     mutate(codigo_de_osinergmin = as.numeric(codigo_de_osinergmin))
 
-grifos_distancias %>% arrange(desc(num_grifos_cerc))
-
 grifo_full <-
     full_join(grifos_con_datos,
               grifos_distancias,
               by = c("codigo_de_osinergmin"))
 
 ```
+# Corregimos razones sociales de marcas principales:
+
+```{r}
+grifo_full_1 <- grifo_full %>%
+    mutate(
+        razon_social = case_when(
+            str_detect(razon_social, "COESTI") ~ "COESTI S.A.",
+            str_detect(razon_social, "REPSOL") ~ "REPSOL COMERCIAL S.A.C.",
+            TRUE ~ razon_social
+        )
+    )
+        
+```
+
+```{r}
+grifo_full %>%
+    
+```
 
 
-Guardamos
+
+#Guardamos
 ```{r remedy011}
 
-saveRDS(grifo_full, file = here::here("data","processed","grifo_coding_clean.rds"))
+saveRDS(grifo_full_1, file = here::here("data","processed","grifo_coding_clean.rds"))
 
 
 ```
+
+
 
