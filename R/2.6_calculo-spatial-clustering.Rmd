@@ -49,7 +49,7 @@ hallar_lista_vecinos(14665)
 ```{r}
 
 
-hallar_cluster(8153)
+hallar_cluster(8153, tipo = "razon_social")
 hallar_cluster(14665)
 
 ```
@@ -58,11 +58,12 @@ hallar_cluster(14665)
 
 
 #cluster de 1
-hallar_todos_cluster(14646)
+hallar_todos_cluster(14646, tipo = "razon_social")
 #cluster de 2 
 hallar_todos_cluster(19956)
 #cluster independiente
 hallar_todos_cluster(14665)
+
 
 
 ```
@@ -72,7 +73,7 @@ hallar_todos_cluster(14665)
 
 #Prueba, debería retornar verdadero
 
-comprobar_df_dup(hallar_todos_cluster(17944), hallar_todos_cluster(94684))
+comprobar_df_dup(hallar_todos_cluster(6743), hallar_todos_cluster(8332))
 
 #debería retornar falso
 comprobar_df_dup(hallar_todos_cluster(17944), hallar_todos_cluster(19956))
@@ -119,8 +120,13 @@ Creamos función de spatial clustering (a nivel de banderas):
 ```{r}
 
 
-calcular_sc(14645)
+calcular_sc(14645, "bandera")
+calcular_sc(14645, "razon_social")
 calcular_sc(19956)
+
+hallar_clusteres_mercado(19956)
+hallar_lista_vecinos(19956)
+calcular_sc(19956, "razon_social")
 
 ```
 

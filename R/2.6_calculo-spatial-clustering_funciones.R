@@ -40,20 +40,21 @@ hallar_cluster <- function(cod, tipo = "razon_social") {
     
     bandera <- hallar_bandera(cod)
     if (tipo == "razon_social") {
-        bandera <-
-            unique(grifos[grifos$codigo_de_osinergmin.princ == cod,]$bandera.princ)
-        df2 <- filter(grifos,
-                      codigo_de_osinergmin.princ %in% lista_vecinos,
-                      bandera.princ == bandera) %>%
-            distinct(codigo_de_osinergmin.princ,
-                     razon_social.princ,
-                     bandera.princ)
-    } else {
         razon_social_cod <-
             unique(grifos[grifos$codigo_de_osinergmin.princ == cod,]$razon_social.princ)
         df2 <- filter(grifos,
                       codigo_de_osinergmin.princ %in% lista_vecinos,
                       razon_social.princ == razon_social_cod) %>%
+            distinct(codigo_de_osinergmin.princ,
+                     razon_social.princ,
+                     bandera.princ)
+
+    } else {
+        bandera <-
+            unique(grifos[grifos$codigo_de_osinergmin.princ == cod,]$bandera.princ)
+        df2 <- filter(grifos,
+                      codigo_de_osinergmin.princ %in% lista_vecinos,
+                      bandera.princ == bandera) %>%
             distinct(codigo_de_osinergmin.princ,
                      razon_social.princ,
                      bandera.princ)
@@ -82,7 +83,7 @@ hallar_todos_cluster <- function(cod, tipo = "razon_social") {
     
     while (i < nrow(df)) {
         df <-
-            bind_rows(df, hallar_cluster(df$codigo_de_osinergmin.princ[i + 1]), tipo) %>%
+            bind_rows(df, hallar_cluster(df$codigo_de_osinergmin.princ[i + 1], tipo)) %>%
             distinct()
         i <- i + 1
     }
@@ -153,9 +154,9 @@ calcular_sc <- function(cod, tipo = "razon_social") {
     #numero de grifos en el mercado local
     N <- length(hallar_lista_vecinos(cod)) + 1
     #número de clusteres
-    M <- length(hallar_clusteres_mercado(cod))
+    M <- length(hallar_clusteres_mercado(cod, tipo))
     #suma número de estaciones en cada cluster
-    suma_clusteres <- sum(sapply(hallar_clusteres_mercado(cod), nrow))
+    suma_clusteres <- sum(sapply(hallar_clusteres_mercado(cod, tipo), nrow))
     suma_clusteres
     #medida de spatial cluster 
     sc <- suma_clusteres / M / N
