@@ -1,0 +1,36 @@
+---
+title: "Spatial clustering luego de venta"
+output: html_notebook
+---
+
+# Cargamos librerías
+
+```{r}
+suppressMessages(library(tidyverse))
+```
+
+
+# Cargamos archivos
+
+```{r}
+grifos_sc_pre <- readRDS(here::here("data","processed","grifos_con_sc_pre_venta.RDS"))
+grifos_sc_post <- readRDS(here::here("data","processed","grifos_con_sc_post_venta.RDS"))
+```
+
+Hacemos merge de ambas
+```{r}
+grifos_sc <- grifos_sc_post %>%
+    rename(sc_post = sc)
+grifos_sc$sc_pre <- grifos_sc_pre$sc
+
+grifos_sc %>% 
+    mutate(diff_sc = sc_post - sc_pre) %>%
+    group_by(bandera) %>%
+    summarise(mean_diff_sc = mean(diff_sc),
+              n = n())
+```
+```{r}
+grifos_sc %>%
+    filter(stringr::str_detect(razon_social, "PERUANA DE ESTACIONES"))
+```
+

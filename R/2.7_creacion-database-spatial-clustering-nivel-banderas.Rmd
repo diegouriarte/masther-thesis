@@ -61,12 +61,10 @@ Ahora, cambiamos las banderas que dicen Pecsa por Primax,
 
 
 ```{r}
-grifos_post <- grifos %>% 
-    mutate(bandera.princ = recode_factor(bandera.princ, "PECSA" = "PRIMAX"),
-           bandera.vec = recode_factor(bandera.vec, "PECSA" = "PRIMAX"))
+#cargamos la nueva base de datos con el nombre de grifos, de lo contrario no funcionan las funciones
+grifos <- readRDS(here::here("data","processed","grifo_con_vecinos_post.RDS")) 
 grifos_coding_clean_post <- grifos_coding_clean %>%
     mutate(bandera = recode_factor(bandera, "PECSA" = "PRIMAX"))
-
 ```
 
 
@@ -83,7 +81,9 @@ proc.time() - ptm
 
 grifos_sc_post$sc <- sc_vector_post
 
-
+grifos_sc_post_1 <- left_join(grifos_coding_clean_post, 
+                           grifos_sc_post, 
+                           c("codigo_de_osinergmin" = "codigo_de_osinergmin.princ")) 
 
 ```
 
@@ -91,7 +91,7 @@ Grabamos el dataset para ser usado luego:
 
 ```{r}
 saveRDS(grifos_sc_pre, file = here::here("data","processed","grifos_con_sc_pre_venta.RDS"))
-saveRDS(grifos_sc_post, file = here::here("data","processed","grifos_con_sc_post_venta.RDS"))
+saveRDS(grifos_sc_post_1, file = here::here("data","processed","grifos_con_sc_post_venta.RDS"))
 
 ```
 

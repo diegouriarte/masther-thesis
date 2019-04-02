@@ -25,105 +25,6 @@ Cargamos la base de datos con grifos y ubicaciones:
 grifos <- readRDS(here::here("data","processed","grifo_coding_clean.rds"))
 glimpse(grifos)
 ```
-<!-- # Primer intento de sacar los vecinos de manera programática -->
-
-<!-- Usamos la función definida previamente para hallar los vecinos -->
-<!-- ```{r} -->
-<!-- grifos_1 <- grifos %>%  -->
-<!--     select(x = lon,  -->
-<!--            y = lat,  -->
-<!--            codigo_de_osinergmin, -->
-<!--            razon_social, -->
-<!--            ruc, -->
-<!--            direccion, -->
-<!--            distrito, -->
-<!--            bandera) -->
-<!-- vec_thiessen <- vecinos_thiessen(grifos_1) -->
-<!-- ``` -->
-
-
-<!-- Hacemos el join para tener los datos de los grifos, me parece está mal -->
-<!-- ```{r} -->
-<!-- grifos_to_join <- grifos %>%  -->
-<!--     rownames_to_column() %>% -->
-<!--     select(rowname,  -->
-<!--            codigo_de_osinergmin, -->
-<!--            razon_social, -->
-<!--            ruc, -->
-<!--            direccion, -->
-<!--            distrito, -->
-<!--            bandera) %>% -->
-<!--     mutate(rowname = as.integer(rowname)) -->
-
-
-<!-- grifos_con_vecinos <- left_join( -->
-<!--     vec_thiessen, -->
-<!--     grifos_to_join, -->
-<!--     suffix = c(".princ", ".vec"), -->
-<!--     by = c("ind2" = "rowname") -->
-<!-- ) -->
-
-
-
-<!-- ``` -->
-
-
-<!-- Revisamos un grifo cercano para ver si está bien codificado: -->
-
-# ```{r}
-# grifos_con_vecinos %>%
-#   filter(razon_social.princ == "INVERSIONES MAVU S.A.C.") %>%
-#   select(ends_with("vec"))
-# ```
-
-<!-- Este grifo est? ubicado en Cercado en la avenida Venezuela, por lo que la funci?n est? haciendo cualquier cosa. -->
-
-<!-- Creo que el error est? en los grifos duplicados (que cambiaron de due?o en alg?n momento). Como trabajo preliminar,  -->
-<!-- solo quedarnos con el primero. Luego habr? que limpiar manualmente y definir fechas. -->
-
-
-# ```{r}
-# grifos_to_join_2 <- grifos %>% 
-#     distinct(lat,lon, .keep_all = TRUE) %>%
-#     rownames_to_column() %>%
-#     select(rowname, 
-#            codigo_de_osinergmin,
-#            razon_social,
-#            ruc,
-#            direccion,
-#            distrito,
-#            bandera) %>%
-#     mutate(rowname = as.integer(rowname))
-# 
-# grifos_to_join_2 %>% filter(rowname == 90)
-# 
-# vec_thiessen_1 <- grifos_1 %>%
-#   distinct(x,y, .keep_all = TRUE) %>%
-#   vecinos_thiessen(.)
-# 
-# vec_thiessen_1 %>%
-#   filter(razon_social == "INVERSIONES MAVU S.A.C.") 
-# 
-# grifos_con_vecinos_2 <- left_join(
-#     vec_thiessen_1,
-#     grifos_to_join_2,
-#     suffix = c(".princ", ".vec"),
-#     by = c("ind2" = "rowname")
-# )
-# 
-# grifos_con_vecinos_2 %>% 
-#   filter(razon_social.princ == "INVERSIONES MAVU S.A.C.") 
-# 
-# grifos_con_vecinos_2 %>% 
-#   filter(razon_social.princ == "SERVICENTRO Y AFINES LAS AMERICAS E.I.R.L.") 
-# ```
-<!-- Ahora s? -->
-
-Guardemos ese dataset para utilizarlo en otro archivo cuya funcion sea sacar las medidas de concentraci?n y otras cosas divertidas
-
-```{r}
-saveRDS(grifos_con_vecinos, file = here::here("data","processed","grifo_con_vecinos.RDS"))
-```
 
 
 # Mapa en google maps - Visualizaci?n
@@ -189,7 +90,6 @@ coordenadas_costa <-
 Creamos un gr?fico simple para ver si funciona (ojo primero va la longitud, luego latitud)
 
 ```{r}
-require(spatstat)
 
 W <- owin(poly=data.frame(x=(coordenadas_costa$x), y=(coordenadas_costa$y)))
 plot(W)
@@ -220,8 +120,6 @@ dsp_xy <- spTransform(dsp_df, CRS("+proj=longlat +datum=WGS84"))
 grifos_filtrado <- grifos %>% 
   distinct(lat,lon, .keep_all = TRUE) %>%
   rownames_to_column("rowname")
-
-grifos_filtrado
 
 grifos_thissen <- merge(dsp_xy, grifos_filtrado, by.x="id", by.y="rowname")
 
@@ -274,9 +172,12 @@ for (grifo in grifos_thissen$codigo_de_osinergmin) {
 }
 ```
 
+
+
+# Para antes del merger
+
 ```{r}
 
-grifos
 hallar_bandera <- function(cod1) {
     # se debe tener cargado el ouput de 2.5 estaciones thiessen
     #input: codigo del grifo
@@ -331,8 +232,12 @@ for (grifo in grifos$codigo_de_osinergmin) {
   
   }
 
+# list_thiessen <- purrr::map_dfr(.x = grifos$codigo_de_osinergmin, .f = vec_thiessen_irr)
+
 grifos_thiessen_irr <- grifos_thiessen_irr %>%
   filter(codigo_de_osinergmin.princ != codigo_de_osinergmin.vec)
+
+saveRDS(grifos_thiessen_irr, here::here("data", "processed","grifos_thiessen_irr.Rds"))
 ```
 
 Ahora agregamos información sobre las banderas:
@@ -367,5 +272,41 @@ grifos_con_vecinos %>%
 
 
 ```{r}
-saveRDS(grifos_con_vecinos, file = here::here("data","processed","grifo_con_vecinos.RDS"))
+saveRDS(grifos_con_vecinos, file = here::here("data","processed","grifo_con_vecinos_pre.RDS"))
+```
+
+
+# Ahora post merger a nivel banderas
+```{r}
+grifos_post <- grifos %>%
+  mutate(bandera = recode_factor(bandera, "PECSA" = "PRIMAX"))
+```
+
+```{r}
+
+
+grifos_con_vecinos_post <- left_join(
+  grifos_thiessen_irr,
+  select(
+    grifos_post,
+    codigo_de_osinergmin,
+    bandera.princ = bandera,
+    razon_social.princ = razon_social
+  ),
+  by = c("codigo_de_osinergmin.princ" = "codigo_de_osinergmin")
+) %>%
+  left_join(
+    select(
+      grifos_post,
+      codigo_de_osinergmin,
+      bandera.vec = bandera,
+      razon_social.vec = razon_social
+    ),
+    by = c("codigo_de_osinergmin.vec" = "codigo_de_osinergmin")
+  )
+```
+
+
+```{r}
+saveRDS(grifos_con_vecinos_post, file = here::here("data","processed","grifo_con_vecinos_post.RDS"))
 ```
