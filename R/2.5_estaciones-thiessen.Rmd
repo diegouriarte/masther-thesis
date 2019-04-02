@@ -306,7 +306,46 @@ grifos_con_vecinos_post <- left_join(
   )
 ```
 
+```{r}
+saveRDS(grifos_con_vecinos_post, file = here::here("data","processed","grifo_con_vecinos_post_bandera.RDS"))
+```
+
+# Ahora post merger a nivel razon_social
+
+Cambiaré la razón social de los grifos Pecsa a Coesti, para efectos del cálculo (se manejan como empresas distintas)
 
 ```{r}
-saveRDS(grifos_con_vecinos_post, file = here::here("data","processed","grifo_con_vecinos_post.RDS"))
+grifos_thiessen_irr <- readRDS(here::here("data", "processed","grifos_thiessen_irr.Rds"))
+
+library(stringr)
+grifos_post_razon <- grifos %>%
+  mutate(razon_social = if_else(str_detect(razon_social, "PERUANA DE"),
+                                "COESTI S.A.",
+                                razon_social))
+
+grifos_con_vecinos_post_razon <- left_join(
+  grifos_thiessen_irr,
+  select(
+    grifos_post_razon,
+    codigo_de_osinergmin,
+    bandera.princ = bandera,
+    razon_social.princ = razon_social
+  ),
+  by = c("codigo_de_osinergmin.princ" = "codigo_de_osinergmin")
+) %>%
+  left_join(
+    select(
+      grifos_post_razon,
+      codigo_de_osinergmin,
+      bandera.vec = bandera,
+      razon_social.vec = razon_social
+    ),
+    by = c("codigo_de_osinergmin.vec" = "codigo_de_osinergmin")
+  )
+```
+
+
+
+```{r}
+saveRDS(grifos_con_vecinos_post_razon, file = here::here("data","processed","grifo_con_vecinos_post_razon.RDS"))
 ```
