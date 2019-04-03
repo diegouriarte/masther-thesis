@@ -17,7 +17,7 @@ source(here::here("R","2.4_funcion-thiessen.R"))
 ```
 
 
-Se construir?n los pol?gonos de Thiesen para todo el dataset, as? como se identificar?n los vecinos y de que due?o y bandera son. Adem?s, se construir?n gr?ficos de los vecinos
+Se construirán los pol?gonos de Thiesen para todo el dataset, así como se identificarán los vecinos y de que due?o y bandera son. Además, se construir?n gr?ficos de los vecinos
 
 Cargamos la base de datos con grifos y ubicaciones:
 
@@ -69,9 +69,12 @@ polys %>%
 ```
 Todo bien, pero al coger un rectángulo toma área del mar y no tiene sentido. Intentaré arreglar eso
 
+
+
+
 # Corrigiendo los límites (para que no sea una caja y no tome el mar)
 
-Importamos l?mites de la costa para ?rea de inter?s (los saqu? manualmente):
+Importamos límites de la costa para ?rea de inter?s (los saqu? manualmente):
 
 ```{r}
 coordenadas_costa <-
@@ -174,6 +177,7 @@ for (grifo in grifos_thissen$codigo_de_osinergmin) {
 
 
 
+
 # Para antes del merger
 
 ```{r}
@@ -225,14 +229,14 @@ Ahora lo hacemos para toda la muestra:
 grifos_thiessen_irr <- tibble("codigo_de_osinergmin.princ" =  numeric(), 
        "codigo_de_osinergmin.vec" = numeric())
 grifos_thiessen_irr
-for (grifo in grifos$codigo_de_osinergmin) {
-  
-  grifos_thiessen_irr <- bind_rows(grifos_thiessen_irr,
-                                   vec_thiessen_irr(grifo) )  
-  
-  }
+# for (grifo in grifos$codigo_de_osinergmin) {
+#   
+#   grifos_thiessen_irr <- bind_rows(grifos_thiessen_irr,
+#                                    vec_thiessen_irr(grifo) )  
+#   
+#   }
 
-# list_thiessen <- purrr::map_dfr(.x = grifos$codigo_de_osinergmin, .f = vec_thiessen_irr)
+list_thiessen <- purrr::map_dfr(.x = grifos$codigo_de_osinergmin, .f = vec_thiessen_irr)
 
 grifos_thiessen_irr <- grifos_thiessen_irr %>%
   filter(codigo_de_osinergmin.princ != codigo_de_osinergmin.vec)
@@ -243,6 +247,8 @@ saveRDS(grifos_thiessen_irr, here::here("data", "processed","grifos_thiessen_irr
 Ahora agregamos información sobre las banderas:
 
 ```{r}
+grifos_thiessen_irr <- readRDS(here::here("data", "processed","grifos_thiessen_irr.Rds"))
+
 grifos_con_vecinos <- left_join(
   grifos_thiessen_irr,
   select(
@@ -268,6 +274,10 @@ grifos_con_vecinos <- left_join(
 grifos_con_vecinos %>%
   filter(razon_social.princ == "INVERSIONES MAVU S.A.C.") %>%
   select(ends_with("vec"))
+
+grifos_con_vecinos %>%
+  filter(str_detect(razon_social.princ, "REPSOL")) %>%
+  count(razon_social.princ)
 ```
 
 
