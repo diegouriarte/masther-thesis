@@ -1,12 +1,17 @@
 ---
 title: "Spatial clustering luego de venta"
-output: html_notebook
+output:
+  html_notebook: default
 ---
 
 # Cargamos librerías
 
 ```{r}
 suppressMessages(library(tidyverse))
+library(knitr)
+library(kableExtra)
+library(forcats)
+
 ```
 
 # A nivel bandera
@@ -71,14 +76,79 @@ grifos_sc_1 %>%
               sd = sd(diff_sc),
               n = n())
 ```
-```{r}
-grifos_sc_1 %>%
-    filter(diff_sc == 0)
 
-grifos_sc_1 %>% 
+
+```{r}
+df1 <- grifos_sc_1 %>% 
     filter(diff_sc != 0)  %>%
     group_by(razon_social_sum) %>%
-    summarise(mean_diff_sc = mean(diff_sc),
-              sd = sd(diff_sc),
-              n = n())
+    summarise(Promedio= mean(diff_sc),
+              SD = sd(diff_sc),
+              "Mínimo" = min(diff_sc),
+              "Máximo" = max(diff_sc),
+              "Numero de Obs." = n()) %>%
+    mutate(razon_social_sum= fct_relevel(razon_social_sum, 
+                                         "PERUANA DE ESTACIONES DE SERVICIOS S.A.C.",
+                                         "COESTI S.A.", 
+                                         "REPSOL COMERCIAL S.A.C.",
+                                         "OTRA RAZÓN",
+                                         "Todas las estaciones")) %>%
+    arrange(razon_social_sum) %>%
+    select(1, 6, 2, 3, 4, 5)
+
+
+df2 <- grifos_sc_1 %>% 
+    filter(diff_sc != 0)  %>%
+    mutate(razon_social_sum = "TODAS LAS ESTACIONES") %>%
+    group_by(razon_social_sum) %>%
+    summarise(Promedio= mean(diff_sc),
+              SD = sd(diff_sc),
+              "Mínimo" = min(diff_sc),
+              "Máximo" = max(diff_sc),
+              "Numero de Obs." = n()) %>%
+    select(1, 6, 2, 3, 4, 5)
+
+x <- bind_rows(df1, df2) %>%
+    rename("Razón Social" = razon_social_sum) %>%
+    kable(format = "html", 
+          digits = c(0, 0, 3, 3, 3, 3)) %>%
+    kable_styling(full_width = FALSE, position = "left") 
+x
+pack_rows(x, "Grupo de tratamiento", 1,5)
 ```
+```{r}
+df3 <- grifos_sc_1 %>% 
+    filter(diff_sc == 0)  %>%
+    group_by(razon_social_sum) %>%
+    summarise("Numero de Obs." = n()) %>%
+    mutate(razon_social_sum= fct_relevel(razon_social_sum, 
+                                         "PERUANA DE ESTACIONES DE SERVICIOS S.A.C.",
+                                         "COESTI S.A.", 
+                                         "REPSOL COMERCIAL S.A.C.",
+                                         "OTRA RAZÓN",
+                                         "Todas las estaciones"),
+           Promedio = 0) %>%
+    arrange(razon_social_sum) 
+
+
+df4 <- grifos_sc_1 %>% 
+    filter(diff_sc == 0)  %>%
+    mutate(razon_social_sum = "TODAS LAS ESTACIONES") %>%
+    group_by(razon_social_sum) %>%
+    summarise("Numero de Obs." = n()) %>%
+    mutate(Promedio = 0) %>%
+    arrange(razon_social_sum) 
+
+options(knitr.kable.NA = '-')
+
+bind_rows(df1, df2, df3, df4) %>%
+    rename("Razón Social" = razon_social_sum) %>%
+    kable(format = "html", 
+          digits = c(0, 0, 3, 3, 3, 3)) %>%
+    kable_styling(full_width = FALSE, position = "left") %>%
+    pack_rows("Grupo de Tratamiento", 1, 5) %>%
+    pack_rows("Grupo de Control", 6, 10)
+
+```
+
+
