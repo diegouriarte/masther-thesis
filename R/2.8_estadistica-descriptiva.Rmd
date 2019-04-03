@@ -9,8 +9,9 @@ output: html_notebook
 suppressMessages(library(tidyverse))
 ```
 
+# A nivel bandera
 
-# Cargamos archivos
+## Cargamos archivos
 
 ```{r}
 grifos_sc_pre <- readRDS(here::here("data","processed","grifos_con_sc_pre_venta.RDS"))
@@ -34,3 +35,50 @@ grifos_sc %>%
     filter(stringr::str_detect(razon_social, "PERUANA DE ESTACIONES"))
 ```
 
+# A nivel razon social
+
+## Cargamos archivos
+
+```{r}
+grifos_sc_pre <- readRDS(here::here("data","processed","grifos_con_sc_pre_venta_razon.RDS"))
+grifos_sc_post <- readRDS(here::here("data","processed","grifos_con_sc_post_venta_razon.RDS"))
+
+grifos_sc_pre %>%
+    count(razon_social, sort = TRUE)
+```
+
+Hacemos merge de ambas
+```{r}
+# grifos_sc <- grifos_sc_post %>%
+#     rename(sc_post = sc)
+# grifos_sc$sc_pre <- grifos_sc_pre$sc
+
+grifos_sc <- grifos_sc_pre %>%
+    rename(sc_pre = sc)
+grifos_sc$sc_post <- grifos_sc_post$sc
+
+grifos_sc_1 <- grifos_sc %>% 
+    mutate(diff_sc = sc_post - sc_pre,
+           razon_social_sum = if_else(razon_social %in% c("REPSOL COMERCIAL S.A.C.", 
+                                                          "COESTI S.A.", 
+                                                          "PERUANA DE ESTACIONES DE SERVICIOS S.A.C."),
+                                      razon_social,
+                                      "OTRA RAZÓN"))
+
+grifos_sc_1 %>% 
+    group_by(razon_social_sum) %>%
+    summarise(mean_diff_sc = mean(diff_sc),
+              sd = sd(diff_sc),
+              n = n())
+```
+```{r}
+grifos_sc_1 %>%
+    filter(diff_sc == 0)
+
+grifos_sc_1 %>% 
+    filter(diff_sc != 0)  %>%
+    group_by(razon_social_sum) %>%
+    summarise(mean_diff_sc = mean(diff_sc),
+              sd = sd(diff_sc),
+              n = n())
+```
