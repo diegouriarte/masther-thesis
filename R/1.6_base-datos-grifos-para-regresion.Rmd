@@ -217,11 +217,6 @@ grifo_full_1 <- grifo_full %>%
         
 ```
 
-```{r}
-grifo_full %>%
-    
-```
-
 
 
 #Guardamos

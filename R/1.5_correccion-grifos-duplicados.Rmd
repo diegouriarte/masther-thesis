@@ -14,12 +14,13 @@ grifos <- readRDS(here::here("data","processed","grifo_coding_raw.rds"))
 ```
 
 
-Corregerimos los grifos duplicados, ayudandonos con la data de precios y la data geolocalizada.
+# Corregimos los grifos duplicados, ayudandonos con la data de precios y la data geolocalizada.
 
 Primero, todos los grifos que tienen mismo código, más de una entrada, y que no sean de un grifo conocido, esos los trataremos de manera independiente.
 
 ```{r}
 
+#df con solo el primero de los repetidos (cualquiera)
 grifos_repetidos <- grifos %>% 
     filter(!is.na(lat),
            !str_detect(razon_social,"COESTI"),
@@ -31,6 +32,7 @@ grifos_repetidos <- grifos %>%
     arrange(lat,codigo_de_osinergmin) %>%
     distinct(codigo_de_osinergmin, .keep_all = TRUE)
 
+#df sin ninguno de los repetidos
 grifos_sin_marca_repetidos <- grifos %>% 
     filter(!is.na(lat),
            !str_detect(razon_social,"COESTI"),
@@ -40,16 +42,30 @@ grifos_sin_marca_repetidos <- grifos %>%
     filter(n()>1) %>%
     ungroup()
 
+#al df original, le quitamos todos los duplicados y le agregamos la lista depurada
 grifos_1 <- anti_join(grifos,
                       grifos_sin_marca_repetidos,
                       by = NULL) %>%
     bind_rows(grifos_repetidos)
 
+#Verificamos
+grifos_1 %>% 
+    filter(!is.na(lat),
+           !str_detect(razon_social,"COESTI"),
+           !str_detect(razon_social,"REPSOL"),
+           !str_detect(razon_social,"PERUANA DE COMB")) %>%
+    group_by(codigo_de_osinergmin) %>%
+    filter(n()>1) %>%
+    ungroup() %>%
+    arrange(lat,codigo_de_osinergmin) %>%
+    distinct(codigo_de_osinergmin, .keep_all = TRUE)
 ```
 
 Ahora, `grifos_1` ya no tiene duplicados con el mismo código, al menos para casos sin grifos conocidos. Como hay grifos de PECSA que podrían haber pasado a COESTI, los filtramos y solo vemos duplicados que tengan que ver con Repsol. En caso duplicado, nos quedamos siempre con la razón social de Repsol:
 
 ```{r}
+#nos quedamos solo con grifos repsol, cuando había otro con la misma razón social
+#duplicado
 grifos_repsol_depurado <- grifos_1 %>%
     filter(!is.na(lat),
            !str_detect(razon_social,"COESTI"),
@@ -76,11 +92,22 @@ grifos_2 <- anti_join(grifos_1,
                       by = NULL) %>%
     bind_rows(grifos_repsol_depurado)
 
-
+#prueba
+grifos_2 %>%
+    filter(!is.na(lat),
+           !str_detect(razon_social,"COESTI"),
+           !str_detect(razon_social,"PERUANA DE COMB")) %>%
+    group_by(codigo_de_osinergmin) %>%
+    filter(n() > 1) %>%
+    ungroup() %>%
+    arrange(codigo_de_osinergmin) %>%
+    filter(str_detect(razon_social, "REPSOL")) %>%
+    distinct(codigo_de_osinergmin, .keep_all = TRUE)
 ```
 Ahora debería haber menos grifos repetidos, verificamos:
 
 ```{r}
+#Lo mismo para coesti
 grifos_coesti_depurado <- grifos_2 %>% 
     filter(!is.na(lat)) %>%
     group_by(codigo_de_osinergmin) %>%
@@ -100,8 +127,16 @@ grifos_3 <- anti_join(grifos_2,
                       grifos_coesti_repetido,
                       by = NULL) %>%
     bind_rows(grifos_coesti_depurado)
-```
 
+grifos_3 %>% 
+    filter(!is.na(lat)) %>%
+    group_by(codigo_de_osinergmin) %>%
+    filter(n()>1) %>%
+    ungroup() %>%
+    arrange(codigo_de_osinergmin) %>%
+    distinct(codigo_de_osinergmin, .keep_all = TRUE)
+```
+Ahora ya no hay duplicados por `codigo_de_osinerming` en la base de datos.
 ```{r}
 grifos_3 %>% 
     filter(!is.na(lat)) %>%
@@ -109,7 +144,6 @@ grifos_3 %>%
     filter(n()>1)
 ```
 
-Ahora ya no hay duplicados por `codigo_de_osinerming` en la base de datos.
 
 ## Verificamos por dirección duplicada
 
