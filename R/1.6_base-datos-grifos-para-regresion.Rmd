@@ -53,7 +53,8 @@ grifos_datos_coding_nombres <- grifos_datos_coding %>%
                is.na(bandera) ~ NA_character_,
                TRUE ~ "INDEPENDIENTE"
            ),
-           bandera = as.factor(bandera))
+           bandera = factor(bandera, levels = c("INDEPENDIENTE", "PETROPERU",
+                                                "PECSA", "PRIMAX", "REPSOL")))
 
 grifos_datos_coding_nombres %>%
     count(bandera)
@@ -89,13 +90,38 @@ grifo_datos_con_tipo <- grifos_datos_coding_nombres %>%
             bandera == "INDEPENDIENTE" ~ "INDEPENDIENTE",
             TRUE ~ "ABANDERADA"
         ),
-        con_glp = if_else(!is.na(glp), 1, 0),
-        con_gnv = if_else(!is.na(gnv), 1, 0),
-        ruc = as.character(ruc)
-    )
+        tipo = factor(tipo, levels = c("INDEPENDIENTE", "ABANDERADA", "PROPIA")),
+        tipo_bandera = case_when(
+            is.na(bandera) ~ NA_character_,
+            str_detect(razon_social, "REPSOL") ~ "PROPIA REPSOL",
+            str_detect(razon_social, "COESTI") ~ "PROPIA PRIMAX",
+            str_detect(razon_social, "PERUANA DE ESTACIONES") ~ "PROPIA PECSA",
+            bandera == "PETROPERU" ~ "ABANDERADA PETROPERU",
+            bandera == "INDEPENDIENTE" ~ "INDEPENDIENTE",
+            bandera == "REPSOL" ~ "ABANDERADA REPSOL",
+            bandera == "PRIMAX" ~ "ABANDERADA PRIMAX",
+            bandera == "PECSA" ~ "ABANDERADA PECSA"
+        ),
+        tipo_bandera = factor(tipo_bandera, 
+                              levels = c("INDEPENDIENTE","ABANDERADA PETROPERU",
+                                         "ABANDERADA PECSA", "ABANDERADA PRIMAX",
+                                         "ABANDERADA REPSOL", "PROPIA PECSA",
+                                         "PROPIA PRIMAX", "PROPIA REPSOL")),
+        con_glp = case_when(
+            is.na(glp) ~ NA_real_,
+            glp >= 1 ~ 1,
+            TRUE ~ 0),
+        con_glp = as.factor(con_glp),
+        con_gnv = case_when(
+            is.na(gnv) ~ NA_real_,
+            gnv >= 1 ~ 1,
+            TRUE ~ 0),        
+        con_gnv = as.factor(con_gnv),
+    ) %>%
+    select(-codificador, -ruc, -n, -en_avenida_principal, -revisar)
+    
 
-grifo_datos_con_tipo %>%
-    count(bandera, tipo)
+glimpse(grifo_datos_con_tipo)
 
 ```
 
@@ -216,6 +242,15 @@ grifo_full_1 <- grifo_full %>%
     )
         
 ```
+
+# Arreglamos tipos de variables
+
+Primero vemos que tipos de variables tenemos
+
+```{r}
+skimr::skim(grifo_full_1)
+```
+
 
 
 
