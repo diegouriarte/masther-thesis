@@ -14,53 +14,19 @@ library(forcats)
 
 ```
 
-# A nivel bandera
-
-## Cargamos archivos
-
-```{r}
-grifos_sc_pre <- readRDS(here::here("data","processed","grifos_con_sc_pre_venta.RDS"))
-grifos_sc_post <- readRDS(here::here("data","processed","grifos_con_sc_post_venta.RDS"))
-```
-
-Hacemos merge de ambas
-```{r}
-grifos_sc <- grifos_sc_post %>%
-    rename(sc_post = sc)
-grifos_sc$sc_pre <- grifos_sc_pre$sc
-
-grifos_sc %>% 
-    mutate(diff_sc = sc_post - sc_pre) %>%
-    group_by(bandera) %>%
-    summarise(mean_diff_sc = mean(diff_sc),
-              n = n())
-```
-```{r}
-grifos_sc %>%
-    filter(stringr::str_detect(razon_social, "PERUANA DE ESTACIONES"))
-```
-
 # A nivel razon social
 
 ## Cargamos archivos
 
 ```{r}
-grifos_sc_pre <- readRDS(here::here("data","processed","grifos_con_sc_pre_venta_razon.RDS"))
-grifos_sc_post <- readRDS(here::here("data","processed","grifos_con_sc_post_venta_razon.RDS"))
-
-grifos_sc_pre %>%
-    count(razon_social, sort = TRUE)
+grifos_sc <- readRDS(here::here("data","processed","grifos_con_sc_razon_social.RDS"))
 ```
 
-Hacemos merge de ambas
-```{r}
-# grifos_sc <- grifos_sc_post %>%
-#     rename(sc_post = sc)
-# grifos_sc$sc_pre <- grifos_sc_pre$sc
+Creamos variable de diferencia pre-post sc
 
-grifos_sc <- grifos_sc_pre %>%
-    rename(sc_pre = sc)
-grifos_sc$sc_post <- grifos_sc_post$sc
+```{r}
+
+
 
 grifos_sc_1 <- grifos_sc %>% 
     mutate(diff_sc = sc_post - sc_pre,
@@ -77,6 +43,7 @@ grifos_sc_1 %>%
               n = n())
 ```
 
+Creamos los resúmenes
 
 ```{r}
 df1 <- grifos_sc_1 %>% 
@@ -108,15 +75,6 @@ df2 <- grifos_sc_1 %>%
               "Numero de Obs." = n()) %>%
     select(1, 6, 2, 3, 4, 5)
 
-x <- bind_rows(df1, df2) %>%
-    rename("Razón Social" = razon_social_sum) %>%
-    kable(format = "html", 
-          digits = c(0, 0, 3, 3, 3, 3)) %>%
-    kable_styling(full_width = FALSE, position = "left") 
-x
-pack_rows(x, "Grupo de tratamiento", 1,5)
-```
-```{r}
 df3 <- grifos_sc_1 %>% 
     filter(diff_sc == 0)  %>%
     group_by(razon_social_sum) %>%
@@ -138,6 +96,12 @@ df4 <- grifos_sc_1 %>%
     summarise("Numero de Obs." = n()) %>%
     mutate(Promedio = 0) %>%
     arrange(razon_social_sum) 
+```
+
+
+Creamos la tabla
+
+```{r}
 
 options(knitr.kable.NA = '-')
 
@@ -148,7 +112,6 @@ bind_rows(df1, df2, df3, df4) %>%
     kable_styling(full_width = FALSE, position = "left") %>%
     pack_rows("Grupo de Tratamiento", 1, 5) %>%
     pack_rows("Grupo de Control", 6, 10)
-
 ```
 
 

@@ -20,17 +20,21 @@ library(tidyverse)
 
 # Cargamos precios y grifos -----------------------------------------------
 
-grifos_sc_pre <- readRDS(here::here("data","processed","grifos_con_sc_pre_venta.RDS"))
-grifos_sc_post <- readRDS(here::here("data","processed","grifos_con_sc_post_venta.RDS"))
+grifos_sc <-
+    readRDS(here::here("data", "processed", "grifos_con_sc_razon_social.RDS"))
 
-grifos_sc <- grifos_sc_post %>%
-    rename(sc_post = sc)
-grifos_sc$sc_pre <- grifos_sc_pre$sc
+grifos_sc <- grifos_sc %>% 
+    mutate(tipo = factor(tipo, c("INDEPENDIENTE","ABANDERADA","PROPIA")),
+           tipo_simp = if_else(tipo %in% c("ABANDERADA", "INDEPENDIENTE"), 
+                           "NO PROPIA",
+                           "PROPIA"),
+           tipo_simp = factor(tipo_simp, level = c("NO PROPIA", "PROPIA"))) 
+
 
 
 #' Filtramos data para solo tener info a partir del 2017 y con data codificada de 
 #' grifos.
-#' 
+
 df_db5 <-
     readRDS(here::here("data", "processed", "data_diesel_mensual.rds")) %>%
     filter(`año` >= 2017,
@@ -48,6 +52,7 @@ data_db5_fechas <- df_db5 %>%
     select(-dia) %>%
     filter(mes != 13)
 
+
 # Merge de data de precios y exportación a Stata --------------------------
 
 data_db5 <- grifos_sc %>% 
@@ -55,7 +60,6 @@ data_db5 <- grifos_sc %>%
     select(-codificador, -ruc, -direccion, -distrito:-orden_original,
            -en_avenida_principal, -revisar)
 
-colnames(data_db5)
 
 # Exportamos a Stata ------------------------------------------------------
 
@@ -70,3 +74,40 @@ foreign::write.dta(
 
 
 #' El resto lo corremos en stata
+#' 
+#' 
+
+# Corremos regresiones en R (corte transversal) ---------------------------
+
+data_1_periodo <- data_db5 %>%
+    filter(fecha == "1-1-2017")
+
+data_1_periodo %>% 
+    count(bandera, tipo_simp)
+
+model1 <- lm(precio_de_venta ~ sc_pre + bandera, data_1_periodo)
+
+summary(model1)
+
+model2 <- lm(precio_de_venta ~ sc_pre +  tipo_simp + bandera, data_1_periodo)
+
+summary(model2)
+
+
+model_3 <- data_1_periodo %>%
+    select(
+        precio_de_venta,
+        bandera,
+        tipo_simp,
+        sc_pre,
+        distancia_avg,
+        distancia_min,
+        num_grifos_cerc,
+        llanteria,
+        mecanico,
+        lavado,
+        cajero
+    ) %>%
+    lm(.)
+
+summary(model_3)

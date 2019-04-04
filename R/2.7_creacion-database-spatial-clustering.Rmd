@@ -22,97 +22,7 @@ grifos_coding_clean <- readRDS(here::here("data","processed","grifo_coding_clean
 
 ```
 
-
-# Nivel Banderas
-
-## Calculo de SC pre venta a nivel banderas
-
-
-```{r}
-grifos <- readRDS(here::here("data","processed","grifo_con_vecinos.RDS"))
-
-grifos_sc <- grifos %>%
-    distinct(codigo_de_osinergmin.princ) %>%
-    mutate(sc = NA)
-
-ptm <- proc.time()
-sc_vector <- map_dbl(grifos_sc$codigo_de_osinergmin.princ, calcular_sc, "bandera")
-proc.time() - ptm
-
-grifos_sc$sc <- sc_vector
-
-grifos_sc_pre <- left_join(grifos_coding_clean, 
-                           grifos_sc, 
-                           c("codigo_de_osinergmin" = "codigo_de_osinergmin.princ")) 
-
-```
-
-
-##  Calculo post-venta
-
-Ahora, cambiamos las banderas que dicen Pecsa por Primax, 
-
-
-```{r}
-#cargamos la nueva base de datos con el nombre de grifos, de lo contrario no funcionan las funciones
-grifos <- readRDS(here::here("data","processed","grifo_con_vecinos_post.RDS")) 
-#Cambiamos nombre de banderas
-grifos_coding_clean_post <- grifos_coding_clean %>%
-    mutate(bandera = recode_factor(bandera, "PECSA" = "PRIMAX"))
-```
-
-
-```{r}
-grifos_sc_post <- grifos_post %>%
-    distinct(codigo_de_osinergmin.princ) %>%
-    mutate(sc = NA)
-
-ptm <- proc.time()
-sc_vector_post <- map_dbl(grifos_sc_post$codigo_de_osinergmin.princ, calcular_sc)
-proc.time() - ptm
-
-grifos_sc_post$sc <- sc_vector_post
-
-grifos_sc_post_1 <- left_join(grifos_coding_clean_post, 
-                           grifos_sc_post, 
-                           c("codigo_de_osinergmin" = "codigo_de_osinergmin.princ")) 
-
-```
-
-Grabamos el dataset para ser usado luego:
-
-```{r}
-saveRDS(grifos_sc_pre, file = here::here("data","processed","grifos_con_sc_pre_venta.RDS"))
-saveRDS(grifos_sc_post_1, file = here::here("data","processed","grifos_con_sc_post_venta.RDS"))
-
-```
-
-
 # A nivel razón social
-
-## Calculo pre venta
-
-
-```{r}
-grifos <- readRDS(here::here("data","processed","grifo_con_vecinos_pre.RDS"))
-
-grifos_sc <- grifos %>%
-    distinct(codigo_de_osinergmin.princ) %>%
-    mutate(sc = NA)
-
-ptm <- proc.time()
-sc_vector <- map_dbl(grifos_sc$codigo_de_osinergmin.princ, calcular_sc, "bandera")
-proc.time() - ptm
-
-grifos_sc$sc <- sc_vector
-
-grifos_sc_pre <- left_join(grifos_coding_clean, 
-                           grifos_sc, 
-                           c("codigo_de_osinergmin" = "codigo_de_osinergmin.princ")) 
-
-```
-
-
 
 ## Calculo pre-venta
 
@@ -170,11 +80,20 @@ grifos_sc_post_1 <- left_join(grifos_coding_clean_post,
                            c("codigo_de_osinergmin" = "codigo_de_osinergmin.princ")) 
 
 ```
+Unimos las medidas de sc pre y post en el mismo data file
+
+```{r}
+grifos_sc <- grifos_sc_pre %>%
+    rename(sc_pre = sc)
+grifos_sc$sc_post <- grifos_sc_post_1$sc
+
+```
+
+Arreglamos las variables para la regresión de las siguientes etapas (corregimos factores)
 
 Grabamos el dataset para ser usado luego:
 
 ```{r}
-saveRDS(grifos_sc_pre, file = here::here("data","processed","grifos_con_sc_pre_venta_razon.RDS"))
-saveRDS(grifos_sc_post_1, file = here::here("data","processed","grifos_con_sc_post_venta_razon.RDS"))
+saveRDS(grifos_sc, file = here::here("data","processed","grifos_con_sc_razon_social.RDS"))
 
 ```
