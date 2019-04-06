@@ -1,5 +1,5 @@
 ---
-title: "Creación de database con spatial_clustering a nivel de banderas"
+title: "Creación de database con spatial_clustering a nivel de razon social"
 output: html_notebook
 ---
 
@@ -89,7 +89,6 @@ grifos_sc$sc_post <- grifos_sc_post_1$sc
 
 ```
 
-Arreglamos las variables para la regresión de las siguientes etapas (corregimos factores)
 
 Grabamos el dataset para ser usado luego:
 

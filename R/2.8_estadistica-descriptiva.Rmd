@@ -108,7 +108,8 @@ options(knitr.kable.NA = '-')
 bind_rows(df1, df2, df3, df4) %>%
     rename("Razón Social" = razon_social_sum) %>%
     kable(format = "html", 
-          digits = c(0, 0, 3, 3, 3, 3)) %>%
+          digits = c(0, 0, 3, 3, 3, 3),
+          caption = "Varición en medida de agrupamiento espacial pre y post compra") %>%
     kable_styling(full_width = FALSE, position = "left") %>%
     pack_rows("Grupo de Tratamiento", 1, 5) %>%
     pack_rows("Grupo de Control", 6, 10)

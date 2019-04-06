@@ -20,14 +20,7 @@ library(stringr)
 
 # Cargamos data -----------------------------------------------------------
 
-
-grifos_sc_pre <- readRDS(here::here("data","processed","grifos_con_sc_pre_venta.RDS"))
-grifos_sc_post <- readRDS(here::here("data","processed","grifos_con_sc_post_venta.RDS"))
-
-grifos_sc <- grifos_sc_post %>%
-    rename(sc_post = sc)
-grifos_sc$sc_pre <- grifos_sc_pre$sc
-
+grifos_sc <- readRDS(here::here("data","processed","grifos_con_sc_razon_social.RDS"))
 
 
 df_db5 <-
