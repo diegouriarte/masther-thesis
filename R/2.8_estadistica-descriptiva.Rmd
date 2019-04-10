@@ -14,13 +14,16 @@ library(forcats)
 
 ```
 
-# A nivel razon social
+# Cargamos archivos
 
-## Cargamos archivos
-
+Cargamos los archivos
 ```{r}
 grifos_sc <- readRDS(here::here("data","processed","grifos_con_sc_razon_social.RDS"))
 ```
+
+# Cálculo de SC a nivel razon social
+
+
 
 Creamos variable de diferencia pre-post sc
 
@@ -115,4 +118,60 @@ bind_rows(df1, df2, df3, df4) %>%
     pack_rows("Grupo de Control", 6, 10)
 ```
 
+# Estadísticas descriptivas para tesis
+
+Generamos los archivos con precios y caracterísiticas 
+```{r}
+precios_db5 <- readRDS(here::here("data", "processed", "data_diesel_mensual.rds")) %>%
+  filter(`año` >= 2017,
+         codigo_de_osinergmin %in% grifos_sc$codigo_de_osinergmin) %>% 
+  mutate(dia = 1) %>% 
+  unite(fecha, dia, mes, `año`, sep = "-", remove = FALSE) %>%
+  select(-dia) %>%
+  filter(mes != 13,
+         precio_de_venta > 6)
+
+  
+data_db5 <- left_join(grifos_sc, precios_db5, by = "codigo_de_osinergmin") 
+
+
+precios_g90 <- readRDS(here::here("data", "processed", "data_g90_mensual.rds")) %>%
+  filter(`año` >= 2017,
+         codigo_de_osinergmin %in% grifos_sc$codigo_de_osinergmin) %>% 
+  mutate(dia = 1) %>% 
+  unite(fecha, dia, mes, `año`, sep = "-", remove = FALSE) %>%
+  select(-dia) %>%
+  filter(mes != 13,
+         precio_de_venta > 6)
+
+  
+data_g90 <- left_join(grifos_sc, precios_g90, by = "codigo_de_osinergmin") 
+```
+
+Calculamos el precio promedio de cada uno
+```{r}
+precios_db5 %>% 
+  summarise(`Precio promedio DB5` = mean(precio_de_venta),
+            `SD` = sd(precio_de_venta),
+            `min` = min(precio_de_venta),
+            `max` = max(precio_de_venta))
+
+hist(precios_db5$precio_de_venta)
+
+data_db5 %>% filter(precio_de_venta < 8) %>% 
+  select( codigo_de_osinergmin, razon_social, precio_de_venta, distrito, fecha)
+```
+```{r}
+prices <- readRDS(here::here("data","processed","data_2005_2018_clean.rds"))
+prices %>% 
+  filter(codigo_de_osinergmin == 45240,
+         producto == "DIESEL") %>%
+  ggplot(aes(x = fecha_hora, y = precio_de_venta)) +
+  geom_point()
+prices %>% 
+  filter(codigo_de_osinergmin == 45240,
+         producto == "DIESEL",
+         precio_de_venta < 7) %>% 
+  select(fecha_hora,precio_de_venta)
+```
 

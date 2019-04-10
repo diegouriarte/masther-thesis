@@ -105,6 +105,26 @@ plot(X) # Just to make sure it looks right.
 dX <- dirichlet(X) 
 plot(dX) # Just to make sure ..... 
 ```
+Sacamos una gráfica para la tesis
+
+```{r fig.height=10, fig.width=10}
+grifos_coord <- grifos %>% 
+  filter(distrito == "SAN ISIDRO") %>% 
+  select(x = lon, y = lat) 
+
+W <- owin(xrange = c(min(grifos_coord$x)-0.001, max(grifos_coord$x)+0.001),
+          yrange = c(min(grifos_coord$y)-0.01, max(grifos_coord$y)+0.01))
+
+ 
+X <- as.ppp(grifos_coord,W) 
+plot(X) # Just to make sure it looks right. 
+dX <- dirichlet(X) 
+par(new=TRUE)
+
+plot(dX) # Just to make sure ..... 
+```
+
+
 
 Ahora lo hacemos en mapa interactivo usando leaflet
 ```{r}
@@ -353,6 +373,7 @@ grifos_con_vecinos_post_razon <- left_join(
     by = c("codigo_de_osinergmin.vec" = "codigo_de_osinergmin")
   )
 ```
+
 
 
 

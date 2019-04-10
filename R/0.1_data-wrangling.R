@@ -94,9 +94,9 @@ data_2005_2018 %>%
 
 data_2005_2018_clean_products <- data_2005_2018 %>%
     mutate(producto = recode(producto, !!!level_key)) %>%
-    filter(producto != "DIESEL MARINO N° 2",
+    filter(producto != "DIESEL MARINO N? 2",
            producto != "GLP - G",
-           producto != "KEROSENE (DOMÉSTICO)",
+           producto != "KEROSENE (DOM?STICO)",
            producto != "GAS NATURAL VEHICULAR",
            producto != "GAS LICUADO DE PETROLEO",
            producto != "DIESEL2 BA", 
@@ -106,6 +106,15 @@ data_2005_2018_clean_products <- data_2005_2018 %>%
 data_2005_2018_clean_products %>% 
     filter(precio_de_venta < 10000, precio_de_venta > 1000) %>%
     select(razon_social, departamento, precio_de_venta)
+
+data_2005_2018_clean_products %>% 
+    filter(precio_de_venta == 1, 
+           departamento == "LIMA", 
+           provincia == "LIMA",
+           year(fecha_hora) > 2016,
+           producto == "DIESEL") %>%
+    select(razon_social, fecha_hora, precio_de_venta) %>% 
+    count(razon_social)
 
 #' Function to correct prices that have been incorrectly imputed
 correct_price <- function(price) {

@@ -171,3 +171,5 @@ grifos_nb <- tri2nb(coords, row.names = grifos)
 sp_grifos <- nb2listw(grifos_nb)
 
 lm.morantest(modelo_data, sp_grifos)
+
+lm.LMtests(modelo_data, sp_grifos, test="all")
