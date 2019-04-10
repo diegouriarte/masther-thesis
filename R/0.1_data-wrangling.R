@@ -49,7 +49,7 @@ data_2005_2018 %>% filter(is.na(ruc))
 data_2005_2018 %>%
     filter(departamento == "LIMA", provincia == "LIMA",
            year(fecha_hora) < 2011) %>%
-    count(producto, sort = TRUE) %>% View()
+    count(producto, sort = TRUE) 
 
 
 
@@ -116,6 +116,8 @@ data_2005_2018_clean_products %>%
     select(razon_social, fecha_hora, precio_de_venta) %>% 
     count(razon_social)
 
+
+
 #' Function to correct prices that have been incorrectly imputed
 correct_price <- function(price) {
     if (price < 30.1) {
@@ -152,5 +154,21 @@ data_2005_2018_corrected_prices <- data_2005_2018_clean_products %>%
 
 skim(data_2005_2018_corrected_prices)
 
-saveRDS(data_2005_2018_corrected_prices, file = here::here("data","processed","data_2005_2018_clean.rds"))
+#' No puede ser que el mínimo sea 0, corrijamos:
+#' 
+
+
+
+data_2005_2018_corrected_prices_1 <- data_2005_2018_corrected_prices %>% 
+    filter(precio_de_venta != 0,
+           precio_de_venta > 4)
+
+data_2005_2018_corrected_prices_1 %>% 
+    filter(precio_de_venta < 6) %>%
+    pull(precio_de_venta) %>% 
+    hist()
+
+
+skim(data_2005_2018_corrected_prices_1)
+saveRDS(data_2005_2018_corrected_prices_1, file = here::here("data","processed","data_2005_2018_clean.rds"))
 
