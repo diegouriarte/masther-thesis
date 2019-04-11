@@ -11,6 +11,8 @@ suppressMessages(library(tidyverse))
 library(knitr)
 library(kableExtra)
 library(forcats)
+library(qwraps2)
+
 
 ```
 
@@ -19,6 +21,13 @@ library(forcats)
 Cargamos los archivos
 ```{r}
 grifos_sc <- readRDS(here::here("data","processed","grifos_con_sc_razon_social.RDS"))
+
+#agregamos columna tiene mecánico
+grifos_sc <- grifos_sc %>% 
+  mutate(tiene_mecanico = if_else(mecanico + aceite + lavado > 0, 1, 0),
+         con_glp = as.numeric(con_glp)-1, 
+         con_gnv = as.numeric(con_gnv)-1)
+
 ```
 
 # Cálculo de SC a nivel razon social
@@ -150,28 +159,156 @@ data_g90 <- left_join(grifos_sc, precios_g90, by = "codigo_de_osinergmin")
 
 Calculamos el precio promedio de cada uno
 ```{r}
-precios_db5 %>% 
-  summarise(`Precio promedio DB5` = mean(precio_de_venta),
-            `SD` = sd(precio_de_venta),
-            `min` = min(precio_de_venta),
-            `max` = max(precio_de_venta))
+precios_tabla <- bind_rows(data_db5, data_g90) %>% 
+  group_by(producto) %>%
+  summarise(`Media` = mean(precio_de_venta),
+            `Des. Est` = sd(precio_de_venta),
+            `Min` = min(precio_de_venta),
+            `Max` = max(precio_de_venta)) %>%
+  mutate("Descripción" = if_else(producto == "DIESEL", 
+                                 "Precio de Diésel DB5-S50 en la estación i (soles/galón)",
+                                 "Precio de Gasohol 90 en la estación i (soles/galón)"),
+         Variable = if_else(producto == "G90", 
+                            "P_it G90",
+                            "P_it DB5")) %>% 
+  select(Variable, `Descripción`, everything(), -producto) 
 
-hist(precios_db5$precio_de_venta)
 
-data_db5 %>% filter(precio_de_venta < 8) %>% 
-  select( codigo_de_osinergmin, razon_social, precio_de_venta, distrito, fecha)
+precios_tabla %>% 
+    kable(format = "html", digits = c(0,0,3,3,1,1)) %>%
+    kable_styling(full_width = FALSE, position = "left") 
+
+
 ```
+Calculos las estádisticas a nivel grifos:
+
 ```{r}
-prices <- readRDS(here::here("data","processed","data_2005_2018_clean.rds"))
-prices %>% 
-  filter(codigo_de_osinergmin == 45240,
-         producto == "DIESEL") %>%
-  ggplot(aes(x = fecha_hora, y = precio_de_venta)) +
-  geom_point()
-prices %>% 
-  filter(codigo_de_osinergmin == 45240,
-         producto == "DIESEL",
-         precio_de_venta < 7) %>% 
-  select(fecha_hora,precio_de_venta)
+tabla <- grifos_sc %>%
+  select(codigo_de_osinergmin, 
+         "Agrupamiento espacial" = sc_pre,
+         "Distancia mínima" = distancia_min,
+         "Distancia promedio" = distancia_avg,
+         "Número de grifos cercanos" = num_grifos_cerc,
+         "Número de bahías de abastecimiento" = islas_comb_liq,
+         "Dummy igual a 1 si la estación cuenta con despacho de GLP" = con_glp,
+         "Dummy igual a 1 si la estación cuenta con despacho de GNV" = con_gnv,
+         "Dummy igual a 1 si la estación cuenta con asistencia mecánica" = tiene_mecanico,
+         "Dummy igual a 1 si la estación cuenta con servicio de lavado de autos" = lavado,
+         "Dummy igual a 1 si la estación cuenta con tienda o mini-market" = tienda,
+         "Dummy igual a 1 si la estación cuenta con cajero automático" = cajero,
+         
+  ) %>%
+  gather(key = "Descripción", value = "value", -codigo_de_osinergmin, convert = TRUE) %>%
+  group_by(`Descripción`) %>% 
+  summarise(Media= mean(value, na.rm = TRUE),
+            "Des. Est" = sd(value, na.rm = TRUE),
+            "Min" = min(value, na.rm = TRUE),
+            "Max" = max(value, na.rm = TRUE)) %>% 
+  mutate(`Descripción` = fct_relevel(`Descripción`,
+                                 "Agrupamiento espacial",
+                                 "Distancia mínima",
+                                 "Distancia promedio",
+                                 "Número de grifos cercanos",
+                                 "Número de bahías de abastecimiento",
+                                 "Dummy igual a 1 si la estación cuenta con despacho de GLP",
+                                 "Dummy igual a 1 si la estación cuenta con despacho de GNV",
+                                 "Dummy igual a 1 si la estación cuenta con asistencia mecánica",
+                                 "Dummy igual a 1 si la estación cuenta con servicio de lavado de autos",
+                                 "Dummy igual a 1 si la estación cuenta con tienda o mini-market",
+                                 "Dummy igual a 1 si la estación cuenta con cajero automático")) %>% 
+  arrange(`Descripción`)
+
+tabla$Variable<- c("SC",
+                    "DMIN",
+                    "DPROM",
+                    "NCERC",
+                    "BAHIAS",
+                    "GLP",
+                    "GNV",
+                    "MECANICO",
+                    "LAVADO",
+                    "TIENDA",
+                    "CAJERO")
+
+bind_rows(precios_tabla,tabla) %>%
+  select(`Variable`, everything()) %>% 
+  kable(format = "html", digits = c(0,0,3,3,1,1)) %>%
+  kable_styling(full_width = FALSE, position = "left") %>% 
+  pack_rows("Variable dependiente", 1, 2) %>% 
+  pack_rows("Características espaciales", 3, 7) %>% 
+  pack_rows("Características de la ubicación y del distrito", 8, 13)
+
+
+```
+
+##  Por si queremos hacer por tipo-bandera (PENDIENTE)
+```{r}
+options(qwraps2_markup = "markdown",
+        show_n = "never")
+
+our_summary1 <-
+  list("Agrupamiento espacial" =
+       list("min" = ~ min(sc_pre, na.rm = TRUE),
+            "max" = ~ max(sc_pre, na.rm = TRUE),
+            "mean (sd)" = ~ qwraps2::mean_sd(sc_pre, na_rm = TRUE, 
+                                             denote_sd = "paren",
+                                             show_n = "never")),
+       "Lavado" =
+       list("min" = ~ min(lavado, na.rm = TRUE),
+            "max" = ~ max(lavado, na.rm = TRUE),
+            "mean (sd)" = ~ qwraps2::mean_sd(lavado, 
+                                             na_rm = TRUE, 
+                                             denote_sd = "paren",
+                                             show_n = "never")),
+       "Mecánico" =
+       list("min" = ~ min(tiene_mecanico, na.rm =TRUE),
+            "max" = ~ max(tiene_mecanico, na.rm = TRUE),
+            "mean (sd)" = ~ qwraps2::mean_sd(tiene_mecanico, na_rm = TRUE, 
+                                             denote_sd = "paren",
+                                             show_n = "never"))
+       )
+
+summary_table(grifos_sc, our_summary1)
+
+```
+
+
+## Ahora sacamos la matriz de correlación
+
+```{r}
+
+
+mydata <- data_db5 %>% 
+select("P_it" = precio_de_venta, 
+         "SC" = sc_pre,
+         "DMIN" = distancia_min,
+         "DPROM" = distancia_avg,
+         "NCERC" = num_grifos_cerc,
+         "BAHIAS" =  islas_comb_liq,
+         "GLP" = con_glp,
+         "GNV" = con_gnv,
+         "MECANICA" = tiene_mecanico,
+         "LAVADO" = lavado,
+         "TIENDA" = tienda,
+         "CAJERO" = cajero)
+
+
+mydata.cor = cor(mydata, use = "complete.obs")
+
+mydata.cor %>% 
+  kable(format = "html") %>% 
+  kable_styling(full_width = FALSE, position = "left") 
+
+
+upper<-round(mydata.cor,2)
+upper[upper.tri(mydata.cor)]<-""
+upper<-as.data.frame(upper)
+upper
+
+
+upper %>% 
+  kable(format = "html") %>% 
+  kable_styling(full_width = FALSE, position = "left") 
+corrplot::corrplot(mydata.cor)
 ```
 
