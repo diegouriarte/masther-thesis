@@ -1,0 +1,130 @@
+---
+title: "Regresiones para tesis"
+output: html_notebook
+---
+
+# Cargamos librerías
+
+```{r include=FALSE}
+library(tidyverse)
+library(spdep)
+
+```
+
+# Cargamos datos
+
+```{r}
+grifos_sc <-
+    readRDS(here::here("data", "processed", "grifos_con_sc_razon_social.RDS"))
+
+grifos_sc <- grifos_sc %>% 
+    mutate(serv_mecanico = if_else(mecanico+ aceite + llanteria > 0, 1, 0),
+           serv_mecanico = as.factor(serv_mecanico))
+
+precios_db5 <- readRDS(here::here("data", "processed", "data_diesel_mensual.rds")) %>%
+  filter(`año` >= 2017,
+         codigo_de_osinergmin %in% grifos_sc$codigo_de_osinergmin) %>% 
+  mutate(dia = 1) %>% 
+  unite(fecha, dia, mes, `año`, sep = "-", remove = FALSE) %>%
+  select(-dia) %>%
+  filter(mes != 13,
+         precio_de_venta > 6)
+
+  
+data_db5 <- left_join(grifos_sc, precios_db5, by = "codigo_de_osinergmin") 
+
+
+precios_g90 <- readRDS(here::here("data", "processed", "data_g90_mensual.rds")) %>%
+  filter(`año` >= 2017,
+         codigo_de_osinergmin %in% grifos_sc$codigo_de_osinergmin) %>% 
+  mutate(dia = 1) %>% 
+  unite(fecha, dia, mes, `año`, sep = "-", remove = FALSE) %>%
+  select(-dia) %>%
+  filter(mes != 13,
+         precio_de_venta > 6)
+
+  
+data_g90 <- left_join(grifos_sc, precios_g90, by = "codigo_de_osinergmin") 
+```
+
+# Primera regresión OLS pooled
+
+Hacemos una regresión OLS pooled, clusterizando a nivel de grifo, en corte transversal para un periodo.
+
+
+
+```{r}
+
+
+data <- data_db5 %>%
+    filter(mes == 7, `año` == 2017) %>% 
+    select(
+        precio_de_venta,
+        tipo_bandera,
+        sc_pre,
+        distancia_avg,
+        distancia_min,
+        num_grifos_cerc,
+        serv_mecanico,
+        lavado,
+        cajero,
+        con_gnv,
+        con_glp,
+        lat,
+        lon,
+        codigo_de_osinergmin
+    ) %>%
+    drop_na()
+
+modelo_data <- lm(data %>% select(-lat, -lon, -codigo_de_osinergmin))
+
+
+summary(modelo_data)
+```
+Test de Moran
+```{r}
+coords <- cbind(data$lon, data$lat)
+
+grifos <- data$codigo_de_osinergmin
+
+grifos_nb <- tri2nb(coords, row.names = grifos)
+
+sp_grifos <- nb2listw(grifos_nb)
+
+
+LMtest <- lm.LMtests(modelo_data, sp_grifos, test="all")
+LMtest
+```
+
+Aparentemente, el modelo con lag es el significativo, así que usaremos ese. Estiamos el modelo espacial de Durbin:
+
+```{r}
+modelo <- precio_de_venta ~ tipo_bandera +
+        sc_pre +
+        distancia_avg +
+        distancia_min +
+        num_grifos_cerc +
+        serv_mecanico +
+        lavado +
+        cajero +
+        con_gnv +
+        con_glp 
+durbin_model <- lagsarlm(modelo,
+    data = data, 
+    listw = sp_grifos, 
+    Durbin = TRUE)    
+
+summary(durbin_model)
+```
+
+Corremos el modelo de rezagos espaciales:
+
+```{r}
+spa_lag_model=lagsarlm(formula = modelo, data = data, listw = sp_grifos)
+summary(spa_lag_model)
+```
+
+```{r}
+LR.sarlm(durbin_model, spa_lag_model)
+```
+
