@@ -1,0 +1,1033 @@
+Output Spatial Lag
+Mes:  1 Año:  2017 
+
+
+Call:lagsarlm(formula = modelo, data = .x, listw = .y)
+
+Residuals:
+       Min         1Q     Median         3Q        Max 
+-1.6566083 -0.2391228 -0.0080644  0.1986631  2.8302541 
+
+Type: lag 
+Coefficients: (asymptotic standard errors) 
+                                    Estimate  Std. Error z value  Pr(>|z|)
+(Intercept)                       4.29546254  0.51168466  8.3947 < 2.2e-16
+tipo_banderaABANDERADA PETROPERU  0.08170133  0.07601250  1.0748  0.282446
+tipo_banderaABANDERADA PECSA      0.21668307  0.08745440  2.4777  0.013224
+tipo_banderaABANDERADA PRIMAX     0.30184560  0.06543440  4.6129 3.970e-06
+tipo_banderaABANDERADA REPSOL     0.22861956  0.07091607  3.2238  0.001265
+tipo_banderaPROPIA PECSA         -0.12883566  0.09368493 -1.3752  0.169069
+tipo_banderaPROPIA PRIMAX         0.52870151  0.08344034  6.3363 2.354e-10
+tipo_banderaPROPIA REPSOL         0.41437576  0.07583425  5.4642 4.649e-08
+distancia_avg                     0.11770492  0.10153542  1.1592  0.246354
+distancia_min                     0.08519236  0.04692972  1.8153  0.069475
+num_grifos_cerc                  -0.00416878  0.00330073 -1.2630  0.206594
+serv_mecanico1                   -0.02316289  0.04611288 -0.5023  0.615451
+lavado                           -0.06933856  0.05506654 -1.2592  0.207966
+cajero                            0.10614087  0.04755435  2.2320  0.025616
+con_gnv1                         -0.09844681  0.04885931 -2.0149  0.043915
+con_glp1                          0.00435103  0.04776027  0.0911  0.927412
+ingresos_2012                     0.00051927  0.00011955  4.3433 1.403e-05
+
+Rho: 0.50365, LR test value: 79.49, p-value: < 2.22e-16
+Asymptotic standard error: 0.053324
+    z-value: 9.4452, p-value: < 2.22e-16
+Wald statistic: 89.211, p-value: < 2.22e-16
+
+Log likelihood: -225.6057 for lag model
+ML residual variance (sigma squared): 0.15937, (sigma: 0.39922)
+Number of observations: 429 
+Number of parameters estimated: 19 
+AIC: 489.21, (AIC for lm: 566.7)
+LM test for residual autocorrelation
+test value: 9.5459, p-value: 0.002004
+
+Mes:  2 Año:  2017 
+
+
+Call:lagsarlm(formula = modelo, data = .x, listw = .y)
+
+Residuals:
+      Min        1Q    Median        3Q       Max 
+-1.656330 -0.214200 -0.022686  0.183090  2.783268 
+
+Type: lag 
+Coefficients: (asymptotic standard errors) 
+                                    Estimate  Std. Error z value  Pr(>|z|)
+(Intercept)                       4.14613481  0.50868750  8.1507 4.441e-16
+tipo_banderaABANDERADA PETROPERU  0.11420219  0.07371403  1.5493 0.1213193
+tipo_banderaABANDERADA PECSA      0.24343290  0.08479454  2.8709 0.0040936
+tipo_banderaABANDERADA PRIMAX     0.30739874  0.06344652  4.8450 1.266e-06
+tipo_banderaABANDERADA REPSOL     0.25324722  0.06878392  3.6818 0.0002316
+tipo_banderaPROPIA PECSA         -0.16836326  0.09081658 -1.8539 0.0637560
+tipo_banderaPROPIA PRIMAX         0.48485804  0.08087875  5.9949 2.036e-09
+tipo_banderaPROPIA REPSOL         0.38047001  0.07352984  5.1744 2.287e-07
+distancia_avg                     0.17036374  0.09847762  1.7300 0.0836349
+distancia_min                     0.09234177  0.04550319  2.0293 0.0424230
+num_grifos_cerc                  -0.00377800  0.00319586 -1.1822 0.2371447
+serv_mecanico1                   -0.02193598  0.04470532 -0.4907 0.6236533
+lavado                           -0.08432983  0.05338711 -1.5796 0.1142004
+cajero                            0.10720585  0.04609720  2.3256 0.0200373
+con_gnv1                         -0.08181444  0.04736909 -1.7272 0.0841373
+con_glp1                          0.00423633  0.04630230  0.0915 0.9271010
+ingresos_2012                     0.00052211  0.00011547  4.5217 6.135e-06
+
+Rho: 0.51252, LR test value: 84.155, p-value: < 2.22e-16
+Asymptotic standard error: 0.052987
+    z-value: 9.6726, p-value: < 2.22e-16
+Wald statistic: 93.559, p-value: < 2.22e-16
+
+Log likelihood: -212.7639 for lag model
+ML residual variance (sigma squared): 0.14981, (sigma: 0.38705)
+Number of observations: 429 
+Number of parameters estimated: 19 
+AIC: 463.53, (AIC for lm: 545.68)
+LM test for residual autocorrelation
+test value: 6.8959, p-value: 0.0086393
+
+Mes:  3 Año:  2017 
+
+
+Call:lagsarlm(formula = modelo, data = .x, listw = .y)
+
+Residuals:
+       Min         1Q     Median         3Q        Max 
+-1.6583613 -0.2113846 -0.0016797  0.1889751  2.8233587 
+
+Type: lag 
+Coefficients: (asymptotic standard errors) 
+                                    Estimate  Std. Error z value  Pr(>|z|)
+(Intercept)                       3.99192728  0.49458633  8.0712 6.661e-16
+tipo_banderaABANDERADA PETROPERU  0.08404747  0.06960118  1.2076 0.2272173
+tipo_banderaABANDERADA PECSA      0.24917145  0.08090615  3.0798 0.0020717
+tipo_banderaABANDERADA PRIMAX     0.28482917  0.06053672  4.7051 2.538e-06
+tipo_banderaABANDERADA REPSOL     0.24432384  0.06564049  3.7222 0.0001975
+tipo_banderaPROPIA PECSA         -0.10225125  0.08668552 -1.1796 0.2381731
+tipo_banderaPROPIA PRIMAX         0.48612424  0.07721408  6.2958 3.058e-10
+tipo_banderaPROPIA REPSOL         0.35050729  0.07015479  4.9962 5.847e-07
+distancia_avg                     0.12183173  0.09394409  1.2969 0.1946816
+distancia_min                     0.08806343  0.04341427  2.0284 0.0425149
+num_grifos_cerc                  -0.00345883  0.00305014 -1.1340 0.2567982
+serv_mecanico1                   -0.01534922  0.04259317 -0.3604 0.7185718
+lavado                           -0.09000156  0.05094291 -1.7667 0.0772761
+cajero                            0.09777807  0.04398390  2.2230 0.0262129
+con_gnv1                         -0.08423674  0.04494312 -1.8743 0.0608895
+con_glp1                         -0.00248795  0.04397614 -0.0566 0.9548838
+ingresos_2012                     0.00049170  0.00011083  4.4364 9.147e-06
+
+Rho: 0.53557, LR test value: 93.691, p-value: < 2.22e-16
+Asymptotic standard error: 0.051525
+    z-value: 10.394, p-value: < 2.22e-16
+Wald statistic: 108.04, p-value: < 2.22e-16
+
+Log likelihood: -194.3298 for lag model
+ML residual variance (sigma squared): 0.13642, (sigma: 0.36936)
+Number of observations: 430 
+Number of parameters estimated: 19 
+AIC: 426.66, (AIC for lm: 518.35)
+LM test for residual autocorrelation
+test value: 7.3846, p-value: 0.0065784
+
+Mes:  4 Año:  2017 
+
+
+Call:lagsarlm(formula = modelo, data = .x, listw = .y)
+
+Residuals:
+       Min         1Q     Median         3Q        Max 
+-1.6624808 -0.2126255 -0.0052166  0.1822994  2.8413751 
+
+Type: lag 
+Coefficients: (asymptotic standard errors) 
+                                    Estimate  Std. Error z value  Pr(>|z|)
+(Intercept)                       3.99147504  0.49609412  8.0458 8.882e-16
+tipo_banderaABANDERADA PETROPERU  0.08099163  0.07034173  1.1514 0.2495668
+tipo_banderaABANDERADA PECSA      0.23755360  0.08176434  2.9053 0.0036685
+tipo_banderaABANDERADA PRIMAX     0.27888813  0.06117825  4.5586 5.149e-06
+tipo_banderaABANDERADA REPSOL     0.24338102  0.06633684  3.6689 0.0002436
+tipo_banderaPROPIA PECSA         -0.11221522  0.08759780 -1.2810 0.2001839
+tipo_banderaPROPIA PRIMAX         0.48199033  0.07801986  6.1778 6.500e-10
+tipo_banderaPROPIA REPSOL         0.35449062  0.07089334  5.0003 5.723e-07
+distancia_avg                     0.11918449  0.09494550  1.2553 0.2093722
+distancia_min                     0.09174629  0.04387673  2.0910 0.0365280
+num_grifos_cerc                  -0.00369562  0.00308669 -1.1973 0.2312000
+serv_mecanico1                   -0.01903914  0.04304482 -0.4423 0.6582651
+lavado                           -0.08398890  0.05148543 -1.6313 0.1028241
+cajero                            0.09151195  0.04445281  2.0586 0.0395296
+con_gnv1                         -0.09957796  0.04542673 -2.1921 0.0283754
+con_glp1                          0.00566587  0.04444241  0.1275 0.8985542
+ingresos_2012                     0.00049010  0.00011154  4.3940 1.113e-05
+
+Rho: 0.53655, LR test value: 92.748, p-value: < 2.22e-16
+Asymptotic standard error: 0.051587
+    z-value: 10.401, p-value: < 2.22e-16
+Wald statistic: 108.18, p-value: < 2.22e-16
+
+Log likelihood: -198.9358 for lag model
+ML residual variance (sigma squared): 0.13934, (sigma: 0.37329)
+Number of observations: 430 
+Number of parameters estimated: 19 
+AIC: 435.87, (AIC for lm: 526.62)
+LM test for residual autocorrelation
+test value: 5.8382, p-value: 0.015682
+
+Mes:  5 Año:  2017 
+
+
+Call:lagsarlm(formula = modelo, data = .x, listw = .y)
+
+Residuals:
+       Min         1Q     Median         3Q        Max 
+-1.6589139 -0.2142859 -0.0010535  0.2010024  2.8322489 
+
+Type: lag 
+Coefficients: (asymptotic standard errors) 
+                                    Estimate  Std. Error z value  Pr(>|z|)
+(Intercept)                       3.90843267  0.48703170  8.0250 1.110e-15
+tipo_banderaABANDERADA PETROPERU  0.09403876  0.07012740  1.3410 0.1799301
+tipo_banderaABANDERADA PECSA      0.22252428  0.08150716  2.7301 0.0063311
+tipo_banderaABANDERADA PRIMAX     0.29376119  0.06099935  4.8158 1.466e-06
+tipo_banderaABANDERADA REPSOL     0.24786343  0.06613629  3.7478 0.0001784
+tipo_banderaPROPIA PECSA         -0.14359487  0.08731377 -1.6446 0.1000555
+tipo_banderaPROPIA PRIMAX         0.50403996  0.07780075  6.4786 9.258e-11
+tipo_banderaPROPIA REPSOL         0.36814496  0.07068682  5.2081 1.908e-07
+distancia_avg                     0.11114699  0.09464240  1.1744 0.2402393
+distancia_min                     0.07988295  0.04373758  1.8264 0.0677879
+num_grifos_cerc                  -0.00383210  0.00307835 -1.2449 0.2131855
+serv_mecanico1                   -0.01726011  0.04291114 -0.4022 0.6875155
+lavado                           -0.08360014  0.05132539 -1.6288 0.1033498
+cajero                            0.09521169  0.04431718  2.1484 0.0316808
+con_gnv1                         -0.10249131  0.04528606 -2.2632 0.0236235
+con_glp1                          0.00448263  0.04430259  0.1012 0.9194059
+ingresos_2012                     0.00047255  0.00011100  4.2572 2.070e-05
+
+Rho: 0.54702, LR test value: 98.584, p-value: < 2.22e-16
+Asymptotic standard error: 0.050628
+    z-value: 10.805, p-value: < 2.22e-16
+Wald statistic: 116.74, p-value: < 2.22e-16
+
+Log likelihood: -198.1571 for lag model
+ML residual variance (sigma squared): 0.13847, (sigma: 0.37212)
+Number of observations: 430 
+Number of parameters estimated: 19 
+AIC: 434.31, (AIC for lm: 530.9)
+LM test for residual autocorrelation
+test value: 4.8773, p-value: 0.027213
+
+Mes:  6 Año:  2017 
+
+
+Call:lagsarlm(formula = modelo, data = .x, listw = .y)
+
+Residuals:
+       Min         1Q     Median         3Q        Max 
+-1.6471135 -0.2133884 -0.0094524  0.1973740  2.8387007 
+
+Type: lag 
+Coefficients: (asymptotic standard errors) 
+                                    Estimate  Std. Error z value  Pr(>|z|)
+(Intercept)                       3.78247830  0.48369432  7.8200 5.329e-15
+tipo_banderaABANDERADA PETROPERU  0.09496762  0.07046772  1.3477 0.1777628
+tipo_banderaABANDERADA PECSA      0.19313191  0.08190492  2.3580 0.0183736
+tipo_banderaABANDERADA PRIMAX     0.29282885  0.06129548  4.7773 1.776e-06
+tipo_banderaABANDERADA REPSOL     0.24857852  0.06646580  3.7399 0.0001841
+tipo_banderaPROPIA PECSA         -0.14822532  0.08773438 -1.6895 0.0911278
+tipo_banderaPROPIA PRIMAX         0.49465413  0.07816291  6.3285 2.476e-10
+tipo_banderaPROPIA REPSOL         0.33319122  0.07100817  4.6923 2.702e-06
+distancia_avg                     0.10980672  0.09510706  1.1546 0.2482710
+distancia_min                     0.08271608  0.04395494  1.8818 0.0598580
+num_grifos_cerc                  -0.00304870  0.00308337 -0.9888 0.3227820
+serv_mecanico1                   -0.02028539  0.04312083 -0.4704 0.6380468
+lavado                           -0.08722490  0.05157772 -1.6911 0.0908110
+cajero                            0.09598141  0.04453640  2.1551 0.0311522
+con_gnv1                         -0.10433826  0.04551399 -2.2924 0.0218800
+con_glp1                          0.00817769  0.04451995  0.1837 0.8542599
+ingresos_2012                     0.00043868  0.00011015  3.9827 6.813e-05
+
+Rho: 0.56217, LR test value: 104.7, p-value: < 2.22e-16
+Asymptotic standard error: 0.050094
+    z-value: 11.222, p-value: < 2.22e-16
+Wald statistic: 125.94, p-value: < 2.22e-16
+
+Log likelihood: -201.1283 for lag model
+ML residual variance (sigma squared): 0.13985, (sigma: 0.37396)
+Number of observations: 430 
+Number of parameters estimated: 19 
+AIC: 440.26, (AIC for lm: 542.95)
+LM test for residual autocorrelation
+test value: 6.2259, p-value: 0.012589
+
+Mes:  7 Año:  2017 
+
+
+Call:lagsarlm(formula = modelo, data = .x, listw = .y)
+
+Residuals:
+      Min        1Q    Median        3Q       Max 
+-1.508031 -0.214583 -0.032954  0.186017  3.095073 
+
+Type: lag 
+Coefficients: (asymptotic standard errors) 
+                                    Estimate  Std. Error z value  Pr(>|z|)
+(Intercept)                       3.92971417  0.49889125  7.8769 3.331e-15
+tipo_banderaABANDERADA PETROPERU  0.06925229  0.07136670  0.9704  0.331861
+tipo_banderaABANDERADA PECSA      0.15987998  0.08296007  1.9272  0.053956
+tipo_banderaABANDERADA PRIMAX     0.25531583  0.06205090  4.1146 3.878e-05
+tipo_banderaABANDERADA REPSOL     0.18686101  0.06726079  2.7782  0.005467
+tipo_banderaPROPIA PECSA         -0.13490520  0.08885899 -1.5182  0.128965
+tipo_banderaPROPIA PRIMAX         0.40021978  0.07907171  5.0615 4.160e-07
+tipo_banderaPROPIA REPSOL         0.28090847  0.07186547  3.9088 9.275e-05
+distancia_avg                     0.11212160  0.09634688  1.1637  0.244534
+distancia_min                     0.05708741  0.04452240  1.2822  0.199766
+num_grifos_cerc                  -0.00430461  0.00313102 -1.3748  0.169186
+serv_mecanico1                   -0.02813337  0.04367936 -0.6441  0.519518
+lavado                           -0.08175212  0.05224731 -1.5647  0.117650
+cajero                            0.06729000  0.04510373  1.4919  0.135727
+con_gnv1                         -0.11982474  0.04611444 -2.5984  0.009365
+con_glp1                          0.01252776  0.04509823  0.2778  0.781175
+ingresos_2012                     0.00048451  0.00011143  4.3480 1.374e-05
+
+Rho: 0.54094, LR test value: 90.938, p-value: < 2.22e-16
+Asymptotic standard error: 0.052518
+    z-value: 10.3, p-value: < 2.22e-16
+Wald statistic: 106.09, p-value: < 2.22e-16
+
+Log likelihood: -205.4919 for lag model
+ML residual variance (sigma squared): 0.1435, (sigma: 0.37882)
+Number of observations: 430 
+Number of parameters estimated: 19 
+AIC: 448.98, (AIC for lm: 537.92)
+LM test for residual autocorrelation
+test value: 10.362, p-value: 0.0012867
+
+Mes:  8 Año:  2017 
+
+
+Call:lagsarlm(formula = modelo, data = .x, listw = .y)
+
+Residuals:
+      Min        1Q    Median        3Q       Max 
+-1.435839 -0.199178 -0.012885  0.200002  3.099842 
+
+Type: lag 
+Coefficients: (asymptotic standard errors) 
+                                    Estimate  Std. Error z value  Pr(>|z|)
+(Intercept)                       3.76781943  0.48392941  7.7859 6.883e-15
+tipo_banderaABANDERADA PETROPERU  0.07894792  0.06925015  1.1400  0.254270
+tipo_banderaABANDERADA PECSA      0.21344461  0.08049334  2.6517  0.008009
+tipo_banderaABANDERADA PRIMAX     0.28594329  0.06021680  4.7486 2.049e-06
+tipo_banderaABANDERADA REPSOL     0.18350644  0.06527335  2.8114  0.004933
+tipo_banderaPROPIA PECSA         -0.10963991  0.08622371 -1.2716  0.203524
+tipo_banderaPROPIA PRIMAX         0.41266161  0.07674289  5.3772 7.565e-08
+tipo_banderaPROPIA REPSOL         0.30133635  0.06975445  4.3200 1.561e-05
+distancia_avg                     0.12406688  0.09347986  1.3272  0.184441
+distancia_min                     0.06921932  0.04319649  1.6024  0.109061
+num_grifos_cerc                  -0.00368546  0.00303734 -1.2134  0.224983
+serv_mecanico1                   -0.03006793  0.04237760 -0.7095  0.477999
+lavado                           -0.07913793  0.05069001 -1.5612  0.118473
+cajero                            0.07884810  0.04376271  1.8017  0.071590
+con_gnv1                         -0.12324763  0.04473653 -2.7550  0.005870
+con_glp1                          0.02748263  0.04375230  0.6281  0.529911
+ingresos_2012                     0.00048388  0.00010924  4.4294 9.449e-06
+
+Rho: 0.55103, LR test value: 97.142, p-value: < 2.22e-16
+Asymptotic standard error: 0.05141
+    z-value: 10.718, p-value: < 2.22e-16
+Wald statistic: 114.88, p-value: < 2.22e-16
+
+Log likelihood: -193.0342 for lag model
+ML residual variance (sigma squared): 0.13507, (sigma: 0.36752)
+Number of observations: 430 
+Number of parameters estimated: 19 
+AIC: 424.07, (AIC for lm: 519.21)
+LM test for residual autocorrelation
+test value: 8.6728, p-value: 0.0032299
+
+Mes:  9 Año:  2017 
+
+
+Call:lagsarlm(formula = modelo, data = .x, listw = .y)
+
+Residuals:
+      Min        1Q    Median        3Q       Max 
+-1.241349 -0.197317 -0.010051  0.184471  2.934736 
+
+Type: lag 
+Coefficients: (asymptotic standard errors) 
+                                    Estimate  Std. Error z value  Pr(>|z|)
+(Intercept)                       3.53657881  0.46360650  7.6284 2.376e-14
+tipo_banderaABANDERADA PETROPERU  0.05444956  0.06474197  0.8410 0.4003344
+tipo_banderaABANDERADA PECSA      0.22212719  0.07525519  2.9517 0.0031608
+tipo_banderaABANDERADA PRIMAX     0.29757036  0.05632387  5.2832 1.269e-07
+tipo_banderaABANDERADA REPSOL     0.21691646  0.06104172  3.5536 0.0003800
+tipo_banderaPROPIA PECSA         -0.02746167  0.08064522 -0.3405 0.7334616
+tipo_banderaPROPIA PRIMAX         0.44474095  0.07184716  6.1901 6.013e-10
+tipo_banderaPROPIA REPSOL         0.35192619  0.06528701  5.3904 7.028e-08
+distancia_avg                     0.12789011  0.08737838  1.4636 0.1432935
+distancia_min                     0.07086295  0.04037691  1.7550 0.0792531
+num_grifos_cerc                  -0.00386868  0.00284571 -1.3595 0.1739948
+serv_mecanico1                   -0.01418435  0.03961736 -0.3580 0.7203182
+lavado                           -0.06946851  0.04738162 -1.4661 0.1426077
+cajero                            0.06941061  0.04090432  1.6969 0.0897152
+con_gnv1                         -0.07948533  0.04179822 -1.9016 0.0572178
+con_glp1                          0.03375842  0.04089733  0.8254 0.4091201
+ingresos_2012                     0.00039589  0.00010228  3.8705 0.0001086
+
+Rho: 0.58708, LR test value: 115.45, p-value: < 2.22e-16
+Asymptotic standard error: 0.048406
+    z-value: 12.128, p-value: < 2.22e-16
+Wald statistic: 147.09, p-value: < 2.22e-16
+
+Log likelihood: -166.1207 for lag model
+ML residual variance (sigma squared): 0.11801, (sigma: 0.34353)
+Number of observations: 430 
+Number of parameters estimated: 19 
+AIC: 370.24, (AIC for lm: 483.69)
+LM test for residual autocorrelation
+test value: 7.13, p-value: 0.0075803
+
+Mes:  10 Año:  2017 
+
+
+Call:lagsarlm(formula = modelo, data = .x, listw = .y)
+
+Residuals:
+      Min        1Q    Median        3Q       Max 
+-1.224206 -0.236975 -0.015042  0.199304  2.776470 
+
+Type: lag 
+Coefficients: (asymptotic standard errors) 
+                                    Estimate  Std. Error z value  Pr(>|z|)
+(Intercept)                       4.73697909  0.53454579  8.8617 < 2.2e-16
+tipo_banderaABANDERADA PETROPERU  0.12091698  0.07092241  1.7049  0.088209
+tipo_banderaABANDERADA PECSA      0.21945800  0.08172096  2.6855  0.007243
+tipo_banderaABANDERADA PRIMAX     0.33970134  0.06166625  5.5087 3.615e-08
+tipo_banderaABANDERADA REPSOL     0.33436020  0.06687448  4.9998 5.738e-07
+tipo_banderaPROPIA PECSA          0.06071988  0.08834283  0.6873  0.491880
+tipo_banderaPROPIA PRIMAX         0.45756724  0.07860907  5.8208 5.857e-09
+tipo_banderaPROPIA REPSOL         0.43393774  0.07157891  6.0624 1.341e-09
+distancia_avg                     0.13230144  0.09579209  1.3811  0.167239
+distancia_min                     0.04101999  0.04427640  0.9265  0.354211
+num_grifos_cerc                  -0.00701211  0.00313305 -2.2381  0.025214
+serv_mecanico1                   -0.00478378  0.04343084 -0.1101  0.912293
+lavado                           -0.01870235  0.05195594 -0.3600  0.718873
+cajero                            0.09827780  0.04477166  2.1951  0.028157
+con_gnv1                         -0.01890816  0.04575911 -0.4132  0.679452
+con_glp1                          0.00501809  0.04484874  0.1119  0.910911
+ingresos_2012                     0.00050828  0.00011399  4.4592 8.227e-06
+
+Rho: 0.47082, LR test value: 66.591, p-value: 3.3307e-16
+Asymptotic standard error: 0.054561
+    z-value: 8.6293, p-value: < 2.22e-16
+Wald statistic: 74.465, p-value: < 2.22e-16
+
+Log likelihood: -200.8172 for lag model
+ML residual variance (sigma squared): 0.14206, (sigma: 0.37691)
+Number of observations: 432 
+Number of parameters estimated: 19 
+AIC: 439.63, (AIC for lm: 504.23)
+LM test for residual autocorrelation
+test value: 6.4143, p-value: 0.011321
+
+Mes:  11 Año:  2017 
+
+
+Call:lagsarlm(formula = modelo, data = .x, listw = .y)
+
+Residuals:
+       Min         1Q     Median         3Q        Max 
+-1.0825622 -0.2123474  0.0010371  0.1734221  2.5880926 
+
+Type: lag 
+Coefficients: (asymptotic standard errors) 
+                                    Estimate  Std. Error z value  Pr(>|z|)
+(Intercept)                       3.96448352  0.48210121  8.2233 2.220e-16
+tipo_banderaABANDERADA PETROPERU  0.07602106  0.06316828  1.2035   0.22879
+tipo_banderaABANDERADA PECSA      0.16181406  0.07276303  2.2238   0.02616
+tipo_banderaABANDERADA PRIMAX     0.28242127  0.05493095  5.1414 2.727e-07
+tipo_banderaABANDERADA REPSOL     0.26107813  0.05956704  4.3829 1.171e-05
+tipo_banderaPROPIA PECSA         -0.07872861  0.07862903 -1.0013   0.31670
+tipo_banderaPROPIA PRIMAX         0.46519637  0.07006720  6.6393 3.152e-11
+tipo_banderaPROPIA REPSOL         0.38617443  0.06376145  6.0566 1.391e-09
+distancia_avg                     0.12419435  0.08530848  1.4558   0.14544
+distancia_min                     0.01548254  0.03943138  0.3926   0.69458
+num_grifos_cerc                  -0.00534237  0.00277489 -1.9253   0.05420
+serv_mecanico1                    0.00793244  0.03867065  0.2051   0.83747
+lavado                           -0.03063465  0.04627580 -0.6620   0.50797
+cajero                            0.06534144  0.03987652  1.6386   0.10130
+con_gnv1                         -0.06652716  0.04074784 -1.6327   0.10254
+con_glp1                          0.02135378  0.03993914  0.5347   0.59289
+ingresos_2012                     0.00041740  0.00010147  4.1136 3.895e-05
+
+Rho: 0.56291, LR test value: 110.47, p-value: < 2.22e-16
+Asymptotic standard error: 0.048755
+    z-value: 11.546, p-value: < 2.22e-16
+Wald statistic: 133.3, p-value: < 2.22e-16
+
+Log likelihood: -155.417 for lag model
+ML residual variance (sigma squared): 0.11266, (sigma: 0.33565)
+Number of observations: 432 
+Number of parameters estimated: 19 
+AIC: 348.83, (AIC for lm: 457.3)
+LM test for residual autocorrelation
+test value: 4.016, p-value: 0.045069
+
+Mes:  12 Año:  2017 
+
+
+Call:lagsarlm(formula = modelo, data = .x, listw = .y)
+
+Residuals:
+      Min        1Q    Median        3Q       Max 
+-1.257263 -0.228561  0.027833  0.231755  2.307382 
+
+Type: lag 
+Coefficients: (asymptotic standard errors) 
+                                    Estimate  Std. Error z value  Pr(>|z|)
+(Intercept)                       5.02724698  0.56330906  8.9245 < 2.2e-16
+tipo_banderaABANDERADA PETROPERU  0.01393190  0.07425873  0.1876 0.8511801
+tipo_banderaABANDERADA PECSA      0.27259285  0.08561199  3.1841 0.0014523
+tipo_banderaABANDERADA PRIMAX     0.36832152  0.06451471  5.7091 1.136e-08
+tipo_banderaABANDERADA REPSOL     0.33979498  0.07002557  4.8524 1.220e-06
+tipo_banderaPROPIA PECSA          0.11031138  0.09253497  1.1921 0.2332202
+tipo_banderaPROPIA PRIMAX         0.55649160  0.08228965  6.7626 1.355e-11
+tipo_banderaPROPIA REPSOL         0.36913968  0.07491748  4.9273 8.338e-07
+distancia_avg                     0.19865305  0.10044480  1.9777 0.0479588
+distancia_min                     0.04098597  0.04641845  0.8830 0.3772539
+num_grifos_cerc                  -0.00416843  0.00323825 -1.2872 0.1980083
+serv_mecanico1                   -0.01757649  0.04549894 -0.3863 0.6992705
+lavado                           -0.04198672  0.05446553 -0.7709 0.4407744
+cajero                            0.12881884  0.04692279  2.7453 0.0060449
+con_gnv1                         -0.05347358  0.04793087 -1.1156 0.2645764
+con_glp1                         -0.00171833  0.04701274 -0.0366 0.9708435
+ingresos_2012                     0.00045487  0.00011837  3.8427 0.0001217
+
+Rho: 0.46547, LR test value: 62.637, p-value: 2.4425e-15
+Asymptotic standard error: 0.055027
+    z-value: 8.4589, p-value: < 2.22e-16
+Wald statistic: 71.553, p-value: < 2.22e-16
+
+Log likelihood: -221.5386 for lag model
+ML residual variance (sigma squared): 0.15616, (sigma: 0.39518)
+Number of observations: 433 
+Number of parameters estimated: 19 
+AIC: 481.08, (AIC for lm: 541.71)
+LM test for residual autocorrelation
+test value: 3.2026, p-value: 0.07352
+
+Mes:  1 Año:  2018 
+
+
+Call:lagsarlm(formula = modelo, data = .x, listw = .y)
+
+Residuals:
+      Min        1Q    Median        3Q       Max 
+-1.411605 -0.202403  0.015365  0.212256  2.130075 
+
+Type: lag 
+Coefficients: (asymptotic standard errors) 
+                                    Estimate  Std. Error z value  Pr(>|z|)
+(Intercept)                       4.87650892  0.54784517  8.9013 < 2.2e-16
+tipo_banderaABANDERADA PETROPERU  0.07980101  0.06797189  1.1740 0.2403831
+tipo_banderaABANDERADA PECSA      0.19568208  0.07832821  2.4982 0.0124814
+tipo_banderaABANDERADA PRIMAX     0.32054046  0.05906438  5.4270 5.732e-08
+tipo_banderaABANDERADA REPSOL     0.31075896  0.06406533  4.8507 1.231e-06
+tipo_banderaPROPIA PECSA          0.01066345  0.08462613  0.1260 0.8997267
+tipo_banderaPROPIA PRIMAX         0.54011202  0.07536619  7.1665 7.694e-13
+tipo_banderaPROPIA REPSOL         0.45811774  0.06865145  6.6731 2.505e-11
+distancia_avg                     0.19277951  0.09192368  2.0972 0.0359786
+distancia_min                     0.01695969  0.04246602  0.3994 0.6896200
+num_grifos_cerc                  -0.00615012  0.00298262 -2.0620 0.0392092
+serv_mecanico1                    0.00881870  0.04163774  0.2118 0.8322664
+lavado                           -0.02159840  0.04983903 -0.4334 0.6647510
+cajero                            0.06653033  0.04291746  1.5502 0.1210953
+con_gnv1                         -0.03898492  0.04385160 -0.8890 0.3739928
+con_glp1                          0.00461757  0.04300476  0.1074 0.9144927
+ingresos_2012                     0.00040865  0.00010801  3.7834 0.0001547
+
+Rho: 0.49402, LR test value: 78.804, p-value: < 2.22e-16
+Asymptotic standard error: 0.052676
+    z-value: 9.3783, p-value: < 2.22e-16
+Wald statistic: 87.953, p-value: < 2.22e-16
+
+Log likelihood: -184.295 for lag model
+ML residual variance (sigma squared): 0.1307, (sigma: 0.36152)
+Number of observations: 433 
+Number of parameters estimated: 19 
+AIC: 406.59, (AIC for lm: 483.39)
+LM test for residual autocorrelation
+test value: 3.7498, p-value: 0.052814
+
+Mes:  2 Año:  2018 
+
+
+Call:lagsarlm(formula = modelo, data = .x, listw = .y)
+
+Residuals:
+      Min        1Q    Median        3Q       Max 
+-1.407646 -0.186541  0.011279  0.192540  2.204147 
+
+Type: lag 
+Coefficients: (asymptotic standard errors) 
+                                    Estimate  Std. Error z value  Pr(>|z|)
+(Intercept)                       4.82615428  0.54151179  8.9124 < 2.2e-16
+tipo_banderaABANDERADA PETROPERU  0.08831567  0.06580388  1.3421   0.17956
+tipo_banderaABANDERADA PECSA      0.19407947  0.07583255  2.5593   0.01049
+tipo_banderaABANDERADA PRIMAX     0.31753867  0.05716818  5.5545 2.785e-08
+tipo_banderaABANDERADA REPSOL     0.29531329  0.06200819  4.7625 1.912e-06
+tipo_banderaPROPIA PECSA         -0.02618364  0.08191435 -0.3196   0.74924
+tipo_banderaPROPIA PRIMAX         0.51900407  0.07297291  7.1123 1.141e-12
+tipo_banderaPROPIA REPSOL         0.36625728  0.06643679  5.5129 3.530e-08
+distancia_avg                     0.21347199  0.08901558  2.3981   0.01648
+distancia_min                    -0.00788986  0.04112234 -0.1919   0.84785
+num_grifos_cerc                  -0.00743093  0.00291211 -2.5517   0.01072
+serv_mecanico1                    0.04139619  0.04032460  1.0266   0.30462
+lavado                           -0.01259451  0.04826111 -0.2610   0.79412
+cajero                            0.09393772  0.04156167  2.2602   0.02381
+con_gnv1                         -0.06494262  0.04245731 -1.5296   0.12612
+con_glp1                         -0.00279590  0.04163895 -0.0671   0.94647
+ingresos_2012                     0.00042715  0.00010572  4.0404 5.336e-05
+
+Rho: 0.49756, LR test value: 81.317, p-value: < 2.22e-16
+Asymptotic standard error: 0.052124
+    z-value: 9.5458, p-value: < 2.22e-16
+Wald statistic: 91.122, p-value: < 2.22e-16
+
+Log likelihood: -170.4942 for lag model
+ML residual variance (sigma squared): 0.12253, (sigma: 0.35004)
+Number of observations: 433 
+Number of parameters estimated: 19 
+AIC: 378.99, (AIC for lm: 458.31)
+LM test for residual autocorrelation
+test value: 4.3852, p-value: 0.036252
+
+Mes:  3 Año:  2018 
+
+
+Call:lagsarlm(formula = modelo, data = .x, listw = .y)
+
+Residuals:
+      Min        1Q    Median        3Q       Max 
+-1.077358 -0.180238  0.010909  0.181883  2.179329 
+
+Type: lag 
+Coefficients: (asymptotic standard errors) 
+                                    Estimate  Std. Error z value  Pr(>|z|)
+(Intercept)                       4.64607157  0.52743350  8.8088 < 2.2e-16
+tipo_banderaABANDERADA PETROPERU  0.06165863  0.06335838  0.9732   0.33047
+tipo_banderaABANDERADA PECSA      0.16549670  0.07301986  2.2665   0.02342
+tipo_banderaABANDERADA PRIMAX     0.30262286  0.05492384  5.5099 3.591e-08
+tipo_banderaABANDERADA REPSOL     0.26083676  0.05968001  4.3706 1.239e-05
+tipo_banderaPROPIA PECSA         -0.04001063  0.07866699 -0.5086   0.61103
+tipo_banderaPROPIA PRIMAX         0.54184665  0.07004675  7.7355 1.021e-14
+tipo_banderaPROPIA REPSOL         0.33990451  0.06385297  5.3232 1.019e-07
+distancia_avg                     0.21467296  0.08586585  2.5001   0.01242
+distancia_min                    -0.00975294  0.03965109 -0.2460   0.80571
+num_grifos_cerc                  -0.00679275  0.00279856 -2.4272   0.01521
+serv_mecanico1                    0.02795649  0.03887599  0.7191   0.47207
+lavado                           -0.01288350  0.04654401 -0.2768   0.78193
+cajero                            0.08519686  0.03996971  2.1315   0.03305
+con_gnv1                         -0.08260557  0.04089400 -2.0200   0.04338
+con_glp1                         -0.01001133  0.04016417 -0.2493   0.80316
+ingresos_2012                     0.00039961  0.00010185  3.9234 8.731e-05
+
+Rho: 0.519, LR test value: 93.377, p-value: < 2.22e-16
+Asymptotic standard error: 0.050718
+    z-value: 10.233, p-value: < 2.22e-16
+Wald statistic: 104.72, p-value: < 2.22e-16
+
+Log likelihood: -156.3049 for lag model
+ML residual variance (sigma squared): 0.114, (sigma: 0.33764)
+Number of observations: 434 
+Number of parameters estimated: 19 
+AIC: 350.61, (AIC for lm: 441.99)
+LM test for residual autocorrelation
+test value: 3.5291, p-value: 0.0603
+
+Mes:  4 Año:  2018 
+
+
+Call:lagsarlm(formula = modelo, data = .x, listw = .y)
+
+Residuals:
+       Min         1Q     Median         3Q        Max 
+-1.2613568 -0.1980425  0.0015059  0.2056597  2.1064196 
+
+Type: lag 
+Coefficients: (asymptotic standard errors) 
+                                    Estimate  Std. Error z value  Pr(>|z|)
+(Intercept)                       4.62831959  0.52402474  8.8323 < 2.2e-16
+tipo_banderaABANDERADA PETROPERU  0.06825348  0.06342030  1.0762 0.2818339
+tipo_banderaABANDERADA PECSA      0.23081999  0.07309359  3.1579 0.0015893
+tipo_banderaABANDERADA PRIMAX     0.40388364  0.05498618  7.3452 2.054e-13
+tipo_banderaABANDERADA REPSOL     0.33032183  0.05978352  5.5253 3.289e-08
+tipo_banderaPROPIA PECSA          0.05962968  0.07878928  0.7568 0.4491548
+tipo_banderaPROPIA PRIMAX         0.62475600  0.07018818  8.9012 < 2.2e-16
+tipo_banderaPROPIA REPSOL         0.30287394  0.06390595  4.7394 2.144e-06
+distancia_avg                     0.22466779  0.08591608  2.6150 0.0089236
+distancia_min                    -0.02336881  0.03969101 -0.5888 0.5560167
+num_grifos_cerc                  -0.00637279  0.00279831 -2.2774 0.0227639
+serv_mecanico1                    0.00837732  0.03890469  0.2153 0.8295105
+lavado                           -0.00866855  0.04657956 -0.1861 0.8523647
+cajero                            0.09492625  0.04000739  2.3727 0.0176578
+con_gnv1                         -0.08153788  0.04093408 -1.9919 0.0463786
+con_glp1                         -0.00159018  0.04020349 -0.0396 0.9684492
+ingresos_2012                     0.00038628  0.00010247  3.7696 0.0001635
+
+Rho: 0.52274, LR test value: 98.335, p-value: < 2.22e-16
+Asymptotic standard error: 0.049951
+    z-value: 10.465, p-value: < 2.22e-16
+Wald statistic: 109.52, p-value: < 2.22e-16
+
+Log likelihood: -156.8997 for lag model
+ML residual variance (sigma squared): 0.11421, (sigma: 0.33796)
+Number of observations: 434 
+Number of parameters estimated: 19 
+AIC: 351.8, (AIC for lm: 448.13)
+LM test for residual autocorrelation
+test value: 3.5103, p-value: 0.06099
+
+Mes:  5 Año:  2018 
+
+
+Call:lagsarlm(formula = modelo, data = .x, listw = .y)
+
+Residuals:
+       Min         1Q     Median         3Q        Max 
+-1.6072507 -0.1954798  0.0077767  0.2309024  1.6671718 
+
+Type: lag 
+Coefficients: (asymptotic standard errors) 
+                                    Estimate  Std. Error z value  Pr(>|z|)
+(Intercept)                       5.57064549  0.58619059  9.5031 < 2.2e-16
+tipo_banderaABANDERADA PETROPERU  0.05389457  0.07061430  0.7632 0.4453295
+tipo_banderaABANDERADA PECSA      0.23023205  0.08139234  2.8287 0.0046742
+tipo_banderaABANDERADA PRIMAX     0.35137696  0.06121556  5.7400 9.468e-09
+tipo_banderaABANDERADA REPSOL     0.30041137  0.06650260  4.5173 6.264e-06
+tipo_banderaPROPIA PECSA          0.02177448  0.08773376  0.2482 0.8039889
+tipo_banderaPROPIA PRIMAX         0.64487325  0.07807564  8.2596 2.220e-16
+tipo_banderaPROPIA REPSOL         0.43733180  0.07117443  6.1445 8.021e-10
+distancia_avg                     0.18741922  0.09564780  1.9595 0.0500575
+distancia_min                    -0.04846965  0.04420063 -1.0966 0.2728238
+num_grifos_cerc                  -0.00938899  0.00314147 -2.9887 0.0028015
+serv_mecanico1                    0.03525786  0.04333749  0.8136 0.4158942
+lavado                           -0.06333653  0.05187363 -1.2210 0.2220946
+cajero                            0.10723857  0.04454476  2.4074 0.0160651
+con_gnv1                         -0.06075435  0.04558737 -1.3327 0.1826298
+con_glp1                         -0.00792659  0.04476691 -0.1771 0.8594584
+ingresos_2012                     0.00043892  0.00011333  3.8731 0.0001075
+
+Rho: 0.46255, LR test value: 70.83, p-value: < 2.22e-16
+Asymptotic standard error: 0.053363
+    z-value: 8.668, p-value: < 2.22e-16
+Wald statistic: 75.135, p-value: < 2.22e-16
+
+Log likelihood: -200.6976 for lag model
+ML residual variance (sigma squared): 0.14161, (sigma: 0.37631)
+Number of observations: 434 
+Number of parameters estimated: 19 
+AIC: 439.4, (AIC for lm: 508.22)
+LM test for residual autocorrelation
+test value: 5.095, p-value: 0.023995
+
+Mes:  6 Año:  2018 
+
+
+Call:lagsarlm(formula = modelo, data = .x, listw = .y)
+
+Residuals:
+        Min          1Q      Median          3Q         Max 
+-1.61940256 -0.18990550 -0.00070357  0.21228046  1.52531732 
+
+Type: lag 
+Coefficients: (asymptotic standard errors) 
+                                    Estimate  Std. Error z value  Pr(>|z|)
+(Intercept)                       5.46943321  0.55247062  9.9000 < 2.2e-16
+tipo_banderaABANDERADA PETROPERU  0.08735584  0.06771480  1.2901 0.1970314
+tipo_banderaABANDERADA PECSA      0.29834197  0.07805640  3.8221 0.0001323
+tipo_banderaABANDERADA PRIMAX     0.42577449  0.05872328  7.2505 4.152e-13
+tipo_banderaABANDERADA REPSOL     0.39159474  0.06386271  6.1318 8.688e-10
+tipo_banderaPROPIA PECSA          0.33180366  0.08436879  3.9328 8.397e-05
+tipo_banderaPROPIA PRIMAX         0.81191643  0.07514521 10.8046 < 2.2e-16
+tipo_banderaPROPIA REPSOL         0.50847025  0.06842702  7.4308 1.079e-13
+distancia_avg                     0.18484646  0.09175219  2.0146 0.0439437
+distancia_min                    -0.04357497  0.04241321 -1.0274 0.3042363
+num_grifos_cerc                  -0.00790035  0.00299410 -2.6386 0.0083240
+serv_mecanico1                    0.02954121  0.04158748  0.7103 0.4774939
+lavado                           -0.05091368  0.04976950 -1.0230 0.3063128
+cajero                            0.07355367  0.04272310  1.7216 0.0851353
+con_gnv1                         -0.05389335  0.04371040 -1.2330 0.2175892
+con_glp1                         -0.00998326  0.04295115 -0.2324 0.8162019
+ingresos_2012                     0.00034652  0.00010974  3.1577 0.0015902
+
+Rho: 0.47908, LR test value: 81.644, p-value: < 2.22e-16
+Asymptotic standard error: 0.050133
+    z-value: 9.5562, p-value: < 2.22e-16
+Wald statistic: 91.321, p-value: < 2.22e-16
+
+Log likelihood: -183.9712 for lag model
+ML residual variance (sigma squared): 0.13041, (sigma: 0.36112)
+Number of observations: 435 
+Number of parameters estimated: 19 
+AIC: 405.94, (AIC for lm: 485.59)
+LM test for residual autocorrelation
+test value: 0.45255, p-value: 0.50112
+
+Mes:  7 Año:  2018 
+
+
+Call:lagsarlm(formula = modelo, data = .x, listw = .y)
+
+Residuals:
+      Min        1Q    Median        3Q       Max 
+-1.797290 -0.200072  0.029699  0.222017  1.277734 
+
+Type: lag 
+Coefficients: (asymptotic standard errors) 
+                                    Estimate  Std. Error z value  Pr(>|z|)
+(Intercept)                       5.17092415  0.55595590  9.3010 < 2.2e-16
+tipo_banderaABANDERADA PETROPERU  0.07276374  0.06723992  1.0822 0.2791855
+tipo_banderaABANDERADA PECSA      0.23570205  0.07749895  3.0414 0.0023551
+tipo_banderaABANDERADA PRIMAX     0.35888453  0.05829032  6.1568 7.421e-10
+tipo_banderaABANDERADA REPSOL     0.25785601  0.06334801  4.0705 4.692e-05
+tipo_banderaPROPIA PECSA          0.06988452  0.08359044  0.8360 0.4031353
+tipo_banderaPROPIA PRIMAX         0.65874521  0.07448456  8.8441 < 2.2e-16
+tipo_banderaPROPIA REPSOL         0.45232165  0.06759775  6.6914 2.211e-11
+distancia_avg                     0.21351326  0.09104051  2.3453 0.0190140
+distancia_min                    -0.06859957  0.04214308 -1.6278 0.1035720
+num_grifos_cerc                  -0.00830192  0.00295813 -2.8065 0.0050087
+serv_mecanico1                    0.01857375  0.04130752  0.4496 0.6529659
+lavado                            0.00359932  0.04927831  0.0730 0.9417738
+cajero                            0.09685460  0.04244087  2.2821 0.0224830
+con_gnv1                         -0.05946087  0.04335239 -1.3716 0.1701972
+con_glp1                          0.03011443  0.04259754  0.7070 0.4795961
+ingresos_2012                     0.00036031  0.00010793  3.3383 0.0008428
+
+Rho: 0.51198, LR test value: 93.632, p-value: < 2.22e-16
+Asymptotic standard error: 0.049662
+    z-value: 10.309, p-value: < 2.22e-16
+Wald statistic: 106.28, p-value: < 2.22e-16
+
+Log likelihood: -183.0269 for lag model
+ML residual variance (sigma squared): 0.12866, (sigma: 0.35869)
+Number of observations: 436 
+Number of parameters estimated: 19 
+AIC: 404.05, (AIC for lm: 495.69)
+LM test for residual autocorrelation
+test value: 1.587, p-value: 0.20776
+
+Mes:  8 Año:  2018 
+
+
+Call:lagsarlm(formula = modelo, data = .x, listw = .y)
+
+Residuals:
+      Min        1Q    Median        3Q       Max 
+-1.814389 -0.196343  0.019682  0.222403  1.262410 
+
+Type: lag 
+Coefficients: (asymptotic standard errors) 
+                                    Estimate  Std. Error z value  Pr(>|z|)
+(Intercept)                       5.13296256  0.55266908  9.2876 < 2.2e-16
+tipo_banderaABANDERADA PETROPERU  0.08274368  0.06689291  1.2370  0.216103
+tipo_banderaABANDERADA PECSA      0.22228471  0.07710467  2.8829  0.003940
+tipo_banderaABANDERADA PRIMAX     0.34841519  0.05799031  6.0082 1.876e-09
+tipo_banderaABANDERADA REPSOL     0.24981888  0.06302287  3.9639 7.372e-05
+tipo_banderaPROPIA PECSA          0.13662438  0.08321775  1.6418  0.100638
+tipo_banderaPROPIA PRIMAX         0.68790521  0.07415108  9.2771 < 2.2e-16
+tipo_banderaPROPIA REPSOL         0.44602033  0.06725717  6.6316 3.321e-11
+distancia_avg                     0.21042341  0.09056702  2.3234  0.020158
+distancia_min                    -0.07243780  0.04192615 -1.7277  0.084034
+num_grifos_cerc                  -0.00783293  0.00293379 -2.6699  0.007587
+serv_mecanico1                    0.03176610  0.04109844  0.7729  0.439566
+lavado                           -0.02072600  0.04901997 -0.4228  0.672436
+cajero                            0.07912245  0.04221729  1.8742  0.060907
+con_gnv1                         -0.04755679  0.04314289 -1.1023  0.270327
+con_glp1                          0.02441086  0.04238178  0.5760  0.564632
+ingresos_2012                     0.00034496  0.00010728  3.2156  0.001302
+
+Rho: 0.51709, LR test value: 96.187, p-value: < 2.22e-16
+Asymptotic standard error: 0.049335
+    z-value: 10.481, p-value: < 2.22e-16
+Wald statistic: 109.86, p-value: < 2.22e-16
+
+Log likelihood: -181.0356 for lag model
+ML residual variance (sigma squared): 0.12734, (sigma: 0.35684)
+Number of observations: 436 
+Number of parameters estimated: 19 
+AIC: 400.07, (AIC for lm: 494.26)
+LM test for residual autocorrelation
+test value: 1.7798, p-value: 0.18217
+
+Mes:  9 Año:  2018 
+
+
+Call:lagsarlm(formula = modelo, data = .x, listw = .y)
+
+Residuals:
+      Min        1Q    Median        3Q       Max 
+-1.833817 -0.196176  0.013065  0.223115  1.212870 
+
+Type: lag 
+Coefficients: (asymptotic standard errors) 
+                                    Estimate  Std. Error z value  Pr(>|z|)
+(Intercept)                       4.90186350  0.53581182  9.1485 < 2.2e-16
+tipo_banderaABANDERADA PETROPERU  0.05475244  0.06447321  0.8492 0.3957546
+tipo_banderaABANDERADA PECSA      0.18663614  0.07433834  2.5106 0.0120516
+tipo_banderaABANDERADA PRIMAX     0.32028050  0.05588616  5.7309 9.987e-09
+tipo_banderaABANDERADA REPSOL     0.22532832  0.06079393  3.7064 0.0002102
+tipo_banderaPROPIA PECSA          0.08935731  0.08027873  1.1131 0.2656705
+tipo_banderaPROPIA PRIMAX         0.68043558  0.07156627  9.5078 < 2.2e-16
+tipo_banderaPROPIA REPSOL         0.45712372  0.06492159  7.0412 1.906e-12
+distancia_avg                     0.24562708  0.08723503  2.8157 0.0048672
+distancia_min                    -0.05882185  0.04046040 -1.4538 0.1459982
+num_grifos_cerc                  -0.00856334  0.00284106 -3.0141 0.0025771
+serv_mecanico1                    0.01049996  0.03964908  0.2648 0.7911463
+lavado                           -0.02279780  0.04731397 -0.4818 0.6299190
+cajero                            0.06615035  0.04073601  1.6239 0.1044016
+con_gnv1                         -0.03213175  0.04157676 -0.7728 0.4396232
+con_glp1                          0.00751712  0.04088554  0.1839 0.8541250
+ingresos_2012                     0.00035212  0.00010455  3.3679 0.0007575
+
+Rho: 0.53672, LR test value: 106.72, p-value: < 2.22e-16
+Asymptotic standard error: 0.047908
+    z-value: 11.203, p-value: < 2.22e-16
+Wald statistic: 125.51, p-value: < 2.22e-16
+
+Log likelihood: -167.0029 for lag model
+ML residual variance (sigma squared): 0.11862, (sigma: 0.34442)
+Number of observations: 437 
+Number of parameters estimated: 19 
+AIC: 372.01, (AIC for lm: 476.72)
+LM test for residual autocorrelation
+test value: 1.2957, p-value: 0.255
+
+Mes:  10 Año:  2018 
+
+
+Call:lagsarlm(formula = modelo, data = .x, listw = .y)
+
+Residuals:
+      Min        1Q    Median        3Q       Max 
+-2.251542 -0.232278  0.002725  0.269237  1.130316 
+
+Type: lag 
+Coefficients: (asymptotic standard errors) 
+                                    Estimate  Std. Error z value  Pr(>|z|)
+(Intercept)                       6.37549334  0.65637255  9.7132 < 2.2e-16
+tipo_banderaABANDERADA PETROPERU  0.06774772  0.07998436  0.8470 0.3969884
+tipo_banderaABANDERADA PECSA      0.26278083  0.09225166  2.8485 0.0043923
+tipo_banderaABANDERADA PRIMAX     0.34458873  0.06927227  4.9744 6.545e-07
+tipo_banderaABANDERADA REPSOL     0.25873506  0.07539834  3.4316 0.0006001
+tipo_banderaPROPIA PECSA          0.20562604  0.09962879  2.0639 0.0390251
+tipo_banderaPROPIA PRIMAX         0.72423219  0.08854770  8.1790 2.220e-16
+tipo_banderaPROPIA REPSOL         0.39903561  0.08039595  4.9634 6.928e-07
+distancia_avg                     0.33012900  0.10831281  3.0479 0.0023043
+distancia_min                    -0.06433863  0.05020720 -1.2815 0.2000313
+num_grifos_cerc                  -0.01168043  0.00353191 -3.3071 0.0009426
+serv_mecanico1                    0.00182754  0.04918962  0.0372 0.9703631
+lavado                           -0.02313116  0.05870641 -0.3940 0.6935706
+cajero                            0.06876315  0.05054786  1.3604 0.1737169
+con_gnv1                         -0.00359600  0.05161494 -0.0697 0.9444564
+con_glp1                          0.00432900  0.05074291  0.0853 0.9320131
+ingresos_2012                     0.00056169  0.00012945  4.3390 1.431e-05
+
+Rho: 0.41204, LR test value: 51.483, p-value: 7.2209e-13
+Asymptotic standard error: 0.056634
+    z-value: 7.2755, p-value: 3.4506e-13
+Wald statistic: 52.933, p-value: 3.4517e-13
+
+Log likelihood: -255.72 for lag model
+ML residual variance (sigma squared): 0.18271, (sigma: 0.42745)
+Number of observations: 437 
+Number of parameters estimated: 19 
+AIC: 549.44, (AIC for lm: 598.92)
+LM test for residual autocorrelation
+test value: 6.1448, p-value: 0.01318
+
+Mes:  11 Año:  2018 
+
+
+Call:lagsarlm(formula = modelo, data = .x, listw = .y)
+
+Residuals:
+      Min        1Q    Median        3Q       Max 
+-2.251542 -0.232278  0.002725  0.269237  1.130316 
+
+Type: lag 
+Coefficients: (asymptotic standard errors) 
+                                    Estimate  Std. Error z value  Pr(>|z|)
+(Intercept)                       6.37549334  0.65637255  9.7132 < 2.2e-16
+tipo_banderaABANDERADA PETROPERU  0.06774772  0.07998436  0.8470 0.3969884
+tipo_banderaABANDERADA PECSA      0.26278083  0.09225166  2.8485 0.0043923
+tipo_banderaABANDERADA PRIMAX     0.34458873  0.06927227  4.9744 6.545e-07
+tipo_banderaABANDERADA REPSOL     0.25873506  0.07539834  3.4316 0.0006001
+tipo_banderaPROPIA PECSA          0.20562604  0.09962879  2.0639 0.0390251
+tipo_banderaPROPIA PRIMAX         0.72423219  0.08854770  8.1790 2.220e-16
+tipo_banderaPROPIA REPSOL         0.39903561  0.08039595  4.9634 6.928e-07
+distancia_avg                     0.33012900  0.10831281  3.0479 0.0023043
+distancia_min                    -0.06433863  0.05020720 -1.2815 0.2000313
+num_grifos_cerc                  -0.01168043  0.00353191 -3.3071 0.0009426
+serv_mecanico1                    0.00182754  0.04918962  0.0372 0.9703631
+lavado                           -0.02313116  0.05870641 -0.3940 0.6935706
+cajero                            0.06876315  0.05054786  1.3604 0.1737169
+con_gnv1                         -0.00359600  0.05161494 -0.0697 0.9444564
+con_glp1                          0.00432900  0.05074291  0.0853 0.9320131
+ingresos_2012                     0.00056169  0.00012945  4.3390 1.431e-05
+
+Rho: 0.41204, LR test value: 51.483, p-value: 7.2209e-13
+Asymptotic standard error: 0.056634
+    z-value: 7.2755, p-value: 3.4506e-13
+Wald statistic: 52.933, p-value: 3.4517e-13
+
+Log likelihood: -255.72 for lag model
+ML residual variance (sigma squared): 0.18271, (sigma: 0.42745)
+Number of observations: 437 
+Number of parameters estimated: 19 
+AIC: 549.44, (AIC for lm: 598.92)
+LM test for residual autocorrelation
+test value: 6.1448, p-value: 0.01318
+
+Mes:  12 Año:  2018 
+
+
+Call:lagsarlm(formula = modelo, data = .x, listw = .y)
+
+Residuals:
+      Min        1Q    Median        3Q       Max 
+-2.251542 -0.232278  0.002725  0.269237  1.130316 
+
+Type: lag 
+Coefficients: (asymptotic standard errors) 
+                                    Estimate  Std. Error z value  Pr(>|z|)
+(Intercept)                       6.37549334  0.65637255  9.7132 < 2.2e-16
+tipo_banderaABANDERADA PETROPERU  0.06774772  0.07998436  0.8470 0.3969884
+tipo_banderaABANDERADA PECSA      0.26278083  0.09225166  2.8485 0.0043923
+tipo_banderaABANDERADA PRIMAX     0.34458873  0.06927227  4.9744 6.545e-07
+tipo_banderaABANDERADA REPSOL     0.25873506  0.07539834  3.4316 0.0006001
+tipo_banderaPROPIA PECSA          0.20562604  0.09962879  2.0639 0.0390251
+tipo_banderaPROPIA PRIMAX         0.72423219  0.08854770  8.1790 2.220e-16
+tipo_banderaPROPIA REPSOL         0.39903561  0.08039595  4.9634 6.928e-07
+distancia_avg                     0.33012900  0.10831281  3.0479 0.0023043
+distancia_min                    -0.06433863  0.05020720 -1.2815 0.2000313
+num_grifos_cerc                  -0.01168043  0.00353191 -3.3071 0.0009426
+serv_mecanico1                    0.00182754  0.04918962  0.0372 0.9703631
+lavado                           -0.02313116  0.05870641 -0.3940 0.6935706
+cajero                            0.06876315  0.05054786  1.3604 0.1737169
+con_gnv1                         -0.00359600  0.05161494 -0.0697 0.9444564
+con_glp1                          0.00432900  0.05074291  0.0853 0.9320131
+ingresos_2012                     0.00056169  0.00012945  4.3390 1.431e-05
+
+Rho: 0.41204, LR test value: 51.483, p-value: 7.2209e-13
+Asymptotic standard error: 0.056634
+    z-value: 7.2755, p-value: 3.4506e-13
+Wald statistic: 52.933, p-value: 3.4517e-13
+
+Log likelihood: -255.72 for lag model
+ML residual variance (sigma squared): 0.18271, (sigma: 0.42745)
+Number of observations: 437 
+Number of parameters estimated: 19 
+AIC: 549.44, (AIC for lm: 598.92)
+LM test for residual autocorrelation
+test value: 6.1448, p-value: 0.01318
+

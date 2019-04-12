@@ -1,0 +1,865 @@
+Output de OLS
+Mes:  1 Año:  2017 
+
+
+Call:
+lm(formula = modelo, data = .x)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-1.57378 -0.27192 -0.01629  0.23000  3.09489 
+
+Coefficients:
+                                   Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                       8.8633906  0.1726841  51.327  < 2e-16 ***
+tipo_banderaABANDERADA PETROPERU  0.1145194  0.0871772   1.314 0.189699    
+tipo_banderaABANDERADA PECSA      0.2247219  0.1003818   2.239 0.025711 *  
+tipo_banderaABANDERADA PRIMAX     0.3622372  0.0749760   4.831 1.92e-06 ***
+tipo_banderaABANDERADA REPSOL     0.3180268  0.0811778   3.918 0.000105 ***
+tipo_banderaPROPIA PECSA         -0.0766999  0.1074559  -0.714 0.475767    
+tipo_banderaPROPIA PRIMAX         0.6337185  0.0953386   6.647 9.51e-11 ***
+tipo_banderaPROPIA REPSOL         0.4958836  0.0867857   5.714 2.12e-08 ***
+distancia_avg                     0.1334307  0.1165527   1.145 0.252952    
+distancia_min                     0.0887172  0.0538753   1.647 0.100380    
+num_grifos_cerc                  -0.0101383  0.0037276  -2.720 0.006809 ** 
+serv_mecanico1                    0.0046276  0.0529317   0.087 0.930376    
+lavado                           -0.0948027  0.0632141  -1.500 0.134456    
+cajero                            0.1014438  0.0545518   1.860 0.063657 .  
+con_gnv1                         -0.1103504  0.0560854  -1.968 0.049791 *  
+con_glp1                         -0.0288974  0.0548221  -0.527 0.598400    
+ingresos_2012                     0.0011314  0.0001186   9.537  < 2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.4583 on 412 degrees of freedom
+Multiple R-squared:  0.4136,	Adjusted R-squared:  0.3908 
+F-statistic: 18.16 on 16 and 412 DF,  p-value: < 2.2e-16
+
+Mes:  2 Año:  2017 
+
+
+Call:
+lm(formula = modelo, data = .x)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-1.58217 -0.25620 -0.01857  0.22051  3.04061 
+
+Coefficients:
+                                   Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                       8.8081826  0.1685054  52.272  < 2e-16 ***
+tipo_banderaABANDERADA PETROPERU  0.1420678  0.0850677   1.670  0.09567 .  
+tipo_banderaABANDERADA PECSA      0.2563367  0.0979527   2.617  0.00920 ** 
+tipo_banderaABANDERADA PRIMAX     0.3628911  0.0731617   4.960 1.03e-06 ***
+tipo_banderaABANDERADA REPSOL     0.3386227  0.0792134   4.275 2.38e-05 ***
+tipo_banderaPROPIA PECSA         -0.1161278  0.1048556  -1.108  0.26872    
+tipo_banderaPROPIA PRIMAX         0.5834791  0.0930315   6.272 9.03e-10 ***
+tipo_banderaPROPIA REPSOL         0.4524052  0.0846856   5.342 1.52e-07 ***
+distancia_avg                     0.1953457  0.1137323   1.718  0.08662 .  
+distancia_min                     0.0939176  0.0525716   1.786  0.07476 .  
+num_grifos_cerc                  -0.0098354  0.0036374  -2.704  0.00714 ** 
+serv_mecanico1                    0.0032150  0.0516508   0.062  0.95040    
+lavado                           -0.1063399  0.0616844  -1.724  0.08547 .  
+cajero                            0.1029332  0.0532318   1.934  0.05384 .  
+con_gnv1                         -0.0880006  0.0547282  -1.608  0.10861    
+con_glp1                         -0.0271319  0.0534955  -0.507  0.61230    
+ingresos_2012                     0.0011325  0.0001158   9.783  < 2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.4472 on 412 degrees of freedom
+Multiple R-squared:  0.4073,	Adjusted R-squared:  0.3843 
+F-statistic:  17.7 on 16 and 412 DF,  p-value: < 2.2e-16
+
+Mes:  3 Año:  2017 
+
+
+Call:
+lm(formula = modelo, data = .x)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-1.58409 -0.24531 -0.01396  0.21990  3.07312 
+
+Coefficients:
+                                  Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                       8.872197   0.162984  54.436  < 2e-16 ***
+tipo_banderaABANDERADA PETROPERU  0.120330   0.081437   1.478  0.14028    
+tipo_banderaABANDERADA PECSA      0.259109   0.094735   2.735  0.00650 ** 
+tipo_banderaABANDERADA PRIMAX     0.343862   0.070761   4.860 1.67e-06 ***
+tipo_banderaABANDERADA REPSOL     0.334628   0.076625   4.367 1.59e-05 ***
+tipo_banderaPROPIA PECSA         -0.054253   0.101423  -0.535  0.59299    
+tipo_banderaPROPIA PRIMAX         0.583766   0.089992   6.487 2.51e-10 ***
+tipo_banderaPROPIA REPSOL         0.429546   0.081912   5.244 2.51e-07 ***
+distancia_avg                     0.144581   0.110017   1.314  0.18952    
+distancia_min                     0.092605   0.050845   1.821  0.06928 .  
+num_grifos_cerc                  -0.009793   0.003515  -2.786  0.00558 ** 
+serv_mecanico1                    0.009032   0.049883   0.181  0.85641    
+lavado                           -0.116116   0.059667  -1.946  0.05233 .  
+cajero                            0.094127   0.051483   1.828  0.06822 .  
+con_gnv1                         -0.097430   0.052636  -1.851  0.06488 .  
+con_glp1                         -0.026684   0.051496  -0.518  0.60462    
+ingresos_2012                     0.001119   0.000112   9.995  < 2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.4326 on 413 degrees of freedom
+Multiple R-squared:  0.4109,	Adjusted R-squared:  0.388 
+F-statistic:    18 on 16 and 413 DF,  p-value: < 2.2e-16
+
+Mes:  4 Año:  2017 
+
+
+Call:
+lm(formula = modelo, data = .x)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-1.58983 -0.23990 -0.02165  0.23085  3.07653 
+
+Coefficients:
+                                  Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                       8.883774   0.164559  53.985  < 2e-16 ***
+tipo_banderaABANDERADA PETROPERU  0.113569   0.082223   1.381  0.16796    
+tipo_banderaABANDERADA PECSA      0.244339   0.095650   2.555  0.01099 *  
+tipo_banderaABANDERADA PRIMAX     0.334053   0.071444   4.676 3.97e-06 ***
+tipo_banderaABANDERADA REPSOL     0.326739   0.077366   4.223 2.96e-05 ***
+tipo_banderaPROPIA PECSA         -0.070472   0.102403  -0.688  0.49172    
+tipo_banderaPROPIA PRIMAX         0.570084   0.090862   6.274 8.88e-10 ***
+tipo_banderaPROPIA REPSOL         0.425790   0.082703   5.148 4.07e-07 ***
+distancia_avg                     0.141572   0.111080   1.275  0.20320    
+distancia_min                     0.094358   0.051336   1.838  0.06677 .  
+num_grifos_cerc                  -0.010238   0.003549  -2.885  0.00412 ** 
+serv_mecanico1                    0.007351   0.050365   0.146  0.88403    
+lavado                           -0.108278   0.060244  -1.797  0.07301 .  
+cajero                            0.092844   0.051980   1.786  0.07481 .  
+con_gnv1                         -0.112959   0.053144  -2.126  0.03414 *  
+con_glp1                         -0.019579   0.051993  -0.377  0.70668    
+ingresos_2012                     0.001117   0.000113   9.883  < 2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.4368 on 413 degrees of freedom
+Multiple R-squared:  0.4043,	Adjusted R-squared:  0.3813 
+F-statistic: 17.52 on 16 and 413 DF,  p-value: < 2.2e-16
+
+Mes:  5 Año:  2017 
+
+
+Call:
+lm(formula = modelo, data = .x)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-1.58554 -0.24529 -0.00907  0.24230  3.08427 
+
+Coefficients:
+                                   Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                       8.8997734  0.1653795  53.814  < 2e-16 ***
+tipo_banderaABANDERADA PETROPERU  0.1270295  0.0826336   1.537  0.12499    
+tipo_banderaABANDERADA PECSA      0.2277249  0.0961273   2.369  0.01830 *  
+tipo_banderaABANDERADA PRIMAX     0.3483211  0.0718006   4.851 1.74e-06 ***
+tipo_banderaABANDERADA REPSOL     0.3354862  0.0777515   4.315 2.00e-05 ***
+tipo_banderaPROPIA PECSA         -0.1121518  0.1029138  -1.090  0.27645    
+tipo_banderaPROPIA PRIMAX         0.5918661  0.0913148   6.482 2.59e-10 ***
+tipo_banderaPROPIA REPSOL         0.4368998  0.0831159   5.257 2.36e-07 ***
+distancia_avg                     0.1282010  0.1116340   1.148  0.25147    
+distancia_min                     0.0810022  0.0515924   1.570  0.11717    
+num_grifos_cerc                  -0.0106670  0.0035663  -2.991  0.00295 ** 
+serv_mecanico1                    0.0125880  0.0506163   0.249  0.80372    
+lavado                           -0.1129414  0.0605444  -1.865  0.06283 .  
+cajero                            0.0954808  0.0522392   1.828  0.06831 .  
+con_gnv1                         -0.1156350  0.0534095  -2.165  0.03095 *  
+con_glp1                         -0.0238852  0.0522527  -0.457  0.64783    
+ingresos_2012                     0.0011160  0.0001136   9.823  < 2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.439 on 413 degrees of freedom
+Multiple R-squared:  0.4109,	Adjusted R-squared:  0.3881 
+F-statistic:    18 on 16 and 413 DF,  p-value: < 2.2e-16
+
+Mes:  6 Año:  2017 
+
+
+Call:
+lm(formula = modelo, data = .x)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-1.57491 -0.24690 -0.02548  0.25047  3.09026 
+
+Coefficients:
+                                   Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                       8.9067340  0.1677141  53.107  < 2e-16 ***
+tipo_banderaABANDERADA PETROPERU  0.1231901  0.0838000   1.470  0.14231    
+tipo_banderaABANDERADA PECSA      0.2009004  0.0974843   2.061  0.03994 *  
+tipo_banderaABANDERADA PRIMAX     0.3522294  0.0728142   4.837 1.86e-06 ***
+tipo_banderaABANDERADA REPSOL     0.3369702  0.0788491   4.274 2.39e-05 ***
+tipo_banderaPROPIA PECSA         -0.1202776  0.1043666  -1.152  0.24980    
+tipo_banderaPROPIA PRIMAX         0.5923615  0.0926038   6.397 4.31e-10 ***
+tipo_banderaPROPIA REPSOL         0.4025308  0.0842892   4.776 2.49e-06 ***
+distancia_avg                     0.1268167  0.1132099   1.120  0.26328    
+distancia_min                     0.0814259  0.0523207   1.556  0.12041    
+num_grifos_cerc                  -0.0099366  0.0036166  -2.747  0.00627 ** 
+serv_mecanico1                    0.0095787  0.0513308   0.187  0.85206    
+lavado                           -0.1175385  0.0613990  -1.914  0.05627 .  
+cajero                            0.0940400  0.0529766   1.775  0.07661 .  
+con_gnv1                         -0.1202692  0.0541635  -2.220  0.02693 *  
+con_glp1                         -0.0203683  0.0529904  -0.384  0.70090    
+ingresos_2012                     0.0010960  0.0001152   9.512  < 2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.4452 on 413 degrees of freedom
+Multiple R-squared:  0.3943,	Adjusted R-squared:  0.3708 
+F-statistic:  16.8 on 16 and 413 DF,  p-value: < 2.2e-16
+
+Mes:  7 Año:  2017 
+
+
+Call:
+lm(formula = modelo, data = .x)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-1.4292 -0.2443 -0.0260  0.2299  3.2924 
+
+Coefficients:
+                                   Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                       8.7860821  0.1667356  52.695  < 2e-16 ***
+tipo_banderaABANDERADA PETROPERU  0.1066765  0.0833112   1.280 0.201103    
+tipo_banderaABANDERADA PECSA      0.1595246  0.0969156   1.646 0.100521    
+tipo_banderaABANDERADA PRIMAX     0.3120574  0.0723894   4.311 2.04e-05 ***
+tipo_banderaABANDERADA REPSOL     0.2698921  0.0783891   3.443 0.000634 ***
+tipo_banderaPROPIA PECSA         -0.0994710  0.1037577  -0.959 0.338278    
+tipo_banderaPROPIA PRIMAX         0.4989912  0.0920636   5.420 1.01e-07 ***
+tipo_banderaPROPIA REPSOL         0.3551726  0.0837974   4.238 2.78e-05 ***
+distancia_avg                     0.1366737  0.1125494   1.214 0.225310    
+distancia_min                     0.0493122  0.0520154   0.948 0.343669    
+num_grifos_cerc                  -0.0120091  0.0035955  -3.340 0.000914 ***
+serv_mecanico1                    0.0071986  0.0510313   0.141 0.887890    
+lavado                           -0.1042850  0.0610408  -1.708 0.088305 .  
+cajero                            0.0646732  0.0526675   1.228 0.220165    
+con_gnv1                         -0.1313633  0.0538475  -2.440 0.015126 *  
+con_glp1                         -0.0109945  0.0526812  -0.209 0.834786    
+ingresos_2012                     0.0010799  0.0001145   9.428  < 2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.4426 on 413 degrees of freedom
+Multiple R-squared:  0.3588,	Adjusted R-squared:  0.334 
+F-statistic: 14.45 on 16 and 413 DF,  p-value: < 2.2e-16
+
+Mes:  8 Año:  2017 
+
+
+Call:
+lm(formula = modelo, data = .x)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-1.3774 -0.2477 -0.0296  0.2181  3.3122 
+
+Coefficients:
+                                   Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                       8.6931409  0.1631471  53.284  < 2e-16 ***
+tipo_banderaABANDERADA PETROPERU  0.1137858  0.0815181   1.396 0.163514    
+tipo_banderaABANDERADA PECSA      0.2108086  0.0948297   2.223 0.026755 *  
+tipo_banderaABANDERADA PRIMAX     0.3436495  0.0708314   4.852 1.74e-06 ***
+tipo_banderaABANDERADA REPSOL     0.2627574  0.0767020   3.426 0.000675 ***
+tipo_banderaPROPIA PECSA         -0.0699930  0.1015247  -0.689 0.490947    
+tipo_banderaPROPIA PRIMAX         0.5110416  0.0900822   5.673 2.64e-08 ***
+tipo_banderaPROPIA REPSOL         0.3775750  0.0819939   4.605 5.50e-06 ***
+distancia_avg                     0.1280767  0.1101271   1.163 0.245505    
+distancia_min                     0.0581632  0.0508960   1.143 0.253790    
+num_grifos_cerc                  -0.0116034  0.0035181  -3.298 0.001057 ** 
+serv_mecanico1                    0.0111844  0.0499330   0.224 0.822877    
+lavado                           -0.0991989  0.0597271  -1.661 0.097499 .  
+cajero                            0.0737641  0.0515340   1.431 0.153081    
+con_gnv1                         -0.1299446  0.0526886  -2.466 0.014058 *  
+con_glp1                          0.0020476  0.0515474   0.040 0.968333    
+ingresos_2012                     0.0011149  0.0001121   9.948  < 2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.4331 on 413 degrees of freedom
+Multiple R-squared:  0.3839,	Adjusted R-squared:  0.3601 
+F-statistic: 16.09 on 16 and 413 DF,  p-value: < 2.2e-16
+
+Mes:  9 Año:  2017 
+
+
+Call:
+lm(formula = modelo, data = .x)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-1.2939 -0.2689 -0.0438  0.2216  3.1931 
+
+Coefficients:
+                                   Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                       8.8970366  0.1565463  56.833  < 2e-16 ***
+tipo_banderaABANDERADA PETROPERU  0.1005667  0.0782199   1.286 0.199271    
+tipo_banderaABANDERADA PECSA      0.2166648  0.0909930   2.381 0.017713 *  
+tipo_banderaABANDERADA PRIMAX     0.3545618  0.0679656   5.217 2.89e-07 ***
+tipo_banderaABANDERADA REPSOL     0.2892328  0.0735986   3.930 9.96e-05 ***
+tipo_banderaPROPIA PECSA          0.0207615  0.0974170   0.213 0.831339    
+tipo_banderaPROPIA PRIMAX         0.5514284  0.0864375   6.380 4.77e-10 ***
+tipo_banderaPROPIA REPSOL         0.4273583  0.0786765   5.432 9.54e-08 ***
+distancia_avg                     0.1226102  0.1056714   1.160 0.246598    
+distancia_min                     0.0598037  0.0488367   1.225 0.221437    
+num_grifos_cerc                  -0.0124294  0.0033758  -3.682 0.000262 ***
+serv_mecanico1                    0.0246959  0.0479128   0.515 0.606525    
+lavado                           -0.0886060  0.0573106  -1.546 0.122854    
+cajero                            0.0704283  0.0494490   1.424 0.155126    
+con_gnv1                         -0.0820906  0.0505568  -1.624 0.105196    
+con_glp1                         -0.0009410  0.0494618  -0.019 0.984830    
+ingresos_2012                     0.0010834  0.0001075  10.074  < 2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.4155 on 413 degrees of freedom
+Multiple R-squared:  0.4107,	Adjusted R-squared:  0.3879 
+F-statistic: 17.99 on 16 and 413 DF,  p-value: < 2.2e-16
+
+Mes:  10 Año:  2017 
+
+
+Call:
+lm(formula = modelo, data = .x)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-1.28440 -0.27489 -0.02964  0.21876  2.97587 
+
+Coefficients:
+                                   Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                       9.1915346  0.1593361  57.686  < 2e-16 ***
+tipo_banderaABANDERADA PETROPERU  0.1425209  0.0797802   1.786   0.0748 .  
+tipo_banderaABANDERADA PECSA      0.2289368  0.0919925   2.489   0.0132 *  
+tipo_banderaABANDERADA PRIMAX     0.3795938  0.0692943   5.478 7.47e-08 ***
+tipo_banderaABANDERADA REPSOL     0.3890853  0.0750962   5.181 3.45e-07 ***
+tipo_banderaPROPIA PECSA          0.1014999  0.0993303   1.022   0.3075    
+tipo_banderaPROPIA PRIMAX         0.5510247  0.0880591   6.257 9.76e-10 ***
+tipo_banderaPROPIA REPSOL         0.4889070  0.0802762   6.090 2.57e-09 ***
+distancia_avg                     0.1048574  0.1078648   0.972   0.3316    
+distancia_min                     0.0332081  0.0498623   0.666   0.5058    
+num_grifos_cerc                  -0.0140418  0.0034453  -4.076 5.50e-05 ***
+serv_mecanico1                    0.0264869  0.0488812   0.542   0.5882    
+lavado                           -0.0294093  0.0585026  -0.503   0.6154    
+cajero                            0.1053883  0.0503972   2.091   0.0371 *  
+con_gnv1                         -0.0147456  0.0515290  -0.286   0.7749    
+con_glp1                         -0.0236543  0.0505022  -0.468   0.6398    
+ingresos_2012                     0.0010641  0.0001093   9.736  < 2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.4245 on 415 degrees of freedom
+Multiple R-squared:  0.4239,	Adjusted R-squared:  0.4017 
+F-statistic: 19.09 on 16 and 415 DF,  p-value: < 2.2e-16
+
+Mes:  11 Año:  2017 
+
+
+Call:
+lm(formula = modelo, data = .x)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-1.15676 -0.24707 -0.01356  0.20599  2.81835 
+
+Coefficients:
+                                   Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                       9.3421724  0.1509130  61.904  < 2e-16 ***
+tipo_banderaABANDERADA PETROPERU  0.1111074  0.0755627   1.470   0.1422    
+tipo_banderaABANDERADA PECSA      0.1558790  0.0871294   1.789   0.0743 .  
+tipo_banderaABANDERADA PRIMAX     0.3294750  0.0656311   5.020 7.68e-07 ***
+tipo_banderaABANDERADA REPSOL     0.3203182  0.0711263   4.504 8.70e-06 ***
+tipo_banderaPROPIA PECSA         -0.0476465  0.0940793  -0.506   0.6128    
+tipo_banderaPROPIA PRIMAX         0.5711746  0.0834039   6.848 2.70e-11 ***
+tipo_banderaPROPIA REPSOL         0.4420902  0.0760325   5.814 1.21e-08 ***
+distancia_avg                     0.1081822  0.1021626   1.059   0.2903    
+distancia_min                     0.0065176  0.0472264   0.138   0.8903    
+num_grifos_cerc                  -0.0133391  0.0032632  -4.088 5.23e-05 ***
+serv_mecanico1                    0.0492185  0.0462971   1.063   0.2884    
+lavado                           -0.0463948  0.0554099  -0.837   0.4029    
+cajero                            0.0724087  0.0477330   1.517   0.1300    
+con_gnv1                         -0.0683699  0.0488050  -1.401   0.1620    
+con_glp1                         -0.0080633  0.0478325  -0.169   0.8662    
+ingresos_2012                     0.0010751  0.0001035  10.385  < 2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.402 on 415 degrees of freedom
+Multiple R-squared:  0.4419,	Adjusted R-squared:  0.4204 
+F-statistic: 20.54 on 16 and 415 DF,  p-value: < 2.2e-16
+
+Mes:  12 Año:  2017 
+
+
+Call:
+lm(formula = modelo, data = .x)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-1.09365 -0.26784  0.01113  0.25866  2.56573 
+
+Coefficients:
+                                   Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                       9.6106019  0.1661316  57.849  < 2e-16 ***
+tipo_banderaABANDERADA PETROPERU  0.0297123  0.0831154   0.357  0.72091    
+tipo_banderaABANDERADA PECSA      0.2730914  0.0958745   2.848  0.00461 ** 
+tipo_banderaABANDERADA PRIMAX     0.3960166  0.0721562   5.488 7.07e-08 ***
+tipo_banderaABANDERADA REPSOL     0.3877021  0.0782222   4.956 1.05e-06 ***
+tipo_banderaPROPIA PECSA          0.1354924  0.1034568   1.310  0.19104    
+tipo_banderaPROPIA PRIMAX         0.6310966  0.0916928   6.883 2.17e-11 ***
+tipo_banderaPROPIA REPSOL         0.4124194  0.0836723   4.929 1.20e-06 ***
+distancia_avg                     0.1631921  0.1124896   1.451  0.14761    
+distancia_min                     0.0302038  0.0519964   0.581  0.56163    
+num_grifos_cerc                  -0.0107015  0.0035812  -2.988  0.00297 ** 
+serv_mecanico1                    0.0146823  0.0509580   0.288  0.77339    
+lavado                           -0.0601401  0.0610087  -0.986  0.32482    
+cajero                            0.1404464  0.0525395   2.673  0.00781 ** 
+con_gnv1                         -0.0438402  0.0536873  -0.817  0.41463    
+con_glp1                         -0.0233020  0.0526522  -0.443  0.65831    
+ingresos_2012                     0.0010378  0.0001139   9.109  < 2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.4427 on 416 degrees of freedom
+Multiple R-squared:  0.4161,	Adjusted R-squared:  0.3937 
+F-statistic: 18.53 on 16 and 416 DF,  p-value: < 2.2e-16
+
+Mes:  1 Año:  2018 
+
+
+Call:
+lm(formula = modelo, data = .x)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-1.37000 -0.23292  0.00529  0.23555  2.38175 
+
+Coefficients:
+                                   Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                       9.8497317  0.1553118  63.419  < 2e-16 ***
+tipo_banderaABANDERADA PETROPERU  0.1032862  0.0777024   1.329    0.184    
+tipo_banderaABANDERADA PECSA      0.1951169  0.0896305   2.177    0.030 *  
+tipo_banderaABANDERADA PRIMAX     0.3507169  0.0674568   5.199 3.15e-07 ***
+tipo_banderaABANDERADA REPSOL     0.3468592  0.0731277   4.743 2.90e-06 ***
+tipo_banderaPROPIA PECSA          0.0291150  0.0967190   0.301    0.764    
+tipo_banderaPROPIA PRIMAX         0.6150778  0.0857210   7.175 3.33e-12 ***
+tipo_banderaPROPIA REPSOL         0.5026417  0.0782230   6.426 3.60e-10 ***
+distancia_avg                     0.1689569  0.1051635   1.607    0.109    
+distancia_min                     0.0068717  0.0486100   0.141    0.888    
+num_grifos_cerc                  -0.0137526  0.0033480  -4.108 4.81e-05 ***
+serv_mecanico1                    0.0460696  0.0476392   0.967    0.334    
+lavado                           -0.0423879  0.0570354  -0.743    0.458    
+cajero                            0.0719107  0.0491177   1.464    0.144    
+con_gnv1                         -0.0343787  0.0501908  -0.685    0.494    
+con_glp1                         -0.0158754  0.0492231  -0.323    0.747    
+ingresos_2012                     0.0009940  0.0001065   9.333  < 2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.4138 on 416 degrees of freedom
+Multiple R-squared:  0.4301,	Adjusted R-squared:  0.4081 
+F-statistic: 19.62 on 16 and 416 DF,  p-value: < 2.2e-16
+
+Mes:  2 Año:  2018 
+
+
+Call:
+lm(formula = modelo, data = .x)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-1.2168 -0.2212  0.0000  0.2174  2.3874 
+
+Coefficients:
+                                   Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                       9.8428766  0.1508770  65.238  < 2e-16 ***
+tipo_banderaABANDERADA PETROPERU  0.1074663  0.0754836   1.424   0.1553    
+tipo_banderaABANDERADA PECSA      0.1963376  0.0870711   2.255   0.0247 *  
+tipo_banderaABANDERADA PRIMAX     0.3517644  0.0655306   5.368 1.33e-07 ***
+tipo_banderaABANDERADA REPSOL     0.3374180  0.0710396   4.750 2.81e-06 ***
+tipo_banderaPROPIA PECSA         -0.0054950  0.0939572  -0.058   0.9534    
+tipo_banderaPROPIA PRIMAX         0.5988968  0.0832733   7.192 2.99e-12 ***
+tipo_banderaPROPIA REPSOL         0.4179315  0.0759894   5.500 6.65e-08 ***
+distancia_avg                     0.1853108  0.1021606   1.814   0.0704 .  
+distancia_min                    -0.0178452  0.0472220  -0.378   0.7057    
+num_grifos_cerc                  -0.0158056  0.0032524  -4.860 1.67e-06 ***
+serv_mecanico1                    0.0801130  0.0462789   1.731   0.0842 .  
+lavado                           -0.0327291  0.0554067  -0.591   0.5550    
+cajero                            0.0981846  0.0477152   2.058   0.0402 *  
+con_gnv1                         -0.0621884  0.0487577  -1.275   0.2029    
+con_glp1                         -0.0169239  0.0478176  -0.354   0.7236    
+ingresos_2012                     0.0010216  0.0001035   9.874  < 2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.402 on 416 degrees of freedom
+Multiple R-squared:  0.4498,	Adjusted R-squared:  0.4286 
+F-statistic: 21.26 on 16 and 416 DF,  p-value: < 2.2e-16
+
+Mes:  3 Año:  2018 
+
+
+Call:
+lm(formula = modelo, data = .x)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-1.20530 -0.21319 -0.01287  0.21023  2.37320 
+
+Coefficients:
+                                   Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                       9.8916216  0.1478674  66.895  < 2e-16 ***
+tipo_banderaABANDERADA PETROPERU  0.0881958  0.0738652   1.194   0.2332    
+tipo_banderaABANDERADA PECSA      0.1673170  0.0852078   1.964   0.0502 .  
+tipo_banderaABANDERADA PRIMAX     0.3395983  0.0639879   5.307 1.81e-07 ***
+tipo_banderaABANDERADA REPSOL     0.3080634  0.0694788   4.434 1.18e-05 ***
+tipo_banderaPROPIA PECSA         -0.0175195  0.0917061  -0.191   0.8486    
+tipo_banderaPROPIA PRIMAX         0.6366430  0.0811962   7.841 3.78e-14 ***
+tipo_banderaPROPIA REPSOL         0.3933227  0.0742366   5.298 1.90e-07 ***
+distancia_avg                     0.1867655  0.1001403   1.865   0.0629 .  
+distancia_min                    -0.0209737  0.0462696  -0.453   0.6506    
+num_grifos_cerc                  -0.0149547  0.0031821  -4.700 3.55e-06 ***
+serv_mecanico1                    0.0711740  0.0453509   1.569   0.1173    
+lavado                           -0.0352253  0.0543062  -0.649   0.5169    
+cajero                            0.0905148  0.0466272   1.941   0.0529 .  
+con_gnv1                         -0.0820323  0.0477274  -1.719   0.0864 .  
+con_glp1                         -0.0268084  0.0468690  -0.572   0.5676    
+ingresos_2012                     0.0010037  0.0001011   9.926  < 2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.3941 on 417 degrees of freedom
+Multiple R-squared:  0.4554,	Adjusted R-squared:  0.4345 
+F-statistic: 21.79 on 16 and 417 DF,  p-value: < 2.2e-16
+
+Mes:  4 Año:  2018 
+
+
+Call:
+lm(formula = modelo, data = .x)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-1.35776 -0.22985 -0.00089  0.20552  2.28325 
+
+Coefficients:
+                                   Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                       9.9500157  0.1489185  66.815  < 2e-16 ***
+tipo_banderaABANDERADA PETROPERU  0.0982115  0.0743902   1.320  0.18749    
+tipo_banderaABANDERADA PECSA      0.2363706  0.0858135   2.754  0.00614 ** 
+tipo_banderaABANDERADA PRIMAX     0.4421652  0.0644427   6.861 2.48e-11 ***
+tipo_banderaABANDERADA REPSOL     0.3839463  0.0699727   5.487 7.10e-08 ***
+tipo_banderaPROPIA PECSA          0.0944844  0.0923580   1.023  0.30689    
+tipo_banderaPROPIA PRIMAX         0.7379177  0.0817733   9.024  < 2e-16 ***
+tipo_banderaPROPIA REPSOL         0.3622123  0.0747643   4.845 1.79e-06 ***
+distancia_avg                     0.1913777  0.1008521   1.898  0.05844 .  
+distancia_min                    -0.0368133  0.0465985  -0.790  0.42997    
+num_grifos_cerc                  -0.0148738  0.0032047  -4.641 4.65e-06 ***
+serv_mecanico1                    0.0517704  0.0456732   1.133  0.25766    
+lavado                           -0.0346964  0.0546923  -0.634  0.52617    
+cajero                            0.0985812  0.0469586   2.099  0.03639 *  
+con_gnv1                         -0.0737216  0.0480667  -1.534  0.12585    
+con_glp1                         -0.0177365  0.0472021  -0.376  0.70729    
+ingresos_2012                     0.0010129  0.0001018   9.946  < 2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.3969 on 417 degrees of freedom
+Multiple R-squared:  0.4727,	Adjusted R-squared:  0.4525 
+F-statistic: 23.37 on 16 and 417 DF,  p-value: < 2.2e-16
+
+Mes:  5 Año:  2018 
+
+
+Call:
+lm(formula = modelo, data = .x)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-1.53216 -0.23190  0.01801  0.25549  1.88312 
+
+Coefficients:
+                                   Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                      10.4983133  0.1595931  65.782  < 2e-16 ***
+tipo_banderaABANDERADA PETROPERU  0.0776923  0.0797226   0.975   0.3304    
+tipo_banderaABANDERADA PECSA      0.2328694  0.0919647   2.532   0.0117 *  
+tipo_banderaABANDERADA PRIMAX     0.3955601  0.0690621   5.728 1.95e-08 ***
+tipo_banderaABANDERADA REPSOL     0.3398158  0.0749884   4.532 7.66e-06 ***
+tipo_banderaPROPIA PECSA          0.0540345  0.0989783   0.546   0.5854    
+tipo_banderaPROPIA PRIMAX         0.7406977  0.0876349   8.452 4.84e-16 ***
+tipo_banderaPROPIA REPSOL         0.4818181  0.0801235   6.013 3.97e-09 ***
+distancia_avg                     0.1553586  0.1080813   1.437   0.1513    
+distancia_min                    -0.0623225  0.0499387  -1.248   0.2127    
+num_grifos_cerc                  -0.0169241  0.0034344  -4.928 1.20e-06 ***
+serv_mecanico1                    0.0711134  0.0489471   1.453   0.1470    
+lavado                           -0.0821369  0.0586127  -1.401   0.1619    
+cajero                            0.1142017  0.0503247   2.269   0.0238 *  
+con_gnv1                         -0.0506201  0.0515121  -0.983   0.3263    
+con_glp1                         -0.0300682  0.0505856  -0.594   0.5526    
+ingresos_2012                     0.0010016  0.0001091   9.178  < 2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.4253 on 417 degrees of freedom
+Multiple R-squared:  0.4594,	Adjusted R-squared:  0.4386 
+F-statistic: 22.14 on 16 and 417 DF,  p-value: < 2.2e-16
+
+Mes:  6 Año:  2018 
+
+
+Call:
+lm(formula = modelo, data = .x)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-1.58625 -0.23918  0.00172  0.24597  1.78015 
+
+Coefficients:
+                                   Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                      10.6093535  0.1549090  68.488  < 2e-16 ***
+tipo_banderaABANDERADA PETROPERU  0.1139731  0.0774594   1.471 0.141938    
+tipo_banderaABANDERADA PECSA      0.3033853  0.0893871   3.394 0.000754 ***
+tipo_banderaABANDERADA PRIMAX     0.4741494  0.0670997   7.066 6.70e-12 ***
+tipo_banderaABANDERADA REPSOL     0.4357294  0.0729017   5.977 4.88e-09 ***
+tipo_banderaPROPIA PECSA          0.3861863  0.0962564   4.012 7.13e-05 ***
+tipo_banderaPROPIA PRIMAX         0.9130383  0.0851959  10.717  < 2e-16 ***
+tipo_banderaPROPIA REPSOL         0.5567242  0.0779548   7.142 4.12e-12 ***
+distancia_avg                     0.1310505  0.1051371   1.246 0.213289    
+distancia_min                    -0.0565061  0.0485881  -1.163 0.245509    
+num_grifos_cerc                  -0.0147036  0.0033407  -4.401 1.37e-05 ***
+serv_mecanico1                    0.0684614  0.0476140   1.438 0.151227    
+lavado                           -0.0721790  0.0570317  -1.266 0.206364    
+cajero                            0.0812527  0.0489517   1.660 0.097694 .  
+con_gnv1                         -0.0440910  0.0500512  -0.881 0.378869    
+con_glp1                         -0.0332926  0.0491991  -0.677 0.498976    
+ingresos_2012                     0.0009534  0.0001061   8.983  < 2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.4139 on 418 degrees of freedom
+Multiple R-squared:  0.502,	Adjusted R-squared:  0.483 
+F-statistic: 26.34 on 16 and 418 DF,  p-value: < 2.2e-16
+
+Mes:  7 Año:  2018 
+
+
+Call:
+lm(formula = modelo, data = .x)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-1.7884 -0.2440 -0.0006  0.2633  1.5216 
+
+Coefficients:
+                                   Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                      10.7577132  0.1562613  68.844  < 2e-16 ***
+tipo_banderaABANDERADA PETROPERU  0.1112644  0.0782644   1.422   0.1559    
+tipo_banderaABANDERADA PECSA      0.2452278  0.0903151   2.715   0.0069 ** 
+tipo_banderaABANDERADA PRIMAX     0.4175491  0.0677953   6.159 1.72e-09 ***
+tipo_banderaABANDERADA REPSOL     0.3165739  0.0736565   4.298 2.15e-05 ***
+tipo_banderaPROPIA PECSA          0.1258974  0.0972549   1.295   0.1962    
+tipo_banderaPROPIA PRIMAX         0.7844527  0.0860820   9.113  < 2e-16 ***
+tipo_banderaPROPIA REPSOL         0.5139961  0.0784177   6.555 1.64e-10 ***
+distancia_avg                     0.1804534  0.1060861   1.701   0.0897 .  
+distancia_min                    -0.0798636  0.0490935  -1.627   0.1045    
+num_grifos_cerc                  -0.0148865  0.0033658  -4.423 1.24e-05 ***
+serv_mecanico1                    0.0561329  0.0480990   1.167   0.2439    
+lavado                           -0.0155042  0.0574213  -0.270   0.7873    
+cajero                            0.1051011  0.0494569   2.125   0.0342 *  
+con_gnv1                         -0.0564644  0.0505190  -1.118   0.2643    
+con_glp1                          0.0081948  0.0496559   0.165   0.8690    
+ingresos_2012                     0.0009758  0.0001069   9.125  < 2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.4182 on 419 degrees of freedom
+Multiple R-squared:  0.4729,	Adjusted R-squared:  0.4528 
+F-statistic:  23.5 on 16 and 419 DF,  p-value: < 2.2e-16
+
+Mes:  8 Año:  2018 
+
+
+Call:
+lm(formula = modelo, data = .x)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-1.79972 -0.23997  0.00582  0.27022  1.49998 
+
+Coefficients:
+                                   Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                      10.7771785  0.1560057  69.082  < 2e-16 ***
+tipo_banderaABANDERADA PETROPERU  0.1210762  0.0781364   1.550  0.12200    
+tipo_banderaABANDERADA PECSA      0.2336634  0.0901673   2.591  0.00989 ** 
+tipo_banderaABANDERADA PRIMAX     0.4104294  0.0676844   6.064 2.97e-09 ***
+tipo_banderaABANDERADA REPSOL     0.3112434  0.0735361   4.233 2.84e-05 ***
+tipo_banderaPROPIA PECSA          0.1909678  0.0970959   1.967  0.04987 *  
+tipo_banderaPROPIA PRIMAX         0.8168508  0.0859412   9.505  < 2e-16 ***
+tipo_banderaPROPIA REPSOL         0.5096352  0.0782895   6.510 2.16e-10 ***
+distancia_avg                     0.1745086  0.1059126   1.648  0.10017    
+distancia_min                    -0.0819273  0.0490132  -1.672  0.09536 .  
+num_grifos_cerc                  -0.0140177  0.0033603  -4.172 3.68e-05 ***
+serv_mecanico1                    0.0702139  0.0480204   1.462  0.14444    
+lavado                           -0.0395863  0.0573274  -0.691  0.49024    
+cajero                            0.0866223  0.0493761   1.754  0.08010 .  
+con_gnv1                         -0.0414528  0.0504364  -0.822  0.41161    
+con_glp1                          0.0004547  0.0495747   0.009  0.99269    
+ingresos_2012                     0.0009670  0.0001068   9.058  < 2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.4175 on 419 degrees of freedom
+Multiple R-squared:  0.4708,	Adjusted R-squared:  0.4506 
+F-statistic:  23.3 on 16 and 419 DF,  p-value: < 2.2e-16
+
+Mes:  9 Año:  2018 
+
+
+Call:
+lm(formula = modelo, data = .x)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-1.85380 -0.23690  0.00217  0.26493  1.47282 
+
+Coefficients:
+                                   Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                      10.7782824  0.1527105  70.580  < 2e-16 ***
+tipo_banderaABANDERADA PETROPERU  0.1045700  0.0763771   1.369   0.1717    
+tipo_banderaABANDERADA PECSA      0.1946367  0.0881671   2.208   0.0278 *  
+tipo_banderaABANDERADA PRIMAX     0.3856363  0.0661469   5.830 1.11e-08 ***
+tipo_banderaABANDERADA REPSOL     0.2853368  0.0719342   3.967 8.57e-05 ***
+tipo_banderaPROPIA PECSA          0.1475514  0.0949922   1.553   0.1211    
+tipo_banderaPROPIA PRIMAX         0.8142218  0.0840659   9.686  < 2e-16 ***
+tipo_banderaPROPIA REPSOL         0.5210693  0.0766247   6.800 3.60e-11 ***
+distancia_avg                     0.2040290  0.1034161   1.973   0.0492 *  
+distancia_min                    -0.0727291  0.0479712  -1.516   0.1302    
+num_grifos_cerc                  -0.0151632  0.0032846  -4.616 5.20e-06 ***
+serv_mecanico1                    0.0526923  0.0469939   1.121   0.2628    
+lavado                           -0.0461204  0.0561173  -0.822   0.4116    
+cajero                            0.0769554  0.0483225   1.593   0.1120    
+con_gnv1                         -0.0308513  0.0492952  -0.626   0.5318    
+con_glp1                         -0.0214050  0.0484980  -0.441   0.6592    
+ingresos_2012                     0.0010051  0.0001045   9.623  < 2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.4087 on 420 degrees of freedom
+Multiple R-squared:  0.4865,	Adjusted R-squared:  0.4669 
+F-statistic: 24.87 on 16 and 420 DF,  p-value: < 2.2e-16
+
+Mes:  10 Año:  2018 
+
+
+Call:
+lm(formula = modelo, data = .x)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-2.24996 -0.28060 -0.00125  0.32656  1.18653 
+
+Coefficients:
+                                   Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                      11.0477690  0.1756270  62.905  < 2e-16 ***
+tipo_banderaABANDERADA PETROPERU  0.0983981  0.0878387   1.120 0.263263    
+tipo_banderaABANDERADA PECSA      0.2634365  0.1013979   2.598 0.009705 ** 
+tipo_banderaABANDERADA PRIMAX     0.3949568  0.0760733   5.192 3.25e-07 ***
+tipo_banderaABANDERADA REPSOL     0.2973698  0.0827290   3.595 0.000364 ***
+tipo_banderaPROPIA PECSA          0.2504716  0.1092472   2.293 0.022359 *  
+tipo_banderaPROPIA PRIMAX         0.8213939  0.0966813   8.496 3.45e-16 ***
+tipo_banderaPROPIA REPSOL         0.4478019  0.0881234   5.082 5.65e-07 ***
+distancia_avg                     0.2902021  0.1189352   2.440 0.015100 *  
+distancia_min                    -0.0729707  0.0551700  -1.323 0.186671    
+num_grifos_cerc                  -0.0176522  0.0037775  -4.673 4.00e-06 ***
+serv_mecanico1                    0.0364588  0.0540460   0.675 0.500308    
+lavado                           -0.0448401  0.0645385  -0.695 0.487577    
+cajero                            0.0879238  0.0555740   1.582 0.114379    
+con_gnv1                          0.0072779  0.0566927   0.128 0.897914    
+con_glp1                         -0.0152406  0.0557759  -0.273 0.784798    
+ingresos_2012                     0.0010868  0.0001201   9.048  < 2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.47 on 420 degrees of freedom
+Multiple R-squared:  0.4268,	Adjusted R-squared:  0.405 
+F-statistic: 19.54 on 16 and 420 DF,  p-value: < 2.2e-16
+
+Mes:  11 Año:  2018 
+
+
+Call:
+lm(formula = modelo, data = .x)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-2.24996 -0.28060 -0.00125  0.32656  1.18653 
+
+Coefficients:
+                                   Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                      11.0477690  0.1756270  62.905  < 2e-16 ***
+tipo_banderaABANDERADA PETROPERU  0.0983981  0.0878387   1.120 0.263263    
+tipo_banderaABANDERADA PECSA      0.2634365  0.1013979   2.598 0.009705 ** 
+tipo_banderaABANDERADA PRIMAX     0.3949568  0.0760733   5.192 3.25e-07 ***
+tipo_banderaABANDERADA REPSOL     0.2973698  0.0827290   3.595 0.000364 ***
+tipo_banderaPROPIA PECSA          0.2504716  0.1092472   2.293 0.022359 *  
+tipo_banderaPROPIA PRIMAX         0.8213939  0.0966813   8.496 3.45e-16 ***
+tipo_banderaPROPIA REPSOL         0.4478019  0.0881234   5.082 5.65e-07 ***
+distancia_avg                     0.2902021  0.1189352   2.440 0.015100 *  
+distancia_min                    -0.0729707  0.0551700  -1.323 0.186671    
+num_grifos_cerc                  -0.0176522  0.0037775  -4.673 4.00e-06 ***
+serv_mecanico1                    0.0364588  0.0540460   0.675 0.500308    
+lavado                           -0.0448401  0.0645385  -0.695 0.487577    
+cajero                            0.0879238  0.0555740   1.582 0.114379    
+con_gnv1                          0.0072779  0.0566927   0.128 0.897914    
+con_glp1                         -0.0152406  0.0557759  -0.273 0.784798    
+ingresos_2012                     0.0010868  0.0001201   9.048  < 2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.47 on 420 degrees of freedom
+Multiple R-squared:  0.4268,	Adjusted R-squared:  0.405 
+F-statistic: 19.54 on 16 and 420 DF,  p-value: < 2.2e-16
+
+Mes:  12 Año:  2018 
+
+
+Call:
+lm(formula = modelo, data = .x)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-2.24996 -0.28060 -0.00125  0.32656  1.18653 
+
+Coefficients:
+                                   Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                      11.0477690  0.1756270  62.905  < 2e-16 ***
+tipo_banderaABANDERADA PETROPERU  0.0983981  0.0878387   1.120 0.263263    
+tipo_banderaABANDERADA PECSA      0.2634365  0.1013979   2.598 0.009705 ** 
+tipo_banderaABANDERADA PRIMAX     0.3949568  0.0760733   5.192 3.25e-07 ***
+tipo_banderaABANDERADA REPSOL     0.2973698  0.0827290   3.595 0.000364 ***
+tipo_banderaPROPIA PECSA          0.2504716  0.1092472   2.293 0.022359 *  
+tipo_banderaPROPIA PRIMAX         0.8213939  0.0966813   8.496 3.45e-16 ***
+tipo_banderaPROPIA REPSOL         0.4478019  0.0881234   5.082 5.65e-07 ***
+distancia_avg                     0.2902021  0.1189352   2.440 0.015100 *  
+distancia_min                    -0.0729707  0.0551700  -1.323 0.186671    
+num_grifos_cerc                  -0.0176522  0.0037775  -4.673 4.00e-06 ***
+serv_mecanico1                    0.0364588  0.0540460   0.675 0.500308    
+lavado                           -0.0448401  0.0645385  -0.695 0.487577    
+cajero                            0.0879238  0.0555740   1.582 0.114379    
+con_gnv1                          0.0072779  0.0566927   0.128 0.897914    
+con_glp1                         -0.0152406  0.0557759  -0.273 0.784798    
+ingresos_2012                     0.0010868  0.0001201   9.048  < 2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.47 on 420 degrees of freedom
+Multiple R-squared:  0.4268,	Adjusted R-squared:  0.405 
+F-statistic: 19.54 on 16 and 420 DF,  p-value: < 2.2e-16
+

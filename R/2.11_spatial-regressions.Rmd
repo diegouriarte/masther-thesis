@@ -40,11 +40,12 @@ precios_db5 <- data_precios[[1]]
 
 precios_g90 <- data_precios[[2]]
 
+# cargamos data de distritos
+
 data_distrital_raw <- read_csv(here::here("data", "demo-distrital","data_pop_lima.csv")) %>% 
   janitor::clean_names() 
 
 
-# cargamos data de distritos
 ```
 Limpiamos archivo distrital:
 
@@ -62,9 +63,16 @@ data_distrital_clean <- data_distrital_raw %>%
 
 Creamos archivos con info
 ```{r}
-grifos_sc <- grifos_sc %>% 
-    mutate(serv_mecanico = if_else(mecanico+ aceite + llanteria > 0, 1, 0),
-           serv_mecanico = as.factor(serv_mecanico))
+grifos_sc <- grifos_sc %>%
+  mutate(
+    serv_mecanico = if_else(mecanico + aceite + llanteria > 0, 1, 0),
+    serv_mecanico = as.factor(serv_mecanico)
+  ) %>%
+  mutate(
+    num_grifos_cerc = if_else(is.na(num_grifos_cerc), as.integer(0), num_grifos_cerc),
+    distancia_avg = if_else(is.na(distancia_avg), 0, distancia_avg)
+  )
+
 
 data_total <- map(list(precios_db5, precios_g90),
                   ~ left_join(grifos_sc, .x, by = "codigo_de_osinergmin") %>% 
@@ -87,7 +95,7 @@ Hacemos una regresión OLS pooled, clusterizando a nivel de grifo, en corte tran
 
 
 data <- data_db5 %>%
-    filter(mes == 7, `año` == 2017) %>% 
+    filter(mes == 1, `año` == 2017) %>% 
     select(
         precio_de_venta,
         tipo_bandera,
@@ -100,6 +108,8 @@ data <- data_db5 %>%
         cajero,
         con_gnv,
         con_glp,
+        ingresos_2012,
+        densidad_2017,
         lat,
         lon,
         codigo_de_osinergmin
@@ -138,7 +148,9 @@ modelo <- precio_de_venta ~ tipo_bandera +
         lavado +
         cajero +
         con_gnv +
-        con_glp 
+        con_glp +
+        ingresos_2012 + 
+        densidad_2017
 durbin_model <- lagsarlm(modelo,
     data = data, 
     listw = sp_grifos, 
@@ -161,3 +173,256 @@ LR.sarlm(durbin_model, spa_lag_model)
 summary(spa_lag_model)
 ```
 
+# Corremos los modelos OLS para todos los meses antes de la compra
+
+```{r func-regresiones}
+#Funcion para output de regresiones 
+
+output_reg <- function(data, modelo) {
+
+
+    
+  data_mes_nest <- data %>%
+    select(
+          precio_de_venta,
+          tipo_bandera,
+          sc_pre,
+          sc_post,
+          distancia_avg,
+          distancia_min,
+          num_grifos_cerc,
+          serv_mecanico,
+          lavado,
+          cajero,
+          con_gnv,
+          con_glp,
+          ingresos_2012,
+          densidad_2017,
+          lat,
+          lon,
+          codigo_de_osinergmin,
+          mes,
+          `año`
+      ) %>% 
+      group_by(mes, `año`) %>% 
+      nest()
+  
+  data_mes_model <- data_mes_nest %>% 
+    mutate(ols = map(data, ~ lm(modelo, data = .x)))
+  
+  
+  
+  list1 <- as.list(select(data_mes_model, ols, mes, `año`))
+  
+  
+  out <- capture.output(pwalk(list1,
+                              function(ols, mes, `año`) {
+                                cat("Mes: ", mes, "Año: ", `año`, "\n\n")
+                                print(summary(ols))
+                              }))
+  
+  out
+}
+```
+
+
+```{r full-model}
+modelo <- precio_de_venta ~ tipo_bandera +
+        sc_pre +
+        distancia_avg +
+        distancia_min +
+        num_grifos_cerc +
+        serv_mecanico +
+        lavado +
+        cajero +
+        con_gnv +
+        con_glp +
+        ingresos_2012 + 
+        densidad_2017
+
+
+
+out_db5 <- output_reg(data_db5, modelo)
+out_g90 <- output_reg(data_g90, modelo)
+
+cat("Output de OLS", out_db5, file= here::here("data", "text-output", "summary_ols_full_db5.txt"), sep="\n", append=FALSE)
+cat("Output de OLS", out_db5, file= here::here("data", "text-output", "summary_ols_full_g90.txt"), sep="\n", append=FALSE)
+
+
+```
+
+
+
+Ahora simplificamos oLS con variables significativas para DB5 y G90
+
+
+```{r simp-model}
+modelo <- precio_de_venta ~ tipo_bandera +
+          distancia_avg +
+          distancia_min +
+          num_grifos_cerc +
+          serv_mecanico +
+          lavado +
+          cajero +
+          con_gnv +
+          con_glp +
+          ingresos_2012  
+
+
+
+out_g90 <- output_reg(data_g90, modelo)
+out_db5 <- output_reg(data_db5, modelo)
+cat("Output de OLS", out_db5, file= here::here("data", "text-output", "summary_ols_usando_simp_db5.txt"), sep="\n", append=FALSE)
+cat("Output de OLS", out_g90, file= here::here("data", "text-output", "summary_ols_usando_simp_g90.txt"), sep="\n", append=FALSE)
+
+```
+
+# Test de Morga
+
+Primero vemos si es necesario utilizar rezagos espaciales, para eso utilizamos el
+test de I-morgan
+
+```{r}
+
+
+data <- data_db5 %>%
+    filter(mes == 1, `año` == 2017) %>% 
+    select(
+        precio_de_venta,
+        tipo_bandera,
+        sc_pre,
+        distancia_avg,
+        distancia_min,
+        num_grifos_cerc,
+        serv_mecanico,
+        lavado,
+        cajero,
+        con_gnv,
+        con_glp,
+        ingresos_2012,
+        densidad_2017,
+        lat,
+        lon,
+        codigo_de_osinergmin
+    ) %>%
+    drop_na()
+
+modelo_data <- lm(data %>% select(-lat, -lon, -codigo_de_osinergmin))
+
+
+summary(modelo_data)
+coords <- cbind(data$lon, data$lat)
+
+grifos <- data$codigo_de_osinergmin
+
+grifos_nb <- tri2nb(coords, row.names = grifos)
+
+sp_grifos <- nb2listw(grifos_nb)
+
+
+LMtest <- lm.LMtests(modelo_data, sp_grifos, test="all")
+LMtest
+```
+
+```{r}
+calcular_reg_month <- function(data) {
+  data_mes_nest <- data %>%
+    select(
+          precio_de_venta,
+          tipo_bandera,
+          sc_pre,
+          sc_post,
+          distancia_avg,
+          distancia_min,
+          num_grifos_cerc,
+          serv_mecanico,
+          lavado,
+          cajero,
+          con_gnv,
+          con_glp,
+          ingresos_2012,
+          densidad_2017,
+          lat,
+          lon,
+          codigo_de_osinergmin,
+          mes,
+          `año`
+      ) %>% 
+      group_by(mes, `año`) %>% 
+      nest()
+
+  data_mes_model <- data_mes_nest %>% 
+    mutate(ols = map(data, ~ lm(modelo, data = .x)),
+           coords = map(data, ~ cbind(.x$lon, .x$lat)),
+           grifos = map(data, ~ .x$codigo_de_osinergmin),
+           grifos_nb = map2(coords, grifos, ~ tri2nb(.x, row.names = .y)),
+           sp_grifos = map(grifos_nb, ~nb2listw(.x)),
+           spatial_lag = map2(data, sp_grifos, ~lagsarlm(modelo, data = .x, listw = .y)),
+           durbin = map2(data, sp_grifos, ~lagsarlm(modelo, data = .x, listw = .y, Durbin = TRUE)),
+           test_LR = map2(durbin, spatial_lag, ~ LR.sarlm(.x, .y)),
+           LMtest = map2(ols, sp_grifos, ~ lm.LMtests(.x, .y, test="all")))
+  data_mes_model
+}
+
+```
+
+Evaluamos para DB5
+```{r}
+db5_all_models_tests <- calcular_reg_month(data_db5) 
+
+list_var <- db5_all_models_tests %>%
+    select(test_LR, mes, `año`) %>%
+    as.list()
+  
+out_var <- capture.output(pwalk(list_var,
+                                  function(test_LR, mes, `año`) {
+                                    cat("Mes: ", mes, "Año: ", `año`, "\n\n")
+                                    print(test_LR)
+                                  }))
+
+cat("Output test LR", 
+    out_var, 
+    file= here::here("data", "text-output", "summary_test_LR_db5.txt"), sep="\n", append=FALSE)
+```
+
+
+```{r}
+
+list_var <- db5_all_models_tests %>%
+    select(spatial_lag, mes, `año`) %>%
+    as.list()
+  
+out_var <- capture.output(pwalk(list_var,
+                                  function(spatial_lag, mes, `año`) {
+                                    cat("Mes: ", mes, "Año: ", `año`, "\n\n")
+                                    print(summary(spatial_lag))
+                                  }))
+
+cat("Output Spatial Lag", 
+    out_var, 
+    file= here::here("data", "text-output", "summary_spatial_lag_db5.txt"), sep="\n", append=FALSE)
+```
+
+Evaluamos para G90
+
+```{r}
+list_LMtest <- calcular_reg_month(data_g90, lm) %>% 
+  select(LMtest, mes, `año`) %>% 
+  as.list
+
+  
+  
+out_LMtest <- capture.output(pwalk(list_LMtest,
+                            function(LMtest, mes, `año`) {
+                              cat("Mes: ", mes, "Año: ", `año`, "\n\n")
+                              print(summary(LMtest))
+                            }))
+
+cat("Output de LMtest I-morgan", 
+    out_LMtest, 
+    file= here::here("data", "text-output", "summary_LMtest_Imorgan_g90.txt"), sep="\n", append=FALSE)
+```
+
+En ambos casos, el modelo sign. es con LAG. Verificamos que no sea necesario el modelo Durbin:
+
+## Modelo Durbin y test

@@ -1,0 +1,361 @@
+Output de LMtest I-morgan
+Mes:  1 Año:  2017 
+
+	Lagrange multiplier diagnostics for spatial dependence
+data:  
+model: MODEL(formula = modelo, data = .x)
+weights: .y
+ 
+       statistic parameter   p.value    
+LMerr    36.6639         1 1.404e-09 ***
+LMlag    65.3338         1 6.661e-16 ***
+RLMerr    4.3577         1   0.03684 *  
+RLMlag   33.0276         1 9.086e-09 ***
+SARMA    69.6915         2 7.772e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+Mes:  2 Año:  2017 
+
+	Lagrange multiplier diagnostics for spatial dependence
+data:  
+model: MODEL(formula = modelo, data = .x)
+weights: .y
+ 
+       statistic parameter   p.value    
+LMerr    39.0083         1 4.220e-10 ***
+LMlag    58.1848         1 2.387e-14 ***
+RLMerr    2.1264         1    0.1448    
+RLMlag   21.3029         1 3.921e-06 ***
+SARMA    60.3112         2 8.005e-14 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+Mes:  3 Año:  2017 
+
+	Lagrange multiplier diagnostics for spatial dependence
+data:  
+model: MODEL(formula = modelo, data = .x)
+weights: .y
+ 
+       statistic parameter   p.value    
+LMerr    32.2411         1 1.362e-08 ***
+LMlag    50.4180         1 1.243e-12 ***
+RLMerr    4.4545         1   0.03481 *  
+RLMlag   22.6314         1 1.963e-06 ***
+SARMA    54.8724         2 1.215e-12 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+Mes:  4 Año:  2017 
+
+	Lagrange multiplier diagnostics for spatial dependence
+data:  
+model: MODEL(formula = modelo, data = .x)
+weights: .y
+ 
+       statistic parameter   p.value    
+LMerr     38.439         1 5.648e-10 ***
+LMlag     58.774         1 1.765e-14 ***
+RLMerr     3.545         1   0.05972 .  
+RLMlag    23.880         1 1.026e-06 ***
+SARMA     62.319         2 2.931e-14 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+Mes:  5 Año:  2017 
+
+	Lagrange multiplier diagnostics for spatial dependence
+data:  
+model: MODEL(formula = modelo, data = .x)
+weights: .y
+ 
+       statistic parameter   p.value    
+LMerr    57.9287         1  2.72e-14 ***
+LMlag    78.0127         1 < 2.2e-16 ***
+RLMerr    2.0522         1     0.152    
+RLMlag   22.1362         1  2.54e-06 ***
+SARMA    80.0649         2 < 2.2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+Mes:  6 Año:  2017 
+
+	Lagrange multiplier diagnostics for spatial dependence
+data:  
+model: MODEL(formula = modelo, data = .x)
+weights: .y
+ 
+       statistic parameter   p.value    
+LMerr     68.868         1 < 2.2e-16 ***
+LMlag     90.278         1 < 2.2e-16 ***
+RLMerr     1.457         1    0.2274    
+RLMlag    22.866         1 1.737e-06 ***
+SARMA     91.734         2 < 2.2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+Mes:  7 Año:  2017 
+
+	Lagrange multiplier diagnostics for spatial dependence
+data:  
+model: MODEL(formula = modelo, data = .x)
+weights: .y
+ 
+       statistic parameter   p.value    
+LMerr    55.3907         1 9.881e-14 ***
+LMlag    76.4009         1 < 2.2e-16 ***
+RLMerr    2.1553         1    0.1421    
+RLMlag   23.1656         1 1.486e-06 ***
+SARMA    78.5562         2 < 2.2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+Mes:  8 Año:  2017 
+
+	Lagrange multiplier diagnostics for spatial dependence
+data:  
+model: MODEL(formula = modelo, data = .x)
+weights: .y
+ 
+       statistic parameter   p.value    
+LMerr    48.7285         1 2.940e-12 ***
+LMlag    67.9426         1 2.220e-16 ***
+RLMerr    1.2586         1    0.2619    
+RLMlag   20.4727         1 6.049e-06 ***
+SARMA    69.2012         2 8.882e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+Mes:  9 Año:  2017 
+
+	Lagrange multiplier diagnostics for spatial dependence
+data:  
+model: MODEL(formula = modelo, data = .x)
+weights: .y
+ 
+       statistic parameter   p.value    
+LMerr    43.9899         1 3.301e-11 ***
+LMlag    56.1610         1 6.672e-14 ***
+RLMerr    1.0393         1 0.3079916    
+RLMlag   13.2104         1 0.0002784 ***
+SARMA    57.2002         2 3.795e-13 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+Mes:  10 Año:  2017 
+
+	Lagrange multiplier diagnostics for spatial dependence
+data:  
+model: MODEL(formula = modelo, data = .x)
+weights: .y
+ 
+       statistic parameter   p.value    
+LMerr    46.4552         1 9.374e-12 ***
+LMlag    66.1338         1 4.441e-16 ***
+RLMerr    4.6663         1   0.03076 *  
+RLMlag   24.3449         1 8.054e-07 ***
+SARMA    70.8001         2 4.441e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+Mes:  11 Año:  2017 
+
+	Lagrange multiplier diagnostics for spatial dependence
+data:  
+model: MODEL(formula = modelo, data = .x)
+weights: .y
+ 
+       statistic parameter   p.value    
+LMerr    45.2348         1 1.748e-11 ***
+LMlag    62.5193         1 2.665e-15 ***
+RLMerr    2.5689         1     0.109    
+RLMlag   19.8533         1 8.362e-06 ***
+SARMA    65.0882         2 7.327e-15 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+Mes:  12 Año:  2017 
+
+	Lagrange multiplier diagnostics for spatial dependence
+data:  
+model: MODEL(formula = modelo, data = .x)
+weights: .y
+ 
+       statistic parameter   p.value    
+LMerr    52.1084         1 5.252e-13 ***
+LMlag    68.7002         1 < 2.2e-16 ***
+RLMerr    2.5666         1    0.1091    
+RLMlag   19.1584         1 1.203e-05 ***
+SARMA    71.2668         2 3.331e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+Mes:  1 Año:  2018 
+
+	Lagrange multiplier diagnostics for spatial dependence
+data:  
+model: MODEL(formula = modelo, data = .x)
+weights: .y
+ 
+       statistic parameter   p.value    
+LMerr    55.2089         1 1.084e-13 ***
+LMlag    75.8587         1 < 2.2e-16 ***
+RLMerr    3.7183         1   0.05382 .  
+RLMlag   24.3682         1 7.957e-07 ***
+SARMA    79.5770         2 < 2.2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+Mes:  2 Año:  2018 
+
+	Lagrange multiplier diagnostics for spatial dependence
+data:  
+model: MODEL(formula = modelo, data = .x)
+weights: .y
+ 
+       statistic parameter   p.value    
+LMerr    47.8225         1 4.666e-12 ***
+LMlag    64.7727         1 8.882e-16 ***
+RLMerr    3.9792         1   0.04607 *  
+RLMlag   20.9293         1 4.765e-06 ***
+SARMA    68.7519         2 1.221e-15 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+Mes:  3 Año:  2018 
+
+	Lagrange multiplier diagnostics for spatial dependence
+data:  
+model: MODEL(formula = modelo, data = .x)
+weights: .y
+ 
+       statistic parameter   p.value    
+LMerr    62.0525         1 3.331e-15 ***
+LMlag    80.3272         1 < 2.2e-16 ***
+RLMerr    3.5241         1   0.06048 .  
+RLMlag   21.7988         1 3.028e-06 ***
+SARMA    83.8513         2 < 2.2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+Mes:  4 Año:  2018 
+
+	Lagrange multiplier diagnostics for spatial dependence
+data:  
+model: MODEL(formula = modelo, data = .x)
+weights: .y
+ 
+       statistic parameter   p.value    
+LMerr    67.6076         1 2.220e-16 ***
+LMlag    88.0324         1 < 2.2e-16 ***
+RLMerr    2.0292         1    0.1543    
+RLMlag   22.4540         1 2.152e-06 ***
+SARMA    90.0615         2 < 2.2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+Mes:  5 Año:  2018 
+
+	Lagrange multiplier diagnostics for spatial dependence
+data:  
+model: MODEL(formula = modelo, data = .x)
+weights: .y
+ 
+       statistic parameter   p.value    
+LMerr   74.98057         1 < 2.2e-16 ***
+LMlag   91.69599         1 < 2.2e-16 ***
+RLMerr   0.47651         1      0.49    
+RLMlag  17.19192         1 3.379e-05 ***
+SARMA   92.17250         2 < 2.2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+Mes:  6 Año:  2018 
+
+	Lagrange multiplier diagnostics for spatial dependence
+data:  
+model: MODEL(formula = modelo, data = .x)
+weights: .y
+ 
+        statistic parameter   p.value    
+LMerr   91.635766         1 < 2.2e-16 ***
+LMlag  108.506580         1 < 2.2e-16 ***
+RLMerr   0.003807         1    0.9508    
+RLMlag  16.874621         1 3.993e-05 ***
+SARMA  108.510387         2 < 2.2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+Mes:  7 Año:  2018 
+
+	Lagrange multiplier diagnostics for spatial dependence
+data:  
+model: MODEL(formula = modelo, data = .x)
+weights: .y
+ 
+        statistic parameter   p.value    
+LMerr  1.0406e+02         1 < 2.2e-16 ***
+LMlag  1.2511e+02         1 < 2.2e-16 ***
+RLMerr 1.5511e-04         1    0.9901    
+RLMlag 2.1055e+01         1 4.463e-06 ***
+SARMA  1.2511e+02         2 < 2.2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+Mes:  8 Año:  2018 
+
+	Lagrange multiplier diagnostics for spatial dependence
+data:  
+model: MODEL(formula = modelo, data = .x)
+weights: .y
+ 
+       statistic parameter   p.value    
+LMerr   67.65085         1 2.220e-16 ***
+LMlag   89.38127         1 < 2.2e-16 ***
+RLMerr   0.29706         1    0.5857    
+RLMlag  22.02747         1 2.688e-06 ***
+SARMA   89.67833         2 < 2.2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+Mes:  9 Año:  2018 
+
+	Lagrange multiplier diagnostics for spatial dependence
+data:  
+model: MODEL(formula = modelo, data = .x)
+weights: .y
+ 
+        statistic parameter   p.value    
+LMerr  9.3589e+01         1 < 2.2e-16 ***
+LMlag  1.1696e+02         1 < 2.2e-16 ***
+RLMerr 2.3089e-03         1    0.9617    
+RLMlag 2.3370e+01         1 1.337e-06 ***
+SARMA  1.1696e+02         2 < 2.2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+Mes:  10 Año:  2018 
+
+	Lagrange multiplier diagnostics for spatial dependence
+data:  
+model: MODEL(formula = modelo, data = .x)
+weights: .y
+ 
+        statistic parameter   p.value    
+LMerr  9.2550e+01         1 < 2.2e-16 ***
+LMlag  1.1350e+02         1 < 2.2e-16 ***
+RLMerr 4.3510e-05         1    0.9947    
+RLMlag 2.0954e+01         1 4.704e-06 ***
+SARMA  1.1350e+02         2 < 2.2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+Mes:  11 Año:  2018 
+
+	Lagrange multiplier diagnostics for spatial dependence
+data:  
+model: MODEL(formula = modelo, data = .x)
+weights: .y
+ 
+        statistic parameter   p.value    
+LMerr  9.2550e+01         1 < 2.2e-16 ***
+LMlag  1.1350e+02         1 < 2.2e-16 ***
+RLMerr 4.3510e-05         1    0.9947    
+RLMlag 2.0954e+01         1 4.704e-06 ***
+SARMA  1.1350e+02         2 < 2.2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+Mes:  12 Año:  2018 
+
+	Lagrange multiplier diagnostics for spatial dependence
+data:  
+model: MODEL(formula = modelo, data = .x)
+weights: .y
+ 
+        statistic parameter   p.value    
+LMerr  9.2550e+01         1 < 2.2e-16 ***
+LMlag  1.1350e+02         1 < 2.2e-16 ***
+RLMerr 4.3510e-05         1    0.9947    
+RLMlag 2.0954e+01         1 4.704e-06 ***
+SARMA  1.1350e+02         2 < 2.2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1

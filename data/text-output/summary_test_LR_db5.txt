@@ -1,0 +1,265 @@
+Output test LR
+Mes:  1 Año:  2017 
+
+
+	Likelihood ratio for spatial linear models
+
+data:  
+Likelihood ratio = 19.787, df = 16, p-value = 0.23
+sample estimates:
+Log likelihood of .x Log likelihood of .y 
+           -215.7122            -225.6057 
+
+Mes:  2 Año:  2017 
+
+
+	Likelihood ratio for spatial linear models
+
+data:  
+Likelihood ratio = 15.568, df = 16, p-value = 0.4835
+sample estimates:
+Log likelihood of .x Log likelihood of .y 
+           -204.9799            -212.7639 
+
+Mes:  3 Año:  2017 
+
+
+	Likelihood ratio for spatial linear models
+
+data:  
+Likelihood ratio = 14.879, df = 16, p-value = 0.5335
+sample estimates:
+Log likelihood of .x Log likelihood of .y 
+           -186.8904            -194.3298 
+
+Mes:  4 Año:  2017 
+
+
+	Likelihood ratio for spatial linear models
+
+data:  
+Likelihood ratio = 13.975, df = 16, p-value = 0.6006
+sample estimates:
+Log likelihood of .x Log likelihood of .y 
+           -191.9482            -198.9358 
+
+Mes:  5 Año:  2017 
+
+
+	Likelihood ratio for spatial linear models
+
+data:  
+Likelihood ratio = 16.172, df = 16, p-value = 0.441
+sample estimates:
+Log likelihood of .x Log likelihood of .y 
+           -190.0709            -198.1571 
+
+Mes:  6 Año:  2017 
+
+
+	Likelihood ratio for spatial linear models
+
+data:  
+Likelihood ratio = 15.539, df = 16, p-value = 0.4856
+sample estimates:
+Log likelihood of .x Log likelihood of .y 
+           -193.3587            -201.1283 
+
+Mes:  7 Año:  2017 
+
+
+	Likelihood ratio for spatial linear models
+
+data:  
+Likelihood ratio = 24.819, df = 16, p-value = 0.07307
+sample estimates:
+Log likelihood of .x Log likelihood of .y 
+           -193.0822            -205.4919 
+
+Mes:  8 Año:  2017 
+
+
+	Likelihood ratio for spatial linear models
+
+data:  
+Likelihood ratio = 28.482, df = 16, p-value = 0.02767
+sample estimates:
+Log likelihood of .x Log likelihood of .y 
+           -178.7933            -193.0342 
+
+Mes:  9 Año:  2017 
+
+
+	Likelihood ratio for spatial linear models
+
+data:  
+Likelihood ratio = 25.019, df = 16, p-value = 0.06948
+sample estimates:
+Log likelihood of .x Log likelihood of .y 
+           -153.6110            -166.1207 
+
+Mes:  10 Año:  2017 
+
+
+	Likelihood ratio for spatial linear models
+
+data:  
+Likelihood ratio = 16.955, df = 16, p-value = 0.3885
+sample estimates:
+Log likelihood of .x Log likelihood of .y 
+           -192.3397            -200.8172 
+
+Mes:  11 Año:  2017 
+
+
+	Likelihood ratio for spatial linear models
+
+data:  
+Likelihood ratio = 14.715, df = 16, p-value = 0.5456
+sample estimates:
+Log likelihood of .x Log likelihood of .y 
+           -148.0593            -155.4170 
+
+Mes:  12 Año:  2017 
+
+
+	Likelihood ratio for spatial linear models
+
+data:  
+Likelihood ratio = 18.029, df = 16, p-value = 0.3222
+sample estimates:
+Log likelihood of .x Log likelihood of .y 
+           -212.5239            -221.5386 
+
+Mes:  1 Año:  2018 
+
+
+	Likelihood ratio for spatial linear models
+
+data:  
+Likelihood ratio = 19.472, df = 16, p-value = 0.2449
+sample estimates:
+Log likelihood of .x Log likelihood of .y 
+           -174.5588            -184.2950 
+
+Mes:  2 Año:  2018 
+
+
+	Likelihood ratio for spatial linear models
+
+data:  
+Likelihood ratio = 20.038, df = 16, p-value = 0.2185
+sample estimates:
+Log likelihood of .x Log likelihood of .y 
+           -160.4753            -170.4942 
+
+Mes:  3 Año:  2018 
+
+
+	Likelihood ratio for spatial linear models
+
+data:  
+Likelihood ratio = 19.985, df = 16, p-value = 0.2209
+sample estimates:
+Log likelihood of .x Log likelihood of .y 
+           -146.3125            -156.3049 
+
+Mes:  4 Año:  2018 
+
+
+	Likelihood ratio for spatial linear models
+
+data:  
+Likelihood ratio = 23.298, df = 16, p-value = 0.106
+sample estimates:
+Log likelihood of .x Log likelihood of .y 
+           -145.2508            -156.8997 
+
+Mes:  5 Año:  2018 
+
+
+	Likelihood ratio for spatial linear models
+
+data:  
+Likelihood ratio = 18.307, df = 16, p-value = 0.3062
+sample estimates:
+Log likelihood of .x Log likelihood of .y 
+           -191.5439            -200.6976 
+
+Mes:  6 Año:  2018 
+
+
+	Likelihood ratio for spatial linear models
+
+data:  
+Likelihood ratio = 16.739, df = 16, p-value = 0.4027
+sample estimates:
+Log likelihood of .x Log likelihood of .y 
+           -175.6018            -183.9712 
+
+Mes:  7 Año:  2018 
+
+
+	Likelihood ratio for spatial linear models
+
+data:  
+Likelihood ratio = 18.487, df = 16, p-value = 0.2961
+sample estimates:
+Log likelihood of .x Log likelihood of .y 
+           -173.7833            -183.0269 
+
+Mes:  8 Año:  2018 
+
+
+	Likelihood ratio for spatial linear models
+
+data:  
+Likelihood ratio = 18.934, df = 16, p-value = 0.2721
+sample estimates:
+Log likelihood of .x Log likelihood of .y 
+           -171.5685            -181.0356 
+
+Mes:  9 Año:  2018 
+
+
+	Likelihood ratio for spatial linear models
+
+data:  
+Likelihood ratio = 23.681, df = 16, p-value = 0.0967
+sample estimates:
+Log likelihood of .x Log likelihood of .y 
+           -155.1623            -167.0029 
+
+Mes:  10 Año:  2018 
+
+
+	Likelihood ratio for spatial linear models
+
+data:  
+Likelihood ratio = 29.461, df = 16, p-value = 0.02101
+sample estimates:
+Log likelihood of .x Log likelihood of .y 
+           -240.9896            -255.7200 
+
+Mes:  11 Año:  2018 
+
+
+	Likelihood ratio for spatial linear models
+
+data:  
+Likelihood ratio = 29.461, df = 16, p-value = 0.02101
+sample estimates:
+Log likelihood of .x Log likelihood of .y 
+           -240.9896            -255.7200 
+
+Mes:  12 Año:  2018 
+
+
+	Likelihood ratio for spatial linear models
+
+data:  
+Likelihood ratio = 29.461, df = 16, p-value = 0.02101
+sample estimates:
+Log likelihood of .x Log likelihood of .y 
+           -240.9896            -255.7200 
+
