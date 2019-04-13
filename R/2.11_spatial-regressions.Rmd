@@ -8,31 +8,35 @@ output: html_notebook
 ```{r include=FALSE}
 library(tidyverse)
 library(spdep)
-
 ```
 
 # Cargamos datos
 
 ```{r}
-#data grifos
+# data grifos
 grifos_sc <-
-    readRDS(here::here("data", "processed", "grifos_con_sc_razon_social.RDS"))
+  readRDS(here::here("data", "processed", "grifos_con_sc_razon_social.RDS"))
 
-#cargamos los precios para 2017 de DB5
-rutas_fuel <- list(here::here("data", "processed", "data_diesel_mensual.rds"),
-              here::here("data", "processed", "data_g90_mensual.rds"))
+# cargamos los precios para 2017 de DB5
+rutas_fuel <- list(
+  here::here("data", "processed", "data_diesel_mensual.rds"),
+  here::here("data", "processed", "data_g90_mensual.rds")
+)
 
 data_precios <- map(
   rutas_fuel,
-  ~ readRDS(.x) %>% filter(
-    `año` >= 2017,
-    codigo_de_osinergmin %in% grifos_sc$codigo_de_osinergmin
-  ) %>%
+  ~ readRDS(.x) %>%
+    filter(
+      `año` >= 2017,
+      codigo_de_osinergmin %in% grifos_sc$codigo_de_osinergmin
+    ) %>%
     mutate(dia = 1) %>%
     unite(fecha, dia, mes, `año`, sep = "-", remove = FALSE) %>%
     select(-dia) %>%
-    filter(mes != 13,
-           precio_de_venta > 6)
+    filter(
+      mes != 13,
+      precio_de_venta > 6
+    )
 )
 
 
@@ -42,22 +46,23 @@ precios_g90 <- data_precios[[2]]
 
 # cargamos data de distritos
 
-data_distrital_raw <- read_csv(here::here("data", "demo-distrital","data_pop_lima.csv")) %>% 
-  janitor::clean_names() 
-
-
+data_distrital_raw <- read_csv(here::here("data", "demo-distrital", "data_pop_lima.csv")) %>%
+  janitor::clean_names()
 ```
 ## Limpiamos archivo distrital:
 
 ```{r}
-data_distrital_clean <- data_distrital_raw %>% 
-  rename("pop_2017" = poblacion_total_30_06_2017,
-         "densidad_2017" = densidad_poblacional_hab_km2,
-         "ingresos_2012" = ingreso_per_capita ) %>% 
-  mutate(pop_2017 = str_remove(pop_2017, " ") %>% parse_number(),
-         densidad_2017 = str_remove(densidad_2017, " ") %>% parse_number(),
-         distrito = str_to_upper(distrito))
-
+data_distrital_clean <- data_distrital_raw %>%
+  rename(
+    "pop_2017" = poblacion_total_30_06_2017,
+    "densidad_2017" = densidad_poblacional_hab_km2,
+    "ingresos_2012" = ingreso_per_capita
+  ) %>%
+  mutate(
+    pop_2017 = str_remove(pop_2017, " ") %>% parse_number(),
+    densidad_2017 = str_remove(densidad_2017, " ") %>% parse_number(),
+    distrito = str_to_upper(distrito)
+  )
 ```
 
 
@@ -74,14 +79,14 @@ grifos_sc <- grifos_sc %>%
   )
 
 
-data_total <- map(list(precios_db5, precios_g90),
-                  ~ left_join(grifos_sc, .x, by = "codigo_de_osinergmin") %>% 
-                    left_join(., data_distrital_clean, by = "distrito"))
+data_total <- map(
+  list(precios_db5, precios_g90),
+  ~ left_join(grifos_sc, .x, by = "codigo_de_osinergmin") %>%
+    left_join(., data_distrital_clean, by = "distrito")
+)
 
 data_db5 <- data_total[[1]]
 data_g90 <- data_total[[2]]
-  
-  
 ```
 
 
@@ -95,26 +100,26 @@ Hacemos una regresión OLS pooled, clusterizando a nivel de grifo, en corte tran
 
 
 data <- data_db5 %>%
-    filter(mes == 1, `año` == 2017) %>% 
-    select(
-        precio_de_venta,
-        tipo_bandera,
-        sc_pre,
-        distancia_avg,
-        distancia_min,
-        num_grifos_cerc,
-        serv_mecanico,
-        lavado,
-        cajero,
-        con_gnv,
-        con_glp,
-        ingresos_2012,
-        densidad_2017,
-        lat,
-        lon,
-        codigo_de_osinergmin
-    ) %>%
-    drop_na()
+  filter(mes == 1, `año` == 2017) %>%
+  select(
+    precio_de_venta,
+    tipo_bandera,
+    sc_pre,
+    distancia_avg,
+    distancia_min,
+    num_grifos_cerc,
+    serv_mecanico,
+    lavado,
+    cajero,
+    con_gnv,
+    con_glp,
+    ingresos_2012,
+    densidad_2017,
+    lat,
+    lon,
+    codigo_de_osinergmin
+  ) %>%
+  drop_na()
 
 modelo_data <- lm(data %>% select(-lat, -lon, -codigo_de_osinergmin))
 
@@ -132,7 +137,7 @@ grifos_nb <- tri2nb(coords, row.names = grifos)
 sp_grifos <- nb2listw(grifos_nb)
 
 
-LMtest <- lm.LMtests(modelo_data, sp_grifos, test="all")
+LMtest <- lm.LMtests(modelo_data, sp_grifos, test = "all")
 LMtest
 ```
 
@@ -140,21 +145,22 @@ Aparentemente, el modelo con lag es el significativo, así que usaremos ese. Est
 
 ```{r}
 modelo <- precio_de_venta ~ tipo_bandera +
-        sc_pre +
-        distancia_avg +
-        distancia_min +
-        num_grifos_cerc +
-        serv_mecanico +
-        lavado +
-        cajero +
-        con_gnv +
-        con_glp +
-        ingresos_2012 + 
-        densidad_2017
+  sc_pre +
+  distancia_avg +
+  distancia_min +
+  num_grifos_cerc +
+  serv_mecanico +
+  lavado +
+  cajero +
+  con_gnv +
+  con_glp +
+  ingresos_2012 +
+  densidad_2017
 durbin_model <- lagsarlm(modelo,
-    data = data, 
-    listw = sp_grifos, 
-    Durbin = TRUE)    
+  data = data,
+  listw = sp_grifos,
+  Durbin = TRUE
+)
 
 summary(durbin_model)
 ```
@@ -162,7 +168,7 @@ summary(durbin_model)
 Corremos el modelo de rezagos espaciales:
 
 ```{r}
-spa_lag_model=lagsarlm(formula = modelo, data = data, listw = sp_grifos)
+spa_lag_model <- lagsarlm(formula = modelo, data = data, listw = sp_grifos)
 summary(spa_lag_model)
 ```
 
@@ -176,51 +182,50 @@ summary(spa_lag_model)
 # Corremos los modelos OLS para todos los meses antes de la compra
 
 ```{r func-regresiones}
-#Funcion para output de regresiones 
+# Funcion para output de regresiones
 
 output_reg <- function(data, modelo) {
-
-
-    
   data_mes_nest <- data %>%
     select(
-          precio_de_venta,
-          tipo_bandera,
-          sc_pre,
-          sc_post,
-          distancia_avg,
-          distancia_min,
-          num_grifos_cerc,
-          serv_mecanico,
-          lavado,
-          cajero,
-          con_gnv,
-          con_glp,
-          ingresos_2012,
-          densidad_2017,
-          lat,
-          lon,
-          codigo_de_osinergmin,
-          mes,
-          `año`
-      ) %>% 
-      group_by(mes, `año`) %>% 
-      nest()
-  
-  data_mes_model <- data_mes_nest %>% 
+      precio_de_venta,
+      tipo_bandera,
+      sc_pre,
+      sc_post,
+      distancia_avg,
+      distancia_min,
+      num_grifos_cerc,
+      serv_mecanico,
+      lavado,
+      cajero,
+      con_gnv,
+      con_glp,
+      ingresos_2012,
+      densidad_2017,
+      lat,
+      lon,
+      codigo_de_osinergmin,
+      mes,
+      `año`
+    ) %>%
+    group_by(mes, `año`) %>%
+    nest()
+
+  data_mes_model <- data_mes_nest %>%
     mutate(ols = map(data, ~ lm(modelo, data = .x)))
-  
-  
-  
+
+
+
   list1 <- as.list(select(data_mes_model, ols, mes, `año`))
-  
-  
-  out <- capture.output(pwalk(list1,
-                              function(ols, mes, `año`) {
-                                cat("Mes: ", mes, "Año: ", `año`, "\n\n")
-                                print(summary(ols))
-                              }))
-  
+
+
+  out <- capture.output(pwalk(
+    list1,
+    function(ols, mes, `año`) {
+      cat("Mes: ", mes, "Año: ", `año`, "\n\n")
+      print(summary(ols))
+    }
+  ))
+
   out
 }
 ```
@@ -228,27 +233,25 @@ output_reg <- function(data, modelo) {
 
 ```{r full-model}
 modelo <- precio_de_venta ~ tipo_bandera +
-        sc_pre +
-        distancia_avg +
-        distancia_min +
-        num_grifos_cerc +
-        serv_mecanico +
-        lavado +
-        cajero +
-        con_gnv +
-        con_glp +
-        ingresos_2012 + 
-        densidad_2017
+  sc_pre +
+  distancia_avg +
+  distancia_min +
+  num_grifos_cerc +
+  serv_mecanico +
+  lavado +
+  cajero +
+  con_gnv +
+  con_glp +
+  ingresos_2012 +
+  densidad_2017
 
 
 
 out_db5 <- output_reg(data_db5, modelo)
 out_g90 <- output_reg(data_g90, modelo)
 
-cat("Output de OLS", out_db5, file= here::here("data", "text-output", "summary_ols_full_db5.txt"), sep="\n", append=FALSE)
-cat("Output de OLS", out_db5, file= here::here("data", "text-output", "summary_ols_full_g90.txt"), sep="\n", append=FALSE)
-
-
+cat("Output de OLS", out_db5, file = here::here("data", "text-output", "summary_ols_full_db5.txt"), sep = "\n", append = FALSE)
+cat("Output de OLS", out_db5, file = here::here("data", "text-output", "summary_ols_full_g90.txt"), sep = "\n", append = FALSE)
 ```
 
 
@@ -258,23 +261,22 @@ Ahora simplificamos oLS con variables significativas para DB5 y G90
 
 ```{r simp-model}
 modelo <- precio_de_venta ~ tipo_bandera +
-          distancia_avg +
-          distancia_min +
-          num_grifos_cerc +
-          serv_mecanico +
-          lavado +
-          cajero +
-          con_gnv +
-          con_glp +
-          ingresos_2012  
+  distancia_avg +
+  distancia_min +
+  num_grifos_cerc +
+  serv_mecanico +
+  lavado +
+  cajero +
+  con_gnv +
+  con_glp +
+  ingresos_2012
 
 
 
 out_g90 <- output_reg(data_g90, modelo)
 out_db5 <- output_reg(data_db5, modelo)
-cat("Output de OLS", out_db5, file= here::here("data", "text-output", "summary_ols_usando_simp_db5.txt"), sep="\n", append=FALSE)
-cat("Output de OLS", out_g90, file= here::here("data", "text-output", "summary_ols_usando_simp_g90.txt"), sep="\n", append=FALSE)
-
+cat("Output de OLS", out_db5, file = here::here("data", "text-output", "summary_ols_usando_simp_db5.txt"), sep = "\n", append = FALSE)
+cat("Output de OLS", out_g90, file = here::here("data", "text-output", "summary_ols_usando_simp_g90.txt"), sep = "\n", append = FALSE)
 ```
 
 # Test de Morga
@@ -286,26 +288,26 @@ test de I-morgan
 
 
 data <- data_db5 %>%
-    filter(mes == 1, `año` == 2017) %>% 
-    select(
-        precio_de_venta,
-        tipo_bandera,
-        sc_pre,
-        distancia_avg,
-        distancia_min,
-        num_grifos_cerc,
-        serv_mecanico,
-        lavado,
-        cajero,
-        con_gnv,
-        con_glp,
-        ingresos_2012,
-        densidad_2017,
-        lat,
-        lon,
-        codigo_de_osinergmin
-    ) %>%
-    drop_na()
+  filter(mes == 1, `año` == 2017) %>%
+  select(
+    precio_de_venta,
+    tipo_bandera,
+    sc_pre,
+    distancia_avg,
+    distancia_min,
+    num_grifos_cerc,
+    serv_mecanico,
+    lavado,
+    cajero,
+    con_gnv,
+    con_glp,
+    ingresos_2012,
+    densidad_2017,
+    lat,
+    lon,
+    codigo_de_osinergmin
+  ) %>%
+  drop_na()
 
 modelo_data <- lm(data %>% select(-lat, -lon, -codigo_de_osinergmin))
 
@@ -320,7 +322,7 @@ grifos_nb <- tri2nb(coords, row.names = grifos)
 sp_grifos <- nb2listw(grifos_nb)
 
 
-LMtest <- lm.LMtests(modelo_data, sp_grifos, test="all")
+LMtest <- lm.LMtests(modelo_data, sp_grifos, test = "all")
 LMtest
 ```
 
@@ -328,116 +330,129 @@ LMtest
 calcular_reg_month <- function(data) {
   data_mes_nest <- data %>%
     select(
-          precio_de_venta,
-          tipo_bandera,
-          sc_pre,
-          sc_post,
-          distancia_avg,
-          distancia_min,
-          num_grifos_cerc,
-          serv_mecanico,
-          lavado,
-          cajero,
-          con_gnv,
-          con_glp,
-          ingresos_2012,
-          densidad_2017,
-          lat,
-          lon,
-          codigo_de_osinergmin,
-          mes,
-          `año`
-      ) %>% 
-      group_by(mes, `año`) %>% 
-      nest()
+      precio_de_venta,
+      tipo_bandera,
+      sc_pre,
+      sc_post,
+      distancia_avg,
+      distancia_min,
+      num_grifos_cerc,
+      serv_mecanico,
+      lavado,
+      cajero,
+      con_gnv,
+      con_glp,
+      ingresos_2012,
+      densidad_2017,
+      lat,
+      lon,
+      codigo_de_osinergmin,
+      mes,
+      `año`
+    ) %>%
+    group_by(mes, `año`) %>%
+    nest()
 
-  data_mes_model <- data_mes_nest %>% 
-    mutate(ols = map(data, ~ lm(modelo, data = .x)),
-           coords = map(data, ~ cbind(.x$lon, .x$lat)),
-           grifos = map(data, ~ .x$codigo_de_osinergmin),
-           grifos_nb = map2(coords, grifos, ~ tri2nb(.x, row.names = .y)),
-           sp_grifos = map(grifos_nb, ~nb2listw(.x)),
-           spatial_lag = map2(data, sp_grifos, ~lagsarlm(modelo, data = .x, listw = .y)),
-           durbin = map2(data, sp_grifos, ~lagsarlm(modelo, data = .x, listw = .y, Durbin = TRUE)),
-           test_LR = map2(durbin, spatial_lag, ~ LR.sarlm(.x, .y)),
-           LMtest = map2(ols, sp_grifos, ~ lm.LMtests(.x, .y, test="all")))
+  data_mes_model <- data_mes_nest %>%
+    mutate(
+      ols = map(data, ~ lm(modelo, data = .x)),
+      coords = map(data, ~ cbind(.x$lon, .x$lat)),
+      grifos = map(data, ~ .x$codigo_de_osinergmin),
+      grifos_nb = map2(coords, grifos, ~ tri2nb(.x, row.names = .y)),
+      sp_grifos = map(grifos_nb, ~ nb2listw(.x)),
+      spatial_lag = map2(data, sp_grifos, ~ lagsarlm(modelo, data = .x, listw = .y)),
+      durbin = map2(data, sp_grifos, ~ lagsarlm(modelo, data = .x, listw = .y, Durbin = TRUE)),
+      test_LR = map2(durbin, spatial_lag, ~ LR.sarlm(.x, .y)),
+      LMtest = map2(ols, sp_grifos, ~ lm.LMtests(.x, .y, test = "all"))
+    )
   data_mes_model
 }
-
 ```
 
 Evaluamos para DB5
 ```{r}
-db5_all_models_tests <- calcular_reg_month(data_db5) 
+db5_all_models_tests <- calcular_reg_month(data_db5)
 
 list_var <- db5_all_models_tests %>%
-    select(test_LR, mes, `año`) %>%
-    as.list()
-  
-out_var <- capture.output(pwalk(list_var,
-                                  function(test_LR, mes, `año`) {
-                                    cat("Mes: ", mes, "Año: ", `año`, "\n\n")
-                                    print(test_LR)
-                                  }))
+  select(test_LR, mes, `año`) %>%
+  as.list()
 
-cat("Output test LR", 
-    out_var, 
-    file= here::here("data", "text-output", "summary_test_LR_db5.txt"), sep="\n", append=FALSE)
+out_var <- capture.output(pwalk(
+  list_var,
+  function(test_LR, mes, `año`) {
+    cat("Mes: ", mes, "Año: ", `año`, "\n\n")
+    print(test_LR)
+  }
+))
+
+cat("Output test LR",
+  out_var,
+  file = here::here("data", "text-output", "summary_test_LR_db5.txt"), sep = "\n", append = FALSE
+)
 ```
 
 
 ```{r}
 
 list_var <- db5_all_models_tests %>%
-    select(spatial_lag, mes, `año`) %>%
-    as.list()
-  
-out_var <- capture.output(pwalk(list_var,
-                                  function(spatial_lag, mes, `año`) {
-                                    cat("Mes: ", mes, "Año: ", `año`, "\n\n")
-                                    print(summary(spatial_lag))
-                                  }))
+  select(spatial_lag, mes, `año`) %>%
+  as.list()
 
-cat("Output Spatial Lag", 
-    out_var, 
-    file= here::here("data", "text-output", "summary_spatial_lag_db5.txt"), sep="\n", append=FALSE)
+out_var <- capture.output(pwalk(
+  list_var,
+  function(spatial_lag, mes, `año`) {
+    cat("Mes: ", mes, "Año: ", `año`, "\n\n")
+    print(summary(spatial_lag))
+  }
+))
+
+cat("Output Spatial Lag",
+  out_var,
+  file = here::here("data", "text-output", "summary_spatial_lag_db5.txt"), sep = "\n", append = FALSE
+)
 ```
 
 Evaluamos para G90
 ```{r}
-db5_all_models_tests <- calcular_reg_month(data_g90) 
+db5_all_models_tests <- calcular_reg_month(data_g90)
 
 list_var <- db5_all_models_tests %>%
-    select(test_LR, mes, `año`) %>%
-    as.list()
-  
-out_var <- capture.output(pwalk(list_var,
-                                  function(test_LR, mes, `año`) {
-                                    cat("Mes: ", mes, "Año: ", `año`, "\n\n")
-                                    print(test_LR)
-                                  }))
+  select(test_LR, mes, `año`) %>%
+  as.list()
 
-cat("Output test LR", 
-    out_var, 
-    file= here::here("data", "text-output", "summary_test_LR_g90.txt"), sep="\n", append=FALSE)
+out_var <- capture.output(pwalk(
+  list_var,
+  function(test_LR, mes, `año`) {
+    cat("Mes: ", mes, "Año: ", `año`, "\n\n")
+    print(test_LR)
+  }
+))
+
+cat("Output test LR",
+  out_var,
+  file = here::here("data", "text-output", "summary_test_LR_g90.txt"), sep = "\n", append = FALSE
+)
 ```
 
 
 ```{r}
 
 list_var <- db5_all_models_tests %>%
-    select(spatial_lag, mes, `año`) %>%
-    as.list()
-  
-out_var <- capture.output(pwalk(list_var,
-                                  function(spatial_lag, mes, `año`) {
-                                    cat("Mes: ", mes, "Año: ", `año`, "\n\n")
-                                    print(summary(spatial_lag))
-                                  }))
+  select(spatial_lag, mes, `año`) %>%
+  as.list()
 
-cat("Output Spatial Lag", 
-    out_var, 
-    file= here::here("data", "text-output", "summary_spatial_lag_g90.txt"), sep="\n", append=FALSE)
+out_var <- capture.output(pwalk(
+  list_var,
+  function(spatial_lag, mes, `año`) {
+    cat("Mes: ", mes, "Año: ", `año`, "\n\n")
+    print(summary(spatial_lag))
+  }
+))
+
+cat("Output Spatial Lag",
+  out_var,
+  file = here::here("data", "text-output", "summary_spatial_lag_g90.txt"), sep = "\n", append = FALSE
+)
 ```
 
 # Regresión de efectos fijos
@@ -451,52 +466,66 @@ Primero debemos crear una variable que sea `COMPRADA` igual a 1 si si la estaci�
 ## Primero solo con variable comprada para estaciones PECSA
 ```{r}
 data_db5 %>%
-  mutate(COMPRADA = case_when(`año` == 2017 ~ 0,
-                              tipo_bandera == "PROPIA PECSA" ~ 1,
-                              TRUE ~ 0),
-         fecha = lubridate::dmy(fecha)) -> data_db5_comprada
+  mutate(
+    COMPRADA = case_when(
+      `año` == 2017 ~ 0,
+      tipo_bandera == "PROPIA PECSA" ~ 1,
+      TRUE ~ 0
+    ),
+    fecha = lubridate::dmy(fecha)
+  ) -> data_db5_comprada
 ```
 
-## Corremos regresión efectos fijos
 
+### Corremos regresión efectos fijos
+
+Primero solo con 
 ```{r}
+library(multiwayvcov)
+library(lmtest)
 library(plm)
 pdf <- pdata.frame(data_db5_comprada %>% drop_na(), index = c("codigo_de_osinergmin", "fecha"))
 
-modelo <- precio_de_venta ~ 
-          COMPRADA
+modelo <- precio_de_venta ~
+COMPRADA
 
 model <- plm(modelo, data = pdf, model = "within", effect = "twoways")
 
 summary(model)
 
 # Cluster by firm
-coeftest(model, vcov=vcovHC(model, type="sss", cluster="group")) 
-
-
+coeftest(model, vcov = vcovHC(model, type = "sss", cluster = "group"))
 ```
 
+### Exportamos data a stata para hacer lo mismo
 
 ```{r}
-library(multiwayvcov)
-library(lmtest)
-data(petersen)
-m1 <- lm(y ~ x, data = petersen)
-
-# Cluster by firm
-vcov_firm <- cluster.vcov(m1, petersen$firmid)
-coeftest(m1, vcov_firm)
-```
-
-```{r}
-library(foreign)
-library(readstata13) 
+library(readstata13)
 data_db5 %>%
-  mutate(COMPRADA = case_when(`año` == 2017 ~ 0,
-                              tipo_bandera == "PROPIA PECSA" ~ 1,
-                              TRUE ~ 0)) %>% 
- write.csv(file = here::here("data", "processed", "data_diesel_reg_comprada.csv"))
-
-
+  mutate(COMPRADA = case_when(
+    `año` == 2017 ~ 0,
+    tipo_bandera == "PROPIA PECSA" ~ 1,
+    TRUE ~ 0
+  )) %>%
+  write.csv(file = here::here("data", "processed", "data_diesel_reg_comprada.csv"))
 ```
 
+## Añadamos variables de competencia de estaciones cercanas:
+
+Cargamos archivo con vecinos de Thiessen y generamos dataframe con datos e indicador si tiene vecino pecsa
+
+```{r}
+grifos_vecinos <- readRDS(here::here("data", "processed", "grifo_con_vecinos_pre.RDS"))
+
+vecinos_pecsa_thissen <- grifos_vecinos %>%
+  group_by(codigo_de_osinergmin.princ) %>%
+  mutate(vecino_pecsa_thiessen = if_else(str_detect(razon_social.vec, "PERUANA DE ESTACIONES"),
+    1,
+    0
+  )) %>%
+  arrange(codigo_de_osinergmin.princ, desc(vecino_pecsa_thiessen)) %>%
+  distinct(codigo_de_osinergmin.princ, .keep_all = TRUE) %>%
+  select(codigo_de_osinergmin.princ, vecino_pecsa_thiessen) 
+
+```
+Ahora calculemos los vecinos 

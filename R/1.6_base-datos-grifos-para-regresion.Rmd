@@ -193,41 +193,68 @@ grifos_distancia_minima <- as_tibble(matriz_distancias, rownames = "codigo_de_os
     ungroup() %>%
     arrange(as.numeric(codigo_de_osinergmin)) %>%
     filter(distancia == distancia_min) %>%
-    select(-distancia)
+    select(-distancia) %>% 
+    mutate_at(c("codigo_de_osinergmin", "grifo_distancia"), as.numeric)
 
 ```
 
 Distancia promedio a grifos a menos de `distancia_competencia`
 
-```{r remedy009}
- 
-grifos_distancia_promedio <- as_tibble(matriz_distancias, rownames = "codigo_de_osinergmin") %>%
-    gather(key = "grifo_distancia", value = "distancia", -codigo_de_osinergmin) %>%
-    filter(distancia != 0, distancia < distancia_competencia) %>%
-    group_by(codigo_de_osinergmin) %>%
-    distinct(grifo_distancia, .keep_all = TRUE) %>%
-    mutate(distancia_avg = mean(distancia),
-           num_grifos_cerc = n()) %>%
-    ungroup() %>%
-    arrange(as.numeric(codigo_de_osinergmin)) %>%
-    distinct(codigo_de_osinergmin, distancia_avg, num_grifos_cerc) %>%
-    arrange(desc(distancia_avg))
+Creamos df con dist promedio a grifos, número de grifos vecinos (1.5 km), y si el grifo tiene grifo propio de Pecsa vecino.
 
+```{r}
+grifos_distancia_pecsa <- as_tibble(matriz_distancias, rownames = "codigo_de_osinergmin") %>%
+  gather(key = "grifo_distancia", value = "distancia", -codigo_de_osinergmin) %>%
+  filter(distancia != 0, distancia < distancia_competencia) %>%
+  mutate(
+    codigo_de_osinergmin = as.numeric(codigo_de_osinergmin),
+    grifo_distancia = as.numeric(grifo_distancia)
+  ) %>%
+  arrange(codigo_de_osinergmin) %>%
+  left_join(
+    grifos_con_datos %>% select(codigo_de_osinergmin, tipo_bandera),
+    by = c("grifo_distancia" = "codigo_de_osinergmin")
+  ) %>%
+  group_by(codigo_de_osinergmin) %>%
+  mutate(
+    distancia_avg = mean(distancia),
+    num_grifos_cerc = n(),
+    vecino_pecsa_dist = if_else(tipo_bandera == "PROPIA PECSA",
+      1,
+      0
+    ),
+    num_vecinos_pecsa = sum(vecino_pecsa_dist)
+  ) %>%
+  arrange(codigo_de_osinergmin, desc(vecino_pecsa_dist)) %>%
+  distinct(codigo_de_osinergmin,
+    distancia_avg,
+    num_grifos_cerc,
+    .keep_all = TRUE
+  ) %>%
+  select(-distancia, -tipo_bandera, -grifo_distancia)
+  
+    
 ```
 
 Lo agregamos al archivo anterior
 
 ```{r remedy010}
-grifos_distancias <- full_join(grifos_distancia_minima, grifos_distancia_promedio,
+grifos_distancias <- full_join(grifos_distancia_minima, grifos_distancia_pecsa,
                                by = "codigo_de_osinergmin") %>%
-    rename("grifo_mas_cercano" = grifo_distancia) %>%
-    mutate(codigo_de_osinergmin = as.numeric(codigo_de_osinergmin))
+    rename("grifo_mas_cercano" = grifo_distancia) 
 
 grifo_full <-
     full_join(grifos_con_datos,
               grifos_distancias,
               by = c("codigo_de_osinergmin"))
+#los grifos que no tienen competencia en 1.5 km hacemos lo siguiente:
 
+grifo_full <- grifo_full %>% 
+    mutate(num_grifos_cerc = if_else(is.na(num_grifos_cerc), 0L, num_grifos_cerc),
+           distancia_avg = if_else(is.na(distancia_avg), 1.5, distancia_avg),
+           num_vecinos_pecsa = as.integer(num_vecinos_pecsa),
+           num_vecinos_pecsa = if_else(is.na(num_vecinos_pecsa), 0L, num_vecinos_pecsa),
+           vecino_pecsa_dist = if_else(is.na(vecino_pecsa_dist), 0, vecino_pecsa_dist))
 ```
 # Corregimos razones sociales de marcas principales:
 

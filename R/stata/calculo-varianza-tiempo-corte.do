@@ -8,9 +8,11 @@ xtset codigo_de_osinergmin fecha_stata
 
 xtreg precio_de_venta i.fecha_stata, fe
 
-import delimited E:\Dropbox\projects\maestria\masther-thesis\data\processed\data_diesel_reg_comprada.csv
 
-xtset codigo_de_osinergmin fecha1
+clear
+import delimited E:\Dropbox\projects\maestria\masther-thesis\data\processed\data_diesel_reg_comprada.csv
 gen fecha1=date(fecha,"DMY")
-format fecha1 %d
-xtreg precio_de_venta comprada i.fecha1, fe
+format fecha1 %td
+xtset codigo_de_osinergmin fecha1
+
+xtreg precio_de_venta comprada i.fecha1, fe  cluster(codigo_de_osinergmin)
