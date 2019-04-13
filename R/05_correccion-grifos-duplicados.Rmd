@@ -6,9 +6,9 @@ output: html_notebook
 library(lubridate)
 library(stringr)
 suppressMessages(library(tidyverse))
-#Cargamos archivo de 0.1_data-wrangling.R
+#Cargamos archivo de 02_data-wrangling.R
 prices <- readRDS(here::here("data","processed","data_2005_2018_clean.rds"))
-#Cargamos archivo de `R/1.4_importar-hoja-gdrive.R`
+#Cargamos archivo de `04_importar-hoja-gdrive.R`
 grifos <- readRDS(here::here("data","processed","grifo_coding_raw.rds"))
 '%ni%' <- Negate('%in%')
 ```

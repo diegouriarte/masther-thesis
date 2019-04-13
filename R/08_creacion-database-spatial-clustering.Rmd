@@ -7,7 +7,7 @@ output: html_notebook
 
 ```{r}
 suppressMessages(library(tidyverse))
-source(here::here("R","2.6_calculo-spatial-clustering_funciones.R"))
+source(here::here("R","funcion03_calculo-spatial-clustering.R"))
 library(purrr)
 
 ```
@@ -86,6 +86,13 @@ Unimos las medidas de sc pre y post en el mismo data file
 grifos_sc <- grifos_sc_pre %>%
     rename(sc_pre = sc)
 grifos_sc$sc_post <- grifos_sc_post_1$sc
+
+grifos_sc <- grifos_sc %>%
+  mutate(
+    tiene_mecanico = if_else(mecanico + aceite + lavado > 0, 1, 0),
+    con_glp = as.numeric(con_glp) - 1,
+    con_gnv = as.numeric(con_gnv) - 1
+  )
 
 ```
 

@@ -13,7 +13,7 @@ suppressMessages(library(spatstat))
 suppressMessages(library(deldir))
 library(sp)
 library(leaflet)
-source(here::here("R","2.4_funcion-thiessen.R"))
+source(here::here("R","funcion02_thiessen.R"))
 ```
 
 
@@ -105,24 +105,24 @@ plot(X) # Just to make sure it looks right.
 dX <- dirichlet(X) 
 plot(dX) # Just to make sure ..... 
 ```
-Sacamos una gráfica para la tesis
+<!-- Sacamos una gráfica para la tesis -->
 
-```{r fig.height=10, fig.width=10}
-grifos_coord <- grifos %>% 
-  filter(distrito == "SAN ISIDRO") %>% 
-  select(x = lon, y = lat) 
+<!-- ```{r fig.height=10, fig.width=10} -->
+<!-- grifos_coord <- grifos %>%  -->
+<!--   filter(distrito == "SAN ISIDRO") %>%  -->
+<!--   select(x = lon, y = lat)  -->
 
-W <- owin(xrange = c(min(grifos_coord$x)-0.001, max(grifos_coord$x)+0.001),
-          yrange = c(min(grifos_coord$y)-0.01, max(grifos_coord$y)+0.01))
+<!-- W <- owin(xrange = c(min(grifos_coord$x)-0.001, max(grifos_coord$x)+0.001), -->
+<!--           yrange = c(min(grifos_coord$y)-0.01, max(grifos_coord$y)+0.01)) -->
 
- 
-X <- as.ppp(grifos_coord,W) 
-plot(X) # Just to make sure it looks right. 
-dX <- dirichlet(X) 
-par(new=TRUE)
 
-plot(dX) # Just to make sure ..... 
-```
+<!-- X <- as.ppp(grifos_coord,W)  -->
+<!-- plot(X) # Just to make sure it looks right.  -->
+<!-- dX <- dirichlet(X)  -->
+<!-- par(new=TRUE) -->
+
+<!-- plot(dX) # Just to make sure .....  -->
+<!-- ``` -->
 
 
 
@@ -258,7 +258,7 @@ grifos_thiessen_irr
 
 list_thiessen <- purrr::map_dfr(.x = grifos$codigo_de_osinergmin, .f = vec_thiessen_irr)
 
-grifos_thiessen_irr <- grifos_thiessen_irr %>%
+grifos_thiessen_irr <- list_thiessen %>%
   filter(codigo_de_osinergmin.princ != codigo_de_osinergmin.vec)
 
 saveRDS(grifos_thiessen_irr, here::here("data", "processed","grifos_thiessen_irr.Rds"))
@@ -306,39 +306,39 @@ saveRDS(grifos_con_vecinos, file = here::here("data","processed","grifo_con_veci
 ```
 
 
-# Ahora post merger a nivel banderas
-```{r}
-grifos_post <- grifos %>%
-  mutate(bandera = recode_factor(bandera, "PECSA" = "PRIMAX"))
-```
+<!-- # Ahora post merger a nivel banderas -->
+<!-- ```{r} -->
+<!-- grifos_post <- grifos %>% -->
+<!--   mutate(bandera = recode_factor(bandera, "PECSA" = "PRIMAX")) -->
+<!-- ``` -->
 
-```{r}
+<!-- ```{r} -->
 
 
-grifos_con_vecinos_post <- left_join(
-  grifos_thiessen_irr,
-  select(
-    grifos_post,
-    codigo_de_osinergmin,
-    bandera.princ = bandera,
-    razon_social.princ = razon_social
-  ),
-  by = c("codigo_de_osinergmin.princ" = "codigo_de_osinergmin")
-) %>%
-  left_join(
-    select(
-      grifos_post,
-      codigo_de_osinergmin,
-      bandera.vec = bandera,
-      razon_social.vec = razon_social
-    ),
-    by = c("codigo_de_osinergmin.vec" = "codigo_de_osinergmin")
-  )
-```
+<!-- grifos_con_vecinos_post <- left_join( -->
+<!--   grifos_thiessen_irr, -->
+<!--   select( -->
+<!--     grifos_post, -->
+<!--     codigo_de_osinergmin, -->
+<!--     bandera.princ = bandera, -->
+<!--     razon_social.princ = razon_social -->
+<!--   ), -->
+<!--   by = c("codigo_de_osinergmin.princ" = "codigo_de_osinergmin") -->
+<!-- ) %>% -->
+<!--   left_join( -->
+<!--     select( -->
+<!--       grifos_post, -->
+<!--       codigo_de_osinergmin, -->
+<!--       bandera.vec = bandera, -->
+<!--       razon_social.vec = razon_social -->
+<!--     ), -->
+<!--     by = c("codigo_de_osinergmin.vec" = "codigo_de_osinergmin") -->
+<!--   ) -->
+<!-- ``` -->
 
-```{r}
-saveRDS(grifos_con_vecinos_post, file = here::here("data","processed","grifo_con_vecinos_post_bandera.RDS"))
-```
+<!-- ```{r} -->
+<!-- saveRDS(grifos_con_vecinos_post, file = here::here("data","processed","grifo_con_vecinos_post_bandera.RDS")) -->
+<!-- ``` -->
 
 # Ahora post merger a nivel razon_social
 

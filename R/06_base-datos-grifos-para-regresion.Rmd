@@ -9,7 +9,7 @@ output: html_notebook
 suppressMessages(library(tidyverse))
 library(lubridate)
 library(stringr)
-source(file = here::here("R", "1.5.1_funcion-auxiliar-distancia.R"))
+source(file = here::here("R", "funcion01_auxiliar-distancia.R"))
 '%ni%' <- Negate('%in%')
 ```
 

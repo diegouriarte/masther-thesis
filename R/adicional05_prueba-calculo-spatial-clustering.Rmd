@@ -38,7 +38,7 @@ grifos %>%
 Cargamos las funciones y hacemos algunas pruebas
 ```{r}
 
-source(here::here("R","2.6_calculo-spatial-clustering_funciones.R"))
+source(here::here("R","funcion03_calculo-spatial-clustering.R"))
 
 
 hallar_lista_vecinos(17947)
@@ -120,11 +120,9 @@ Creamos función de spatial clustering (a nivel de banderas):
 ```{r}
 
 
-calcular_sc(14645, "bandera")
 calcular_sc(14645, "razon_social")
-calcular_sc(19956)
 
-hallar_clusteres_mercado(19956)
+hallar_clusteres_mercado(14645)
 hallar_lista_vecinos(19956)
 calcular_sc(19956, "razon_social")
 
@@ -135,16 +133,16 @@ calcular_sc(19956, "razon_social")
 La prueba la haremos con el grifo 14645 (Pecsa en el cruce de Cuba con Arenales). A la fecha de hoy (2019-03-31), se tiene para el grifo:
 - N = 8
 - M = 5 (Primax, dos de Pecsa, Repsol, Independiente):
-    * `r k_repsol = 9`
+    * `r k_repsol = 2`
     * `r k_primax_1 = 1`
-    * `r k_primax_2 = 14`
+    * `r k_primax_2 = 1`
     * `k_pecsa = 1`
     * `k_independiente = 1`
     
-Por tanto el valor de sc es $sc = \frac{(9+1+14+1+1)/5}{8} = 0.65$. Verificamos que sea el mismo valor
+Por tanto el valor de sc es $sc = \frac{(2+1+1+1+1+1+1)/7}{8} = 0.65$. Verificamos que sea el mismo valor
 
 ```{r}
-if (all.equal(calcular_sc(14645), 0.65)) {
+if (all.equal(calcular_sc(14645), (2+1+1+1+1+1+1)/7/8)) {
     "Función calcular_sc pasa la prueba"
 } else {
     stop("Función calcular_sc no pasa la prueba")
