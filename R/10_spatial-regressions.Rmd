@@ -1,6 +1,8 @@
 ---
 title: "Regresiones para tesis"
 output: html_notebook
+editor_options: 
+  chunk_output_type: inline
 ---
 
 # Cargamos librerías
@@ -8,6 +10,7 @@ output: html_notebook
 ```{r include=FALSE}
 library(tidyverse)
 library(spdep)
+library(stargazer)
 ```
 
 # Cargamos datos
@@ -32,10 +35,12 @@ data_precios <- map(
     ) %>%
     mutate(dia = 1) %>%
     unite(fecha, dia, mes, `año`, sep = "-", remove = FALSE) %>%
+    mutate(fecha = lubridate::dmy(fecha)) %>% 
     select(-dia) %>%
     filter(
       mes != 13,
-      precio_de_venta > 6
+      precio_de_venta > 6,
+      fecha <= lubridate::dmy("2-10-2018")
     )
 )
 
@@ -68,26 +73,18 @@ data_distrital_clean <- data_distrital_raw %>%
 
 ## Creamos archivos con info
 ```{r}
-grifos_sc <- grifos_sc %>%
-  mutate(
-    serv_mecanico = if_else(mecanico + aceite + llanteria > 0, 1, 0),
-    serv_mecanico = as.factor(serv_mecanico)
-  ) %>%
-  mutate(
-    num_grifos_cerc = if_else(is.na(num_grifos_cerc), as.integer(0), num_grifos_cerc),
-    distancia_avg = if_else(is.na(distancia_avg), 0, distancia_avg)
-  )
-
 
 data_total <- map(
   list(precios_db5, precios_g90),
   ~ left_join(grifos_sc, .x, by = "codigo_de_osinergmin") %>%
-    left_join(., data_distrital_clean, by = "distrito")
+    left_join(., data_distrital_clean, by = "distrito") %>% 
+    mutate(sc = if_else(`año` == 2017, sc_pre, sc_post))
 )
 
 data_db5 <- data_total[[1]]
 data_g90 <- data_total[[2]]
 ```
+
 
 
 # Primera regresión OLS pooled
@@ -100,32 +97,32 @@ Hacemos una regresión OLS pooled, clusterizando a nivel de grifo, en corte tran
 
 
 data <- data_db5 %>%
-  filter(mes == 1, `año` == 2017) %>%
-  select(
-    precio_de_venta,
-    tipo_bandera,
-    sc_pre,
-    distancia_avg,
-    distancia_min,
-    num_grifos_cerc,
-    serv_mecanico,
-    lavado,
-    cajero,
-    con_gnv,
-    con_glp,
-    ingresos_2012,
-    densidad_2017,
-    lat,
-    lon,
-    codigo_de_osinergmin
-  ) %>%
+  filter(mes == 10, `año` == 2017) %>%
   drop_na()
 
-modelo_data <- lm(data %>% select(-lat, -lon, -codigo_de_osinergmin))
+modelo_1 <- precio_de_venta ~  sc + distancia_avg + distancia_min +
+  num_grifos_cerc + tiene_mecanico + lavado + cajero + con_gnv + con_glp +
+  ingresos_2012 + densidad_2017 
+model_ols <- lm(modelo_1, data)
 
 
-summary(modelo_data)
+data %>% 
+  filter(tipo_bandera == "PROPIA PECSA")
+summary(model_ols)
 ```
+
+```{r, results = 'asis'}
+etiquetas_cov = c("Abanderada Petroperu", "Abanderada Pecsa", "Abanderada Primax",
+               "Abanderada Repsol", "Propia Pecsa", "Propia Primax", 
+               "Propia Repsol", "SC", "DPROM", "DMIN", "NCERC",
+               "MECANICO", "LAVADO", "CAJERO",  "GNV", "GLP",
+               "INGRESO", "DENPOB")
+stargazer(model_ols, type = "html",
+          covariate.labels = etiquetas_cov,
+          single.row = T)
+```
+
+
 Test de Moran
 ```{r}
 coords <- cbind(data$lon, data$lat)
@@ -137,19 +134,20 @@ grifos_nb <- tri2nb(coords, row.names = grifos)
 sp_grifos <- nb2listw(grifos_nb)
 
 
-LMtest <- lm.LMtests(modelo_data, sp_grifos, test = "all")
+LMtest <- lm.LMtests(model_ols, sp_grifos, test = "all")
 LMtest
+
 ```
 
 Aparentemente, el modelo con lag es el significativo, así que usaremos ese. Estiamos el modelo espacial de Durbin:
 
 ```{r}
 modelo <- precio_de_venta ~ tipo_bandera +
-  sc_pre +
+  sc +
   distancia_avg +
   distancia_min +
   num_grifos_cerc +
-  serv_mecanico +
+  tiene_mecanico +
   lavado +
   cajero +
   con_gnv +
@@ -175,8 +173,16 @@ summary(spa_lag_model)
 ```{r}
 LR.sarlm(durbin_model, spa_lag_model)
 ```
-```{r}
+```{r, results='asis'}
 summary(spa_lag_model)
+etiquetas_cov = c("Abanderada Petroperu", "Abanderada Pecsa", "Abanderada Primax",
+               "Abanderada Repsol", "Propia Pecsa", "Propia Primax", 
+               "Propia Repsol", "SC", "DPROM", "DMIN", "NCERC",
+               "MECANICO", "LAVADO", "CAJERO",  "GNV", "GLP",
+               "INGRESO", "DENPOB")
+stargazer(spa_lag_model, durbin_model, model_ols, type = "html",
+          covariate.labels = etiquetas_cov,
+          single.row = T)
 ```
 
 # Corremos los modelos OLS para todos los meses antes de la compra
@@ -194,7 +200,7 @@ output_reg <- function(data, modelo) {
       distancia_avg,
       distancia_min,
       num_grifos_cerc,
-      serv_mecanico,
+      tiene_mecanico,
       lavado,
       cajero,
       con_gnv,
@@ -237,7 +243,7 @@ modelo <- precio_de_venta ~ tipo_bandera +
   distancia_avg +
   distancia_min +
   num_grifos_cerc +
-  serv_mecanico +
+  tiene_mecanico +
   lavado +
   cajero +
   con_gnv +
@@ -264,7 +270,7 @@ modelo <- precio_de_venta ~ tipo_bandera +
   distancia_avg +
   distancia_min +
   num_grifos_cerc +
-  serv_mecanico +
+  tiene_mecanico +
   lavado +
   cajero +
   con_gnv +
@@ -296,7 +302,7 @@ data <- data_db5 %>%
     distancia_avg,
     distancia_min,
     num_grifos_cerc,
-    serv_mecanico,
+    tiene_mecanico,
     lavado,
     cajero,
     con_gnv,
@@ -337,7 +343,7 @@ calcular_reg_month <- function(data) {
       distancia_avg,
       distancia_min,
       num_grifos_cerc,
-      serv_mecanico,
+      tiene_mecanico,
       lavado,
       cajero,
       con_gnv,
@@ -453,6 +459,48 @@ cat("Output Spatial Lag",
   out_var,
   file = here::here("data", "text-output", "summary_spatial_lag_g90.txt"), sep = "\n", append = FALSE
 )
+
+
+impacts(list_var$spatial_lag[[1]], listw = db5_all_models_tests$sp_grifos[[1]])
+```
+## Hacemos la regresión espacial con un pooled
+
+
+```{r}
+modelo <- precio_de_venta ~ tipo_bandera +
+  distancia_avg +
+  distancia_min +
+  num_grifos_cerc +
+  serv_mecanico +
+  lavado +
+  cajero +
+  con_gnv +
+  con_glp +
+  ingresos_2012
+
+grifos_coord <- data_db5 %>% 
+  distinct(codigo_de_osinergmin, .keep_all = T) %>% 
+  select(codigo_de_osinergmin, lon, lat) %>% 
+  as.matrix()
+
+grifos_nb = tri2nb(grifos_coord[,2:3], row.names = grifos_coord[,1])
+weigth_grifos = nb2listw(grifos_nb)
+
+spatial_lag = lagsarlm(modelo, data = data_db5, listw = weigth_grifos)
+  data_mes_model <- data_mes_nest %>%
+    mutate(
+      ols = map(data, ~ lm(modelo, data = .x)),
+      coords = map(data, ~ cbind(.x$lon, .x$lat)),
+      grifos = map(data, ~ .x$codigo_de_osinergmin),
+      grifos_nb = map2(coords, grifos, ~ tri2nb(.x, row.names = .y)),
+      sp_grifos = map(grifos_nb, ~ nb2listw(.x)),
+      spatial_lag = map2(data, sp_grifos, ~ lagsarlm(modelo, data = .x, listw = .y)),
+      durbin = map2(data, sp_grifos, ~ lagsarlm(modelo, data = .x, listw = .y, Durbin = TRUE)),
+      test_LR = map2(durbin, spatial_lag, ~ LR.sarlm(.x, .y)),
+      LMtest = map2(ols, sp_grifos, ~ lm.LMtests(.x, .y, test = "all"))
+    )
+  data_mes_model
+}
 ```
 
 # Regresión de efectos fijos
@@ -465,15 +513,29 @@ Primero debemos crear una variable que sea `COMPRADA` igual a 1 si si la estaci�
 
 ## Primero solo con variable comprada para estaciones PECSA
 ```{r}
+
+#filtramos la data mes octubre en adelante que no está bien calculada:
+
 data_db5 %>%
   mutate(
     COMPRADA = case_when(
       `año` == 2017 ~ 0,
       tipo_bandera == "PROPIA PECSA" ~ 1,
       TRUE ~ 0
-    ),
-    fecha = lubridate::dmy(fecha)
-  ) -> data_db5_comprada
+    )
+  ) %>% 
+  filter((mes >= 2 & `año` == 2017) | (mes <= 10 & `año` == 2018)) -> data_db5_comprada
+
+grifos_creados_luego <- data_db5_comprada %>% 
+  count(codigo_de_osinergmin) %>% 
+  arrange(n) %>% 
+  filter(n < 4) %>% 
+  pull(codigo_de_osinergmin)
+
+'%ni%' <- Negate('%in%')
+
+data_db5_comprada <- data_db5_comprada %>% 
+  filter(codigo_de_osinergmin %ni% grifos_creados_luego)
 ```
 
 
@@ -484,10 +546,9 @@ Primero solo con
 library(multiwayvcov)
 library(lmtest)
 library(plm)
-pdf <- pdata.frame(data_db5_comprada %>% drop_na(), index = c("codigo_de_osinergmin", "fecha"))
+pdf <- pdata.frame(data_db5_comprada, index = c("codigo_de_osinergmin", "fecha"))
 
-modelo <- precio_de_venta ~
-COMPRADA
+modelo <- precio_de_venta ~ COMPRADA
 
 model <- plm(modelo, data = pdf, model = "within", effect = "twoways")
 
@@ -495,19 +556,38 @@ summary(model)
 
 # Cluster by firm
 coeftest(model, vcov = vcovHC(model, type = "sss", cluster = "group"))
+
 ```
+
+```{r}
+pdf$fecha<-factor(pdf$fecha)
+modelo <- precio_de_venta ~ COMPRADA + fecha
+reg.fe <- plm(modelo, data=pdf, model="within")
+t <- coeftest(reg.fe, vcov = vcovHC(reg.fe, type = "sss", cluster = "group"))
+summary(reg.fe)
+
+```
+
+
+INtentamos con otro paquete:
+
+```{r}
+library(Matrix)
+
+library(lfe)
+modelo <- precio_de_venta ~ COMPRADA | codigo_de_osinergmin + fecha | 0 | codigo_de_osinergmin
+
+m2 <- felm(modelo, data = data_db5_comprada)
+
+summary(m2)
+```
+
 
 ### Exportamos data a stata para hacer lo mismo
 
 ```{r}
-library(readstata13)
-data_db5 %>%
-  mutate(COMPRADA = case_when(
-    `año` == 2017 ~ 0,
-    tipo_bandera == "PROPIA PECSA" ~ 1,
-    TRUE ~ 0
-  )) %>%
-  write.csv(file = here::here("data", "processed", "data_diesel_reg_comprada.csv"))
+
+write.csv(data_db5_comprada, file = here::here("data", "processed", "data_diesel_reg_comprada.csv"))
 ```
 
 ## Añadamos variables de competencia de estaciones cercanas:
@@ -525,7 +605,163 @@ vecinos_pecsa_thissen <- grifos_vecinos %>%
   )) %>%
   arrange(codigo_de_osinergmin.princ, desc(vecino_pecsa_thiessen)) %>%
   distinct(codigo_de_osinergmin.princ, .keep_all = TRUE) %>%
-  select(codigo_de_osinergmin.princ, vecino_pecsa_thiessen) 
+  select("codigo_de_osinergmin" = codigo_de_osinergmin.princ, vecino_pecsa_thiessen) 
 
 ```
-Ahora calculemos los vecinos 
+La data ya tiene información sobre si la estación colindaba con una Pecsa (radio de 1.5 km)
+
+```{r}
+data_db5_comprada_1 <- data_db5_comprada %>% 
+  left_join(vecinos_pecsa_thissen, by = "codigo_de_osinergmin") %>% 
+  mutate(vecino_pecsa_dist = if_else(`año` == 2017, 0, vecino_pecsa_dist),
+         vecino_pecsa_thiessen = if_else(`año` == 2017, 0, vecino_pecsa_thiessen),
+         sc = if_else(`año` == 2017, sc_pre, sc_post)) 
+
+
+data_db5_comprada_1
+write.csv(data_db5_comprada_1, file = here::here("data", "processed", "data_diesel_reg_comprada_1.csv"))
+
+```
+
+##Corremos regresión de efectos fijos:
+
+# Extraemos solo grifos operativos durante toda la ventana de tiempo:
+
+Damos formato a los datos, agregando vecinos, indentificador de tipo de pecsa
+```{r}
+library(lubridate)
+
+df_panel_completo <- function(df) {
+
+df_con_compra <- df %>%
+  mutate(
+    COMPRADA_PROPIA = case_when(
+      `año` == 2017 ~ 0,
+      tipo_bandera == "PROPIA PECSA" ~ 1,
+      TRUE ~ 0),
+    SUMINISTRO = case_when(
+      `año` == 2017 ~ 0,
+      tipo_bandera == "ABANDERADA PECSA" ~ 1,
+      TRUE ~ 0)
+  ) 
+
+df_con_compra_vecinos <- df_con_compra %>% 
+  left_join(vecinos_pecsa_thissen, by = "codigo_de_osinergmin") %>% 
+  mutate(vecino_pecsa_dist = if_else(`año` == 2017, 0, vecino_pecsa_dist),
+         vecino_pecsa_thiessen = if_else(`año` == 2017, 0, vecino_pecsa_thiessen),
+         sc = if_else(`año` == 2017, sc_pre, sc_post)) 
+  df_con_compra_vecinos
+}
+
+data_db5_completa <- df_panel_completo(data_db5)
+```
+Ahora hacemos la regresión por efectos fijos 10 meses y 3 meses antes y después:
+
+```{r}
+inicio <- list("01-03-2017", "01-10-2017")
+fin <- list("01-10-2018", "01-03-2018")
+
+modelo2 <- precio_de_venta ~ COMPRADA_PROPIA  + SUMINISTRO + vecino_pecsa_thiessen + sc + fecha
+
+calc_fe_fechas <- function(df, inicio, fin, modelo) {
+  grifos_creados_luego <- df %>% 
+    count(codigo_de_osinergmin) %>% 
+    arrange(n) %>% 
+    filter(n < max(n)) %>% 
+    pull(codigo_de_osinergmin)
+  
+  '%ni%' <- Negate('%in%')
+  
+  df_panel_balanceado <- df %>% 
+    filter(codigo_de_osinergmin %ni% grifos_creados_luego)
+  
+  panel_df <- df_panel_balanceado %>% 
+    filter(fecha >= dmy(inicio), fecha <= dmy(fin)) %>% 
+    pdata.frame(., index = c("codigo_de_osinergmin", "fecha"))
+  
+  fe <- plm(modelo, data= panel_df, model="within")
+  fe
+}
+
+
+modelos_fe <- map2(inicio, fin, ~ calc_fe_fechas(data_db5_completa, .x, .y, modelo2))
+names(modelos_fe) <- inicio
+
+map(modelos_fe, ~summary(.x))
+
+```
+
+Calculos errores estándares clusterizados
+
+```{r}
+map(modelos_fe, 
+    ~coeftest(.x, vcov = vcovHC(.x, type = "sss", cluster = "group")))
+```
+
+
+
+```{r}
+panel_db5 <- pdata.frame(data_db5_comprada_1, index = c("codigo_de_osinergmin", "fecha"))
+panel_db5$fecha <- factor(panel_db5$fecha)
+modelo <- precio_de_venta ~ COMPRADA + vecino_pecsa_dist + vecino_pecsa_thiessen + sc + fecha
+modelo2 <- precio_de_venta ~ COMPRADA  + vecino_pecsa_thiessen + sc + fecha
+
+fe_db5 <- plm(modelo, data= panel_db5, model="within")
+summary(fe_db5)
+
+t <- coeftest(fe_db5, vcov = vcovHC(fe_db5, type = "sss", cluster = "group"))
+t
+
+# Cluster by firm
+coeftest(model, vcov = vcovHC(model, type = "sss", cluster = "group"))
+
+```
+
+# Ahora un spatial fixed effects:
+
+```{r}
+#damos formato a la data, 
+
+data_db5_comprada_2 <- data_db5_comprada_1 %>% 
+  select(codigo_de_osinergmin, fecha, everything())
+
+coords_db5 <- data_db5_comprada_2 %>% 
+  distinct(codigo_de_osinergmin, .keep_all = T) %>% 
+  select(codigo_de_osinergmin, lon, lat) %>% 
+  as.matrix()
+
+head(coords_db5)
+
+grifos_nb <- tri2nb(coords_db5[,2:3], row.names = coords_db5[,1])
+
+sp_grifos <- nb2listw(grifos_nb)
+
+
+
+fm <- precio_de_venta ~ COMPRADA  + vecino_pecsa_thiessen + sc + fecha
+
+
+sararfemod <- spml(formula = fm, data = data_db5_comprada_2, index = NULL,
+                      listw = sp_grifos, lag = TRUE, spatial.error = "b", model = "within",
+                      effect = "individual", method = "eigen", na.action = na.fail,
+                      quiet = TRUE, zero.policy = NULL,
+                      tol.solve = 1e-10, control = list(), legacy = FALSE)
+summary(sararfemod)
+
+effects(sararfemod)
+
+coeftest(sararfemod, vcov = vcovHC(sararfemod, type = "sss", cluster = "group"))
+
+sararremod <- spml(formula = fm, data = data_db5_comprada_2, index = NULL,
+                   listw = sp_grifos, model = "random", lag = TRUE, spatial.error = "b")
+summary(sararremod)
+
+summary(verdoorn_SEM_FE<- spml(fm, data = data_db5_comprada_2,
+listw = sp_grifos, lag=FALSE,model="within", effect="individual", spatial.error="b"))
+
+summary(verdoorn_SEM_FE<- spml(fm, data = data_db5_comprada_2,
+listw = sp_grifos, lag=FALSE,model="within", effect="individual", spatial.error="kkp"))
+
+
+```
+

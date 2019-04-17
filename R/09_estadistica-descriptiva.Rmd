@@ -200,14 +200,63 @@ precios_tabla %>%
   kable(format = "html", digits = c(0, 0, 3, 3, 1, 1)) %>%
   kable_styling(full_width = FALSE, position = "left")
 ```
+Añadimos variables a nivel distrital:
+
+```{r}
+# cargamos data de distritos
+
+data_distrital_raw <- read_csv(here::here("data", "demo-distrital", "data_pop_lima.csv")) %>%
+    janitor::clean_names()
+
+## Limpiamos archivo distrital:
+
+data_distrital_clean <- data_distrital_raw %>%
+    rename(
+        "pop_2017" = poblacion_total_30_06_2017,
+        "densidad_2017" = densidad_poblacional_hab_km2,
+        "ingresos_2012" = ingreso_per_capita
+    ) %>%
+    mutate(
+        pop_2017 = str_remove(pop_2017, " ") %>% parse_number(),
+        densidad_2017 = str_remove(densidad_2017, " ") %>% parse_number(),
+        distrito = str_to_upper(distrito)
+    )
+
+
+
+## Creamos archivos con info
+grifos_sc <- grifos_sc %>%
+   left_join(data_distrital_clean, by = "distrito")
+
+tabla_distrito <- grifos_sc %>% 
+  select(distrito, 
+         "Densidad poblacional (habitantes por km2)" = densidad_2017, 
+         "Ingreso per cápita (soles por persona)" = ingresos_2012) %>% 
+  distinct() %>% 
+  gather(key = "Descripción", value = "value", -distrito, convert = TRUE) %>% 
+  group_by(`Descripción`) %>% 
+  summarise(
+    Media = mean(value, na.rm = TRUE),
+    "Des. Est" = sd(value, na.rm = TRUE),
+    "Min" = min(value, na.rm = TRUE),
+    "Max" = max(value, na.rm = TRUE)
+  )
+
+tabla_distrito$Variable <- c(
+  "DENPOB",
+  "INGRESO"
+)
+```
+
+
 Calculos las estádisticas a nivel grifos:
 
 ```{r}
 tabla <- grifos_sc %>%
   select(codigo_de_osinergmin,
     "Agrupamiento espacial" = sc_pre,
-    "Distancia mínima" = distancia_min,
-    "Distancia promedio" = distancia_avg,
+    "Distancia mínima (km)" = distancia_min,
+    "Distancia promedio a grifos vecinos (km)" = distancia_avg,
     "Número de grifos cercanos" = num_grifos_cerc,
     "Número de bahías de abastecimiento" = islas_comb_liq,
     "Dummy igual a 1 si la estación cuenta con despacho de GLP" = con_glp,
@@ -228,8 +277,8 @@ tabla <- grifos_sc %>%
   mutate(`Descripción` = fct_relevel(
     `Descripción`,
     "Agrupamiento espacial",
-    "Distancia mínima",
-    "Distancia promedio",
+    "Distancia mínima (km)",
+    "Distancia promedio a grifos vecinos (km)",
     "Número de grifos cercanos",
     "Número de bahías de abastecimiento",
     "Dummy igual a 1 si la estación cuenta con despacho de GLP",
@@ -255,13 +304,14 @@ tabla$Variable <- c(
   "CAJERO"
 )
 
-bind_rows(precios_tabla, tabla) %>%
+bind_rows(precios_tabla, tabla, tabla_distrito) %>%
   select(`Variable`, everything()) %>%
   kable(format = "html", digits = c(0, 0, 3, 3, 1, 1)) %>%
   kable_styling(full_width = FALSE, position = "left") %>%
   pack_rows("Variable dependiente", 1, 2) %>%
-  pack_rows("Características espaciales", 3, 7) %>%
-  pack_rows("Características de la ubicación y del distrito", 8, 13)
+  pack_rows("Características espaciales", 3, 6) %>%
+  pack_rows("Características de la estación", 7, 13) %>% 
+  pack_rows("Características del distrito", 14, 15)
 ```
 
 ##  Por si queremos hacer por tipo-bandera (PENDIENTE)

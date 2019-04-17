@@ -147,18 +147,25 @@ grifos_filtrado <- grifos %>%
 grifos_thissen <- merge(dsp_xy, grifos_filtrado, by.x="id", by.y="rowname")
 
 pal <- colorFactor("plasma", unique(grifos_thissen$bandera))
-pal2 <- colorFactor(c("white", "red","green", "orange", "blue"), unique(grifos_thissen$bandera))
+pal2 <- colorFactor(c("white", "green", "red", "orange", "blue"), unique(grifos_thissen$bandera))
+pal3 <- colorFactor(c("white", "green", 
+                      "darksalmon", "lightgoldenrodyellow", "dodgerblue",
+                      "red", "orange", "blue"), unique(grifos_thissen$tipo_bandera))
+pal4 <- colorFactor("plasma", unique(grifos_thissen$tipo_bandera)) 
+
 leaflet() %>%
   addMarkers(data = grifos_filtrado, 
              lat = ~ lat, 
              lng = ~ lon, 
              popup = paste0(grifos$razon_social," ",grifos$codigo_de_osinergmin),
-             label = grifos$bandera) %>%
+             label = grifos$tipo_bandera,
+             labelOptions = labelOptions(noHide = F))  %>%
   # addPolygons(data = dsp_xy, 
   #             color = "green", 
   #             fill = "green") %>%
   addPolygons(data = grifos_thissen,
-              fillColor = ~pal2(bandera), 
+              #fillColor = ~pal2(bandera), 
+              fillColor = ~pal4(tipo_bandera),
               weight = 1, 
               color = "black") %>%
   addTiles()
