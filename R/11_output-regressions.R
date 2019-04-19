@@ -15,7 +15,7 @@ library(lubridate)
 #' 
 #' # Cargamos datos
 #' 
-## ------------------------------------------------------------------------
+## cargar-datos------------------------------------------------------------------------
 # data grifos
 grifos_sc <-
   readRDS(here::here("data", "processed", "grifos_con_sc_razon_social.RDS"))
@@ -56,7 +56,7 @@ data_distrital_raw <- read_csv(here::here("data", "demo-distrital", "data_pop_li
 
 #' ## Limpiamos archivo distrital:
 #' 
-## ------------------------------------------------------------------------
+#+clean-distrito ------------------------------------------------------------------------
 data_distrital_clean <- data_distrital_raw %>%
   rename(
     "pop_2017" = poblacion_total_30_06_2017,
@@ -72,7 +72,7 @@ data_distrital_clean <- data_distrital_raw %>%
 #' 
 #' 
 #' ## Creamos archivos con info
-## ------------------------------------------------------------------------
+##merge-data-distrito ------------------------------------------------------------------------
 
 data_total <- map(
   list(precios_db5, precios_g90),
@@ -94,7 +94,7 @@ data_g90 <- data_total[[2]]
 #' 
 #' 
 #' 
-## ------------------------------------------------------------------------
+## ols-regression------------------------------------------------------------------------
 
 modelo_1 <- precio_de_venta ~ tipo_bandera + sc + distancia_avg + distancia_min +
   num_grifos_cerc + tiene_mecanico + lavado + cajero + con_gnv + con_glp +
@@ -119,7 +119,7 @@ ols_meses <- map(fechas,
     ~ reg_lineal(.x, modelo_1))
 
 #' 
-## ---- results = 'asis'---------------------------------------------------
+## tabla ols---- results = 'asis'---------------------------------------------------
 etiquetas_cov = c("Abanderada Petroperu", "Abanderada Pecsa", "Abanderada Primax",
                "Abanderada Repsol", "Propia Pecsa", "Propia Primax", 
                "Propia Repsol", "SC", "DPROM", "DMIN", "NCERC",
@@ -129,31 +129,22 @@ stargazer(ols_meses, type = "html",
           covariate.labels = etiquetas_cov,
           single.row = T)
 
-#' Ahora la regresión en porcentajes en lugar de niveles:
-#' 
-
-#' 
-#' 
-#' Test de Moran para los cuatros periodos
-## ------------------------------------------------------------------------
+# Test de Anselin
 
 
+#+ anselin-----
 calcular_weigth_matrix <- function(fecha_char) {
   data_mes <- data_db5 %>%
     filter(fecha == dmy(fecha_char)) %>%
     drop_na() %>% 
     select(codigo_de_osinergmin, lon, lat) %>% 
     as.matrix
-  # 
-  # grifos_nb <- tri2nb(data_mes[,2:3], row.names = data_mes[,1])
-  # sp_grifos <- nb2listw(grifos_nb, zero.policy = T)
-  
-  list.queen<-poly2nb(chi.poly, queen=TRUE)
-  W<-nb2listw(list.queen, style="W", zero.policy=TRUE)
-  
+
+  grifos_nb <- tri2nb(data_mes[,2:3], row.names = data_mes[,1])
+  nb2listw(grifos_nb, zero.policy = T)
 }
 
-
+#calculamos matriz grifos
 sp_grifos <- map(fechas, ~ calcular_weigth_matrix(.x))
 
 
@@ -166,56 +157,74 @@ map_dfr(LMtest,c("RLMerr", "p.value"))
 map(LMtest, "RLMerr")
 map(LMtest, "RLMlag")
 
-# LMtest
-
-
-#' 
 #' Aparentemente, el modelo con lag es el significativo, así que usaremos ese. Estiamos el modelo espacial de Durbin:
 #' 
-## ------------------------------------------------------------------------
-reg_durbin <- function(fecha_char, modelo, sp_grifos, durbin = T) {
+#' 
+# Modelo Durbin------------
+
+#+ durbin ------------------------------------------------------------------------
+reg_durbin <- function(fecha_char, sp_grifos, durbin = T) {
+  modelo_1 <- precio_de_venta ~ tipo_bandera + sc + distancia_avg + distancia_min +
+    num_grifos_cerc + tiene_mecanico + lavado + cajero + con_gnv + con_glp +
+    ingresos_2012 + densidad_2017
+  
   data_mes <- data_db5 %>%
     filter(fecha == dmy(fecha_char)) %>%
     drop_na()
   
-  lagsarlm(modelo,
+  lagsarlm(formula = modelo_1,
            data = data_mes,
            listw = sp_grifos,
-           Durbin = durbin
-  )
+           Durbin = durbin,
+           tol.solve = 1e-13)
   }
 
 
-durbin_fechas <- map2(fechas, sp_grifos, ~reg_durbin(.x, modelo_1, .y))
+durbin_fechas <- map2(fechas, sp_grifos, ~reg_durbin(.x, .y))
+
+stargazer(durbin_fechas, type = "html")
+
+model <- function(var) {
+  var <- ensym(var)
+  df %>%
+    group_by(a) %>%
+    nest() %>%
+    mutate(model=map(data, ~ lm(b ~ !!var, data=.)))
+}
+
 names(durbin_fechas) <- fechas
-
-
 
 summary(durbin_fechas$`01-07-2017`)
 
 #'
-#' Corremos el modelo de rezagos espaciales:
+#' Corremos el modelo autoregressivo espacial:
 #'
 ## ------------------------------------------------------------------------
-spatial_fechas <- map2(fechas, sp_grifos, ~reg_durbin(.x, modelo_1, .y, durbin = F))
+spatial_fechas <- map2(fechas, sp_grifos, ~reg_durbin(.x, .y, durbin = F))
 names(spatial_fechas) <- fechas
 
 #'
 #'
 #'Corremos el modelo de errores espaciales
 #'
-reg_errores <- function(fecha_char, modelo, sp_grifos) {
+reg_errores <- function(fecha_char, sp_grifos) {
+  
+  modelo_1 <- precio_de_venta ~ tipo_bandera + sc + distancia_avg + distancia_min +
+    num_grifos_cerc + tiene_mecanico + lavado + cajero + con_gnv + con_glp +
+    ingresos_2012 + densidad_2017
+  
   data_mes <- data_db5 %>%
     filter(fecha == dmy(fecha_char)) %>%
     drop_na()
   
-  errorsarlm(modelo,
+  errorsarlm(modelo_1,
            data = data_mes,
-           listw = sp_grifos
+           listw = sp_grifos,
+           tol.solve = 1e-13
   )
 }
 
-errores_fechas <- map2(fechas, sp_grifos, ~ reg_errores(.x, modelo_1, .y))
+errores_fechas <- map2(fechas, sp_grifos, ~ reg_errores(.x, .y))
 
 
 ## ------------------------------------------------------------------------
@@ -233,39 +242,21 @@ etiquetas_cov = c("Abanderada Petroperu", "Abanderada Pecsa", "Abanderada Primax
                   "Propia Repsol", "SC", "DPROM", "DMIN", "NCERC",
                   "MECANICO", "LAVADO", "CAJERO",  "GNV", "GLP",
                   "INGRESO", "DENPOB")
-stargazer(spatial_fechas, type = "html",
-          single.row = T)
 
-summary(spatial_fechas[[4]])
+
+
+
+stargazer(durbin_fechas, type = "html")
 
 
 impacts(spatial_fechas[[4]], listw = sp_grifos[[4]])
 
-im_4 <- impacts(spatial_fechas[[4]], listw = sp_grifos[[4]], R = 100, useHESS = T)
-sums_4<-summary(im_4,  zstats=T)
-data.frame(sums_4$res)
-data.frame(sums_4$pzmat)
+#' Hallamos los errores estándares para el cuarto período
+im_4 <- impacts(spatial_fechas[[4]], listw = sp_grifos[[4]], R = 100, useHESS = F)
 
 summary(im_4, zstats=TRUE, short = TRUE)
 
 #'
 #'
 
-# probamos con otra forma de definir vecinos ------------------------------
-data_feb <- data_db5 %>% 
-  filter(fecha <= dmy("01-03-2018")) %>% 
-  distinct(codigo_de_osinergmin, .keep_all = T) %>% 
-  select(codigo_de_osinergmin, lon, lat) %>% 
-  as.matrix()
-
-coords <- data_feb[,2:3]
-rn <- data_feb[,1]
-k1 <- knn2nb(knearneigh(coords))
-all.linked <- max(unlist(nbdists(k1, coords)))
-col.nb.0.all <- dnearneigh(coords, 0, 3, row.names=rn, longlat = TRUE)
-nb_dist <- nb2listw(col.nb.0.all, zero.policy = T)
-summary(col.nb.0.all, coords)
-plot(col.nb.0.all, coords)
-
-impacts(spatial_fechas[[3]], listw = nb_dist, R = 100)
 
