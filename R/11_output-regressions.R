@@ -86,13 +86,9 @@ big_data_viajes <- readRDS(here::here("data",
                                       "data_viajes_distritos.RDS"))
 
 # numero de viajes en diciembre de 2017 x distrito
-viajes_distrito <- big_data_viajes %>% 
-  select("distrito" = nom_dist_d, tipo_dia, horario, motivo, edad, viajes) %>% 
-  group_by(distrito) %>% 
-  summarise(num_viajes = sum(viajes)) %>% 
-  mutate(distrito = replace(distrito, distrito == "BRENA", "BREÑA"),
-         distrito = replace(distrito, distrito == "ATE VITARTE", "ATE"),
-         num_viajes_millon = num_viajes/1000000)
+viajes_distrito <- readRDS(here::here("data",
+                                      "processed",
+                                      "data_viajes_distritos.rds"))
 
 head(viajes_distrito)
 
