@@ -319,14 +319,14 @@ sp_grifos <- nb2listw(grifos_nb)
 
 
 
-fm <- precio_de_venta ~ COMPRADA  + vecino_pecsa_thiessen + sc #+ fecha
+fm <- precio_de_venta ~ COMPRADA  + vecino_pecsa_thiessen + sc + fecha
 
 #' #### Regresión de efectos fijos
 #' 
 #corremos regresión
 sararfemod <- spml(formula = fm, data = data_db5_comprada_2, index = NULL,
                    listw = sp_grifos, lag = TRUE, spatial.error = "b", model = "within",
-                   effect = "twoways", method = "eigen", na.action = na.fail,
+                   effect = "individual", method = "eigen", na.action = na.fail,
                    quiet = TRUE, zero.policy = NULL,
                    tol.solve = 1e-13, control = list(), legacy = FALSE)
 summary(sararfemod)
@@ -345,6 +345,12 @@ summary(imp1, zstats = TRUE, short = T)
 
 sararremod <- spml(formula = fm, data = data_db5_comprada_2, index = NULL,
                    listw = sp_grifos, model = "random", lag = TRUE, spatial.error = "b")
+
+
+sararremod <- spml(formula = fm, data = data_db5_comprada_2, index = NULL,
+                   listw = sp_grifos, model = "random", lag = TRUE, spatial.error = "b",
+                   na.action = na.fail)
+
 summary(sararremod)
 
 summary(verdoorn_SEM_FE<- spml(fm, data = data_db5_comprada_2,
@@ -353,6 +359,70 @@ summary(verdoorn_SEM_FE<- spml(fm, data = data_db5_comprada_2,
 summary(verdoorn_SEM_FE<- spml(fm, data = data_db5_comprada_2,
                                listw = sp_grifos, lag=FALSE,model="within", effect="individual", spatial.error="kkp"))
 
+summary(verdoorn_SEM_Ran<- spml(fm, data = data_db5_comprada_2,
+                               listw = sp_grifos, lag=FALSE,model="random", effect="twoways", spatial.error="kkp"))
 
-```
+#' Hacemos test de Hausman espacial
+#' 
+test_lag <- sphtest(x = fm, data = data_db5_comprada_2, listw = sp_grifos,
+                  spatial.model = "lag", method = "ML")
 
+test_lag
+
+#' ### Test para determinar modelo correcto
+#' 
+#' 
+#' 
+# Hausman test (plm)
+print(hausman_panel <- phtest(fm, data = data_db5_comprada_2))
+
+# Hausman test robust to spatial autocorrelation (splm)
+print(
+    spat_hausman_ML_SEM <- sphtest(
+        fm,
+        data = data_db5_comprada_2,
+        listw = sp_grifos,
+        spatial.model = "error",
+        method = "ML"
+    )
+)
+
+# Hausman test for spatial models
+
+print(
+    spat_hausman_ML_SEM <- sphtest(
+        fm,
+        data = data_db5_comprada_2,
+        listw = sp_grifos,
+        spatial.model = "lag",
+        method = "ML"
+    )
+)
+
+# Fixed effects model
+# Test 1
+slmtest(fm, data=data_db5_comprada_2, listw = sp_grifos, test="lml",
+        model="within")
+# Test 2
+slmtest(fm, data=data_db5_comprada_2, listw = sp_grifos, test="lme",
+        model="within")
+# Test 3
+slmtest(fm, data=data_db5_comprada_2, listw = sp_grifos, test="rlml",
+        model="within")
+# Test 4
+slmtest(fm, data=data_db5_comprada_2, listw = sp_grifos, test="rlme",
+        model="within")
+
+# Random effects model
+# Test 1
+slmtest(fm, data=data_db5_comprada_2, listw = sp_grifos, test="lml",
+        model="random")
+# Test 2
+slmtest(fm, data=data_db5_comprada_2, listw = sp_grifos, test="lme",
+        model="random")
+# Test 3
+slmtest(fm, data=data_db5_comprada_2, listw = sp_grifos, test="rlml",
+        model="random")
+# Test 4
+slmtest(fm, data=data_db5_comprada_2, listw = sp_grifos, test="rlme",
+        model="random")
