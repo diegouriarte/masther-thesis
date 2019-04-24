@@ -102,6 +102,8 @@ anti_join(data_distrital_clean, viajes_distrito, by = "distrito")
 
 data_distrital_clean <- left_join(data_distrital_clean, viajes_distrito, by = "distrito")
 
+saveRDS(data_distrital_clean, here::here("data", "processed", "data_distrital_completa.rds"))
+
 #' ## Merge de data precios con data de distritos y características de grifos
 #' 
 #+ 
