@@ -164,10 +164,8 @@ data_total <- data_total %>%
         -llanteria,-islas_comb_liq,
         -mecanico,
         -aceite,
-        -lavado,-sc_pre,
+        -sc_pre,
         -sc_post,
-        -num_viajes,
-        
     ) %>%
     select(1, 3, 2, everything())
 

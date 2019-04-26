@@ -2,156 +2,78 @@
 #' title: "Regresiones para tesis"
 #' output: 
 #'   html_notebook:
-#'     code_folding: hide
 #'     toc: true
 #'     toc_float: true
-#' editor_options: 
-#'   chunk_output_type: inline
 #' ---
-#' 
+
+#+ setup, include = FALSE, cache = FALSE
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  error = TRUE
+)
+options(tidyverse.quiet = TRUE)
+
 #' # Cargamos librerías
 #' 
-#+ cargar-librerias, include=FALSE
+#+ body, warning = FALSE, message = FALSE
+library(conflicted)
 library(tidyverse)
 library(spdep)
 library(stargazer)
 library(lubridate)
 library(kableExtra)
 library(magrittr)
+'%ni%' <- Negate('%in%')
+conflict_prefer("filter", "dplyr")
 
-#' 
-#' # Cargamos datos
+#' ## Cargamos datos
 #' 
 #+ cargar-datos
-grifos_sc <-
-  readRDS(here::here("data", "processed", "grifos_con_sc_razon_social.RDS"))
 
-#' cargamos los precios para 2017 de DB5
+data_total <- readRDS(file = here::here("data", "processed", "data-final-regresiones.rds"))
 
-#+ precios-cargar
-rutas_fuel <- list(
-  here::here("data", "processed", "data_diesel_mensual.rds"),
-  here::here("data", "processed", "data_g90_mensual.rds")
-)
-
-data_precios <- map(
-  rutas_fuel,
-  ~ readRDS(.x) %>%
-    filter(
-      `año` >= 2017,
-      codigo_de_osinergmin %in% grifos_sc$codigo_de_osinergmin
-    ) %>%
-    mutate(dia = 1) %>%
-    unite(fecha, dia, mes, `año`, sep = "-", remove = FALSE) %>%
-    mutate(fecha = lubridate::dmy(fecha)) %>% 
-    select(-dia) %>%
-    filter(
-      mes != 13,
-      precio_de_venta > 6,
-      fecha <= lubridate::dmy("2-10-2018")
-    )
-)
-
-
-precios_db5 <- data_precios[[1]]
-
-precios_g90 <- data_precios[[2]]
-
-#' cargamos data de distritos
-
-#+ data-distritos
-data_distrital_raw <- read_csv(here::here("data", "demo-distrital", "data_pop_lima.csv")) %>%
-  janitor::clean_names()
-
-#' Limpiamos archivo distrital:
+#' ## Regresión OLS por mes
 #' 
-#+ clean-distrito
-data_distrital_clean <- data_distrital_raw %>%
-  rename(
-    "pop_2017" = poblacion_total_30_06_2017,
-    "densidad_2017" = densidad_poblacional_hab_km2,
-    "ingresos_2012" = ingreso_per_capita
-  ) %>%
-  mutate(
-    pop_2017 = str_remove(pop_2017, " ") %>% parse_number(),
-    densidad_2017 = str_remove(densidad_2017, " ") %>% parse_number(),
-    distrito = str_to_upper(distrito)
-  )
-
-#' Cargamos la info de viajes
-#' 
-#+ distritos
-big_data_viajes <- readRDS(here::here("data", 
-                                      "processed", 
-                                      "data_viajes_distritos.RDS"))
-
-# numero de viajes en diciembre de 2017 x distrito
-viajes_distrito <- readRDS(here::here("data",
-                                      "processed",
-                                      "data_viajes_distritos.rds"))
-
-head(viajes_distrito)
-
-#' Verificamos que queden excluidos distritos que no nos interesan
-anti_join(data_distrital_clean, viajes_distrito, by = "distrito")
-
-#'Todo ok, así que hacemos el merge:
-#+ join-big-data
-
-data_distrital_clean <- left_join(data_distrital_clean, viajes_distrito, by = "distrito")
-
-#' 
-#' ## Creamos archivos con info
-#' 
-#+merge-data-distrito 
-
-data_total <- map(
-  list(precios_db5, precios_g90),
-  ~ left_join(grifos_sc, .x, by = "codigo_de_osinergmin") %>%
-    left_join(., data_distrital_clean, by = "distrito") %>% 
-    mutate(sc = if_else(`año` == 2017, sc_pre, sc_post),
-           ingresos_2012 = ingresos_2012 / 1000,
-           densidad_2017 = densidad_2017/10000)
-)
-
-data_db5 <- data_total[[1]]
-data_g90 <- data_total[[2]]
-
-
+#' Hacemos una regresión OLS en corte transversal para 4 periodo.
 #' 
 #' 
 #' 
-#' # Regresión OLS por mes
-#' 
-#' Hacemos una regresión OLS pooled, clusterizando a nivel de grifo, en corte transversal para 4 periodo.
-#' 
-#' 
-#' 
-#+ ols-regression-1
-#regresión sin viajes x distrito
-modelo_1 <- precio_de_venta ~ tipo_bandera + sc + distancia_avg + distancia_min +
-  num_grifos_cerc + tiene_mecanico + lavado + cajero + con_gnv + con_glp +
-  ingresos_2012 + densidad_2017 
+#+ ols-regression-func
 
-reg_lineal <- function(fecha_char, modelo) {
-  data_mes <- data_db5 %>%
-    filter(fecha == dmy(fecha_char)) %>%
+reg_lineal <- function(df, fecha_char, modelo, prod) {
+  data_mes <- df %>%
+    filter(producto == !!prod, 
+           fecha == dmy(fecha_char)) %>%
     drop_na()
   lm(modelo, data_mes)
 }
 
+#' ### Diesel
+
+#+ diesel-modelo1
+
+modelo_1 <- precio_de_venta ~ tipo_bandera + sc + distancia_avg + distancia_min +
+  num_grifos_cerc + tiene_mecanico + lavado + cajero + con_gnv + con_glp +
+  ingresos_2012 + densidad_2017 
+
 fechas <- list("01-07-2017", "01-10-2017", "01-03-2018", "01-07-2018")
 
-ols_modelo_1 <- map(fechas,
-    ~ reg_lineal(.x, modelo_1))
+ols_modelo_1_DB5 <- map(fechas,
+    ~ reg_lineal(data_total, .x, modelo_1, "DIESEL"))
+names(ols_modelo_1_DB5) <- fechas
 
+#' Hacemos otra regresión con otro modelo
+#+ diesel-modelo2
 modelo_2 <- precio_de_venta ~ tipo_bandera + sc + distancia_avg + distancia_min +
   num_grifos_cerc + tiene_mecanico + lavado + cajero + con_gnv + con_glp +
   ingresos_2012 + densidad_2017 + log(num_viajes)
 
-ols_modelo_2 <- map(fechas,
-                    ~ reg_lineal(.x, modelo_2))
+ols_modelo_2_DB5 <- map(fechas,
+                    ~ reg_lineal(data_total, .x, modelo_2, "DIESEL"))
+names(ols_modelo_2_DB5) <- fechas
 
+#' Resultados
 #+tabla-ols, results = 'asis'
 etiquetas_cov = c("Abanderada Petroperu", "Abanderada Pecsa", "Abanderada Primax",
                "Abanderada Repsol", "Propia Pecsa", "Propia Primax", 
@@ -159,18 +81,57 @@ etiquetas_cov = c("Abanderada Petroperu", "Abanderada Pecsa", "Abanderada Primax
                "MECANICO", "LAVADO", "CAJERO",  "GNV", "GLP",
                "INGRESO", "DENPOB")
 
-stargazer(ols_modelo_1,ols_modelo_2, type = "html",
+stargazer(ols_modelo_1_DB5,ols_modelo_2_DB5, type = "html",
           covariate.labels = etiquetas_cov,
           single.row = T)
 
-#' # Test de Anselin
+
+#' ### G90
+
+#+ g90-modelo1
+
+modelo_1 <- precio_de_venta ~ tipo_bandera + sc + distancia_avg + distancia_min +
+  num_grifos_cerc + tiene_mecanico + lavado + cajero + con_gnv + con_glp +
+  ingresos_2012 + densidad_2017 
+
+fechas <- list("01-07-2017", "01-10-2017", "01-03-2018", "01-07-2018")
+
+ols_modelo_1_G90 <- map(fechas,
+                    ~ reg_lineal(data_total, .x, modelo_1, "G90"))
+names(ols_modelo_1_G90) <- fechas
+
+#' Hacemos otra regresión con otro modelo
+#+ g90-modelo2
+modelo_2 <- precio_de_venta ~ tipo_bandera + sc + distancia_avg + distancia_min +
+  num_grifos_cerc + tiene_mecanico + lavado + cajero + con_gnv + con_glp +
+  ingresos_2012 + densidad_2017 + log(num_viajes)
+
+ols_modelo_2_G90 <- map(fechas,
+                    ~ reg_lineal(data_total, .x, modelo_2, "G90"))
+names(ols_modelo_2_G90) <- fechas
+
+#' Resultados
+#+tabla-ols-g90, results = 'asis'
+etiquetas_cov = c("Abanderada Petroperu", "Abanderada Pecsa", "Abanderada Primax",
+                  "Abanderada Repsol", "Propia Pecsa", "Propia Primax", 
+                  "Propia Repsol", "SC", "DPROM", "DMIN", "NCERC",
+                  "MECANICO", "LAVADO", "CAJERO",  "GNV", "GLP",
+                  "INGRESO", "DENPOB")
+
+stargazer(ols_modelo_1_G90,ols_modelo_2_G90, type = "html",
+          covariate.labels = etiquetas_cov,
+          single.row = T)
 
 
-#+ anselin, results = 'asis', message = FALSE
+#' ## Test de Anselin
 
-calcular_weigth_matrix <- function(fecha_char) {
-  data_mes <- data_db5 %>%
-    filter(fecha == dmy(fecha_char)) %>%
+#' Escribimos función para calculas pesos espaciales.
+#+ func-pesos, results = 'asis', message = FALSE
+
+calcular_weigth_matrix <- function(df, fecha_char, prod) {
+  data_mes <- df %>%
+    filter(producto == !!prod,
+           fecha == dmy(fecha_char)) %>%
     drop_na() %>%
     select(codigo_de_osinergmin, lon, lat) %>%
     as.matrix
@@ -179,47 +140,61 @@ calcular_weigth_matrix <- function(fecha_char) {
   nb2listw(grifos_nb, zero.policy = T)
 }
 
-# calculamos matriz grifos
+#' ## calculamos matriz grifos
+#' 
+sp_grifos_DB5 <- map(fechas, ~ calcular_weigth_matrix(data_total, .x, "DIESEL"))
+sp_grifos_G90 <- map(fechas, ~ calcular_weigth_matrix(data_total, .x, "G90"))
+names(sp_grifos_DB5) <- fechas
+names(sp_grifos_G90) <- fechas
+sp_grifos <- list("DB5" = sp_grifos_DB5, "G90" = sp_grifos_G90)
 
-sp_grifos <- map(fechas, ~ calcular_weigth_matrix(.x))
-
-
-LMtest <- map2(ols_modelo_2, sp_grifos, ~ lm.LMtests(.x, .y, test = "all"))
-names(LMtest) <- fechas
+#Diesel
+LMtest_DB5 <- map2(ols_modelo_2_DB5, sp_grifos_DB5, ~ lm.LMtests(.x, .y, test = "all"))
+names(LMtest_DB5) <- fechas
+#G90
+LMtest_G90 <- map2(ols_modelo_2_G90, sp_grifos_G90, ~ lm.LMtests(.x, .y, test = "all"))
+names(LMtest_G90) <- fechas
 
 resumen <- function(lista_test, test ) {
-  map_dfr(lista_test,c(test, "statistic")) %>% 
-    gather("fecha", "statistic") %>% 
-    mutate(test = test) %>% 
-    left_join(map_dfr(lista_test,c(test, "p.value")) %>% 
+  map_dfr(lista_test,c(test, "statistic")) %>%
+    gather("fecha", "statistic") %>%
+    mutate(test = test) %>%
+    left_join(map_dfr(lista_test,c(test, "p.value")) %>%
                 gather("fecha", "p.value"),
-              by = "fecha") %>% 
+              by = "fecha") %>%
     select(1,3,2,4)
 }
 
-
 nombres_test <- list("LMerr", "LMlag", "RLMerr", "RLMlag")
-test_df <- map_dfr(nombres_test, ~resumen(LMtest, .x))
 
-kable(test_df, digits = c(0, 0, 3, 5))  %>% 
+test_df_DB5 <- map_dfr(nombres_test, ~resumen(LMtest_DB5, .x))
+test_df_G90 <- map_dfr(nombres_test, ~resumen(LMtest_G90, .x))
+
+test_df <- inner_join(test_df_DB5, test_df_G90, 
+           by = c("fecha", "test"), 
+           suffix = c("_DB5", "_G90"))
+
+#' 
+kable(test_df, digits = c(0, 0, 3, 5, 3, 5))  %>%
   kable_styling(bootstrap_options = "striped", full_width = F)
 
-
+#' 
 #' El test robusto nos dice que existe dependencia espacial, pero solo significativa
 #' en el caso de considerar el modelo SAR. Siguiendo la literatura,
 #' estimaremos el modelo completo de Durbin
+#'
+#' ## Modelo Durbin
 #' 
-#' # Modelo Durbin
-
 #+ durbin, results = 'asis'
 
-reg_durbin <- function(fecha_char, sp_grifos, durbin = T) {
+reg_durbin <- function(df, fecha_char, sp_grifos, durbin = T, prod) {
   modelo_2 <- precio_de_venta ~ tipo_bandera + sc + distancia_avg + distancia_min +
     num_grifos_cerc + tiene_mecanico + lavado + cajero + con_gnv + con_glp +
     ingresos_2012 + densidad_2017 + log(num_viajes)
 
-  data_mes <- data_db5 %>%
-    filter(fecha == dmy(fecha_char)) %>%
+  data_mes <- df %>%
+    filter(producto == !!prod, 
+           fecha == dmy(fecha_char)) %>%
     drop_na()
 
   lagsarlm(formula = modelo_2,
@@ -230,26 +205,35 @@ reg_durbin <- function(fecha_char, sp_grifos, durbin = T) {
   }
 
 
-durbin_fechas <- map2(fechas, sp_grifos, ~reg_durbin(.x, .y))
+durbin_DB5 <- map2(fechas, sp_grifos_DB5, ~reg_durbin(data_total, .x, .y, prod = "DIESEL"))
+durbin_G90 <- map2(fechas, sp_grifos_G90, ~reg_durbin(data_total, .x, .y, prod = "G90"))
 
-names(durbin_fechas) <- fechas
-# Corremos el modelo autoregressivo espacial:
+names(durbin_DB5) <- fechas
+names(durbin_G90) <- fechas
 
-spatial_fechas <- map2(fechas, sp_grifos, ~reg_durbin(.x, .y, durbin = F))
-names(spatial_fechas) <- fechas
+#' ### Corremos el modelo autoregresivo espacial:
 
-#' # Corremos el modelo de errores espaciales
+sar_DB5 <- map2(fechas, sp_grifos_DB5, ~reg_durbin(data_total, .x, .y, 
+                                                  prod = "DIESEL", durbin = F))
+sar_G90 <- map2(fechas, sp_grifos_G90, ~reg_durbin(data_total, .x, .y, 
+                                               prod = "G90", durbin = F))
+
+names(sar_DB5) <- fechas
+names(sar_G90) <- fechas
+
+#' ### Corremos el modelo de errores espaciales
 
 #+ ser
 
-reg_errores <- function(fecha_char, sp_grifos) {
+reg_errores <- function(df, fecha_char, sp_grifos, prod) {
 
   modelo_2 <- precio_de_venta ~ tipo_bandera + sc + distancia_avg + distancia_min +
     num_grifos_cerc + tiene_mecanico + lavado + cajero + con_gnv + con_glp +
     ingresos_2012 + densidad_2017 + log(num_viajes)
 
-  data_mes <- data_db5 %>%
-    filter(fecha == dmy(fecha_char)) %>%
+  data_mes <- df %>%
+    filter(producto == !!prod,
+           fecha == dmy(fecha_char)) %>%
     drop_na()
 
   errorsarlm(modelo_2,
@@ -258,33 +242,46 @@ reg_errores <- function(fecha_char, sp_grifos) {
            tol.solve = 1e-13
   )
 }
-errores_fechas <- map2(fechas, sp_grifos, ~ reg_errores(.x, .y))
+SEM_DB5 <- map2(fechas, sp_grifos_DB5, ~ reg_errores(data_total, .x, .y, prod = "DIESEL"))
+SEM_G90 <- map2(fechas, sp_grifos_G90, ~ reg_errores(data_total, .x, .y, prod = "G90"))
 
 #' # Realizamos los test para distinguir entre ambos
 
 #+ test-LR, message = FALSE, warning = FALSE
 
-test_SAR <- map2(durbin_fechas, spatial_fechas, ~ LR.sarlm(.x, .y))
+test_SAR_DB5 <- map2(durbin_DB5, sar_DB5, ~ LR.sarlm(.x, .y))
+test_SEM_DB5 <- map2(durbin_DB5, SEM_DB5, ~ LR.sarlm(.x, .y))
 
-test_SER <- map2(durbin_fechas, errores_fechas, ~ LR.sarlm(.x, .y))
+test_SAR_G90 <- map2(durbin_G90, sar_G90, ~ LR.sarlm(.x, .y))
+test_SEM_G90 <- map2(durbin_G90, SEM_G90, ~ LR.sarlm(.x, .y))
 
 extraer_test_LR <- function(lista_con_test) {
-  map_df(lista_con_test, magrittr::extract, c("statistic", "p.value", "parameter")) %>% 
-    bind_cols(as.data.frame(names(lista_con_test))) %>% 
-    dplyr::select("fecha" = "names(lista_con_test)", statistic, "df" = parameter, p.value)
+  map_df(lista_con_test, magrittr::extract, c("statistic", "p.value", "parameter")) %>%
+    bind_cols(as.data.frame(names(lista_con_test))) %>%
+    select("fecha" = "names(lista_con_test)", statistic, "df" = parameter, p.value)
 }
 
-tabla_test_LR <- extraer_test_LR(test_SER) %>%
-  mutate(Nula = "SER") %>%
-  bind_rows(extraer_test_LR(test_SAR) %>%
+tabla_test_LR_DB5 <- extraer_test_LR(test_SEM_DB5) %>%
+  mutate(Nula = "SEM") %>%
+  bind_rows(extraer_test_LR(test_SAR_DB5) %>%
                       mutate(Nula = "SAR"))
 
-kable(tabla_test_LR, digits = c(0, 0, 3, 5))  %>% 
+tabla_test_LR_G90 <- extraer_test_LR(test_SEM_G90) %>%
+  mutate(Nula = "SEM") %>%
+  bind_rows(extraer_test_LR(test_SAR_G90) %>%
+              mutate(Nula = "SAR"))
+
+tabla_test_LR <- inner_join(tabla_test_LR_DB5, tabla_test_LR_G90, 
+                      by = c("fecha","Nula"), 
+                      suffix = c("_DB5", "_G90")) %>% 
+  select(1, Nula, everything())
+kable(tabla_test_LR, digits = c(0, 0, 1, 0, 5, 1, 0, 5))  %>%
   kable_styling(bootstrap_options = "striped", full_width = F)
 
 
-#' # Modelo escogido para corte transversal
-#' Ahora que hemos determinado que el mejor modelo es el autoregresivo, creamos su tabla
+#' ## Modelo escogido para corte transversal
+#' Ahora que hemos determinado que el mejor modelo es el autoregresivo para Diesel
+#' y el de Durbin para G90, creamos su tabla
 
 #+ sar-output, results = 'asis'
 etiquetas_cov = c("Abanderada Petroperu", "Abanderada Pecsa", "Abanderada Primax",
@@ -293,34 +290,49 @@ etiquetas_cov = c("Abanderada Petroperu", "Abanderada Pecsa", "Abanderada Primax
                   "MECANICO", "LAVADO", "CAJERO",  "GNV", "GLP",
                   "INGRESO", "DENPOB")
 
-stargazer(spatial_fechas, type = "html")
+stargazer(sar_DB5, type = "html")
 
+summary(durbin_G90$`01-07-2017`)
 
 #' Vemos los impactos que tiene el cuarto periodo
-#' 
-
+#'
+#' Impactos para DB5
 #+ impactos-4
-im_4 <- impacts(spatial_fechas[[4]], listw = sp_grifos[[4]], R = 100, useHESS = F)
+im_4 <- impacts(sar_DB5[[4]], listw = sp_grifos_DB5[[4]], R = 100, useHESS = F)
 
 per4 <- summary(im_4, zstats=TRUE, short = TRUE)
 
+#' Impactor para G90
 
-t <- tibble(attr(im_4, "bnames"),
-       "directo" = im_4$res$direct, 
-       "indirecto" = im_4$res$indirect,
-       "total" = im_4$res$total) %>%
-  bind_cols(per4$semat %>% as.data.frame()) %>% 
-  bind_cols(per4$pzmat %>% as.data.frame())
+im_G90 <- impacts(sar_G90[[4]], listw = sp_grifos_G90[[4]], R = 100, useHESS = F)
 
-cols_SE = c("Indirect", "Direct", "Total")
-to_app_SE = ".SE"
-cols_pvalue = c("Indirect1", "Direct1", "Total1")
-to_app_pvalue = ".pvalue"
-tabla_4_impactos <- rename_at(t, cols_SE, funs( paste0(., to_app_SE) ) ) %>% 
-  rename_at(cols_pvalue, funs( paste0(., to_app_pvalue) ) ) 
+perG90 <- summary(im_G90, zstats=TRUE, short = TRUE)
 
+#' Convertimos a tablas para imprimir
 
-kable(tabla_4_impactos, digits = 4)  %>% 
+simp_impactos <- function(spa_reg_list, fecha, prod) {
+  impacto <- impacts(spa_reg_list[[fecha]], listw = sp_grifos[[prod]][[fecha]], R = 100, useHESS = F)
+  intervalos <- summary(impacto, zstats=TRUE, short = TRUE)
+  t <- tibble(attr(impacto, "bnames"),
+              "directo" = impacto$res$direct,
+              "indirecto" = impacto$res$indirect,
+              "total" = impacto$res$total) %>%
+    bind_cols(intervalos$semat %>% as.data.frame()) %>%
+    bind_cols(intervalos$pzmat %>% as.data.frame())
+  
+  cols_SE = c("Indirect", "Direct", "Total")
+  to_app_SE = ".SE"
+  cols_pvalue = c("Indirect1", "Direct1", "Total1")
+  to_app_pvalue = ".pvalue"
+  tabla_impacto <- rename_at(t, cols_SE, funs( paste0(., to_app_SE) ) ) %>%
+    rename_at(cols_pvalue, funs( paste0(., to_app_pvalue) ) )
+  tabla_4_impactos
+}
+
+diesel_4_sar_imp <- simp_impactos(sar_DB5, "01-03-2018", prod = "DB5")
+g90_4_durbin_imp <- simp_impactos(durbin_G90, "01-03-2018", prod = "G90")
+
+kable(g90_4_durbin_imp, digits = 4)  %>%
   kable_styling(bootstrap_options = "striped", full_width = F)
 #'
 #'
