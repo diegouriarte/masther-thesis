@@ -121,10 +121,10 @@ data_total <- data_precios %>%
 #+ variable-comprada
 data_total <- data_total %>%
     mutate(
-        COMPRADA = case_when(`año` == 2017 ~ 0,
+        COMPRADA = case_when(fecha <= dmy("31-01-2018")  ~ 0,
                              tipo_bandera == "PROPIA PECSA" ~ 1,
                              TRUE ~ 0),
-        SUMINISTRO = case_when(`año` == 2017 ~ 0,
+        SUMINISTRO = case_when(fecha <= dmy("31-01-2018")  ~ 0,
                                tipo_bandera == "ABANDERADA PECSA" ~ 1,
                                TRUE ~ 0)
     )
