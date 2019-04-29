@@ -332,7 +332,8 @@ tabla_test_LR_G90 <- extraer_test_LR(test_SEM_G90) %>%
 tabla_test_LR <- inner_join(tabla_test_LR_DB5, tabla_test_LR_G90, 
                       by = c("fecha","Nula"), 
                       suffix = c("_DB5", "_G90")) %>% 
-  select(1, Nula, everything())
+  select(1, Nula, everything()) %>% 
+  filter(fecha %in% c("01-10-2017", "01-03-2018"))
 
 tabla_test_LR %>% 
   mutate(Nula = if_else(Nula == "SAR", 
@@ -340,10 +341,26 @@ tabla_test_LR %>%
                         "\u03B8 = -\u03c1\u03b2 (SEM)"),
          fecha = str_remove_all(fecha, "01-|20"),
          fecha = str_replace_all(fecha, mes_nombres)) %>% 
-kable( digits = c(0, 0, 1, 0, 5, 1, 0, 5), escape = F)  %>%
+  select(-starts_with("df_")) %>% 
+  mutate_at(vars(-fecha, -Nula), round, digits = 3) %>% 
+  mutate_at(vars(starts_with("stati")), format, digits = 1, nsmall = 1, trim = F) %>% 
+  mutate_at(vars(starts_with("p.value")), format, digits = 3, nsmall = 4) %>% 
+  mutate(stat_db5 = paste(statistic_DB5, " [", p.value_DB5, "]", sep = ""),
+         stat_g90 = paste(statistic_G90, " [", p.value_G90, "]", sep = "")) %>% 
+  select(-starts_with("statistic_"), -starts_with("p.value_")) %>% 
+  gather(key = "producto", value = "stat", -fecha, -Nula) %>% 
+  mutate(producto = if_else(producto == "stat_db5", "Diésel", "Gasohol 90")) %>% 
+  rename("Hip. Nula" = Nula) %>% 
+  spread(key = fecha, value = stat) %>% 
+  arrange(producto) %>% 
+  select(1, 4, 3) %>% 
+
+kable( escape = F)  %>%
   kable_styling(bootstrap_options = "striped", full_width = F) %>% 
-  add_footnote("N. grados de libertad igual a 19 para todos las pruebas.", 
-               notation = "none")
+  footnote(general = "N. grados de libertad igual a 19 para todos las pruebas.",
+           general_title = "Nota: ") %>% 
+  add_header_above(c(" " = 1, "Estadístico [valor p]" = 2)) %>% 
+  pack_rows(index = c("Diésel" = 2, "Gasohol 90" = 2))
 #' ## Modelo escogido para corte transversal
 #' Ahora que hemos determinado que el mejor modelo es el autoregresivo para Diesel
 #' y el de Durbin para G90, creamos su tabla
