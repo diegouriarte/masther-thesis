@@ -57,7 +57,7 @@ modelo_1 <- precio_de_venta ~ tipo_bandera + sc + distancia_avg + distancia_min 
   num_grifos_cerc + tiene_mecanico + lavado + cajero + con_gnv + con_glp +
   ingresos_2012 + densidad_2017 
 
-fechas <- list("01-07-2017", "01-10-2017", "01-03-2018", "01-07-2018")
+fechas <- list("01-08-2017", "01-12-2017", "01-03-2018", "01-07-2018")
 
 ols_modelo_1_DB5 <- map(fechas,
     ~ reg_lineal(data_total, .x, modelo_1, "DIESEL"))
@@ -73,17 +73,37 @@ ols_modelo_2_DB5 <- map(fechas,
                     ~ reg_lineal(data_total, .x, modelo_2, "DIESEL"))
 names(ols_modelo_2_DB5) <- fechas
 
+#' Controlamos por distrito
+#' 
+modelo_3 <- precio_de_venta ~ tipo_bandera + sc + distancia_avg + distancia_min +
+  num_grifos_cerc + tiene_mecanico + lavado + cajero + con_gnv + con_glp +
+  ingresos_2012 + densidad_2017 + log(num_viajes) + distrito
+
+ols_modelo_3_DB5 <- map(fechas,
+                        ~ reg_lineal(data_total, .x, modelo_3, "DIESEL"))
+names(ols_modelo_3_DB5) <- fechas
+
+map(ols_modelo_3_DB5, summary)
+map(ols_modelo_2_DB5, summary)
+
 #' Resultados
 #+tabla-ols, results = 'asis'
 etiquetas_cov = c("Abanderada Petroperu", "Abanderada Pecsa", "Abanderada Primax",
                "Abanderada Repsol", "Propia Pecsa", "Propia Primax", 
                "Propia Repsol", "SC", "DPROM", "DMIN", "NCERC",
                "MECANICO", "LAVADO", "CAJERO",  "GNV", "GLP",
-               "INGRESO", "DENPOB")
-
-stargazer(ols_modelo_1_DB5,ols_modelo_2_DB5, type = "html",
+               "INGRESO", "DENPOB", "LOGVIAJES")
+fechas_formato <- map(fechas, ~str_remove(string = .x, pattern = "01-")) %>% 
+  map(., ~str_remove(string = .x, pattern = "20")) %>% 
+  flatten_chr()
+stargazer(ols_modelo_2_DB5, type = "html",
           covariate.labels = etiquetas_cov,
-          single.row = T)
+          dep.var.labels=c("Precio de venta - Diésel (soles/galón)"),
+          dep.var.caption = "",
+          model.numbers	= F,
+          no.space = T,
+          column.labels =  fechas_formato, 
+          single.row = T, out = here::here("doc", "tables", "ols-model2.htm"))
 
 
 #' ### G90
@@ -112,21 +132,21 @@ names(ols_modelo_2_G90) <- fechas
 
 #' Resultados
 #+tabla-ols-g90, results = 'asis'
-etiquetas_cov = c("Abanderada Petroperu", "Abanderada Pecsa", "Abanderada Primax",
-                  "Abanderada Repsol", "Propia Pecsa", "Propia Primax", 
-                  "Propia Repsol", "SC", "DPROM", "DMIN", "NCERC",
-                  "MECANICO", "LAVADO", "CAJERO",  "GNV", "GLP",
-                  "INGRESO", "DENPOB")
 
-stargazer(ols_modelo_1_G90,ols_modelo_2_G90, type = "html",
+stargazer(ols_modelo_2_G90$`01-12-2017`, ols_modelo_2_G90$`01-03-2018`, type = "html",
           covariate.labels = etiquetas_cov,
-          single.row = T)
+          dep.var.labels=c("Precio de venta - Gasohol 90 (soles/galón)"),
+          dep.var.caption = "",
+          model.numbers	= F,
+          no.space = T,
+          column.labels =  fechas_formato[2:3], 
+          single.row = T, out = here::here("doc", "tables", "ols-model2-g90.htm"))
 
 
-#' ## Test de Anselin
+#' ## Test de Anselin 1996
 
 #' Escribimos función para calculas pesos espaciales.
-#+ func-pesos, results = 'asis', message = FALSE
+#+ func-pesos, message = FALSE
 
 calcular_weigth_matrix <- function(df, fecha_char, prod) {
   data_mes <- df %>%
@@ -176,6 +196,44 @@ test_df <- inner_join(test_df_DB5, test_df_G90,
 
 #' 
 kable(test_df, digits = c(0, 0, 3, 5, 3, 5))  %>%
+  kable_styling(bootstrap_options = "striped", full_width = F)
+
+test_df %>% 
+  filter(test %in% c("RLMerr", "RLMlag"),
+         str_detect(fecha, "12|03")) %>% 
+  kable(digits = c(0, 0, 3, 5, 3, 5)) %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F)
+
+res_tabla <- test_df %>% 
+  filter(test %in% c("RLMerr", "RLMlag"),
+         str_detect(fecha, "12|03"))
+
+mes_nombres <- c("01" = "Ene",
+                 "02" = "Feb",
+                 "03"="Mar",
+                 "04"="Abr",
+                 "05"="May",
+                 "06"="Jun",
+                 "07"="Jul",
+                 "08"="Ago",
+                 "09"="Set",
+                 "10"="Oct",
+                 "11"="Nov",
+                 "12" = "Dic")
+res_tabla %>% 
+  mutate_at(vars(-fecha, -test), round, digits = 3) %>% 
+  mutate_at(vars(starts_with("stati")), format, digits = 2, nsmall = 2, trim = F) %>% 
+  mutate_at(vars(starts_with("p.value")), format, digits = 3, nsmall = 2) %>% 
+  mutate(DB5 = paste(statistic_DB5, " [", p.value_DB5, "]", sep = ""),
+         G90 = paste(statistic_G90, " [", p.value_G90, "]", sep = ""),
+         fecha = str_remove(fecha, "01-"),
+         test = if_else(test == "RLMerr", 
+                        "Test LM Robusto SEM",
+                        "Test LM Robusto SAR"),
+         fecha = str_replace_all(fecha, mes_nombres)) %>% 
+  arrange(desc(fecha)) %>% 
+  select("Fecha" = fecha, "Test [valor p]" = test, "Diésel" = DB5, "Gasohol 90" = G90) %>% 
+  kable(escape = F) %>% 
   kable_styling(bootstrap_options = "striped", full_width = F)
 
 #' 
@@ -275,10 +333,17 @@ tabla_test_LR <- inner_join(tabla_test_LR_DB5, tabla_test_LR_G90,
                       by = c("fecha","Nula"), 
                       suffix = c("_DB5", "_G90")) %>% 
   select(1, Nula, everything())
-kable(tabla_test_LR, digits = c(0, 0, 1, 0, 5, 1, 0, 5))  %>%
-  kable_styling(bootstrap_options = "striped", full_width = F)
 
-
+tabla_test_LR %>% 
+  mutate(Nula = if_else(Nula == "SAR", 
+                        "\u03B8 = 0 (SAR)",
+                        "\u03B8 = -\u03c1\u03b2 (SEM)"),
+         fecha = str_remove_all(fecha, "01-|20"),
+         fecha = str_replace_all(fecha, mes_nombres)) %>% 
+kable( digits = c(0, 0, 1, 0, 5, 1, 0, 5), escape = F)  %>%
+  kable_styling(bootstrap_options = "striped", full_width = F) %>% 
+  add_footnote("N. grados de libertad igual a 19 para todos las pruebas.", 
+               notation = "none")
 #' ## Modelo escogido para corte transversal
 #' Ahora que hemos determinado que el mejor modelo es el autoregresivo para Diesel
 #' y el de Durbin para G90, creamos su tabla
