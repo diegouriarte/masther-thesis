@@ -360,18 +360,16 @@ kable( escape = F)  %>%
            general_title = "Nota: ") %>% 
   add_header_above(c(" " = 1, "Estadístico [valor p]" = 2)) %>% 
   pack_rows(index = c("Diésel" = 2, "Gasohol 90" = 2))
+
 #' ## Modelo escogido para corte transversal
 #' Ahora que hemos determinado que el mejor modelo es el autoregresivo para Diesel
 #' y el de Durbin para G90, creamos su tabla
 
 #+ sar-output, results = 'asis'
-etiquetas_cov = c("Abanderada Petroperu", "Abanderada Pecsa", "Abanderada Primax",
-                  "Abanderada Repsol", "Propia Pecsa", "Propia Primax",
-                  "Propia Repsol", "SC", "DPROM", "DMIN", "NCERC",
-                  "MECANICO", "LAVADO", "CAJERO",  "GNV", "GLP",
-                  "INGRESO", "DENPOB")
 
-stargazer(sar_DB5, type = "html")
+stargazer(sar_DB5, type = "html",
+          covariate.labels = etiquetas_cov, 
+          out = here::here("doc", "tables", "sar_db5.htm"))
 
 summary(durbin_G90$`01-07-2017`)
 
