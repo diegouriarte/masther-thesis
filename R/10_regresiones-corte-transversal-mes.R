@@ -354,7 +354,6 @@ tabla_test_LR %>%
   spread(key = fecha, value = stat) %>% 
   arrange(producto) %>% 
   select(1, 4, 3) %>% 
-
 kable( escape = F)  %>%
   kable_styling(bootstrap_options = "striped", full_width = F) %>% 
   footnote(general = "N. grados de libertad igual a 19 para todos las pruebas.",
