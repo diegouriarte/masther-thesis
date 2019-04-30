@@ -446,21 +446,11 @@ stargazer(lista_sar2,
 #'
 #' Impactos para DB5
 #' 
-#+ impactos-4
-im_4 <- impacts(sar_DB5[[4]], listw = sp_grifos_DB5[[4]], R = 100, useHESS = F)
-
-per4 <- summary(im_4, zstats=TRUE, short = TRUE)
-
-#' Impactor para G90
-
-im_G90 <- impacts(sar_G90[[4]], listw = sp_grifos_G90[[4]], R = 100, useHESS = F)
-
-perG90 <- summary(im_G90, zstats=TRUE, short = TRUE)
 
 #' Convertimos a tablas para imprimir
 
-simp_impactos <- function(spa_reg_list, fecha, prod) {
-  impacto <- impacts(spa_reg_list[[fecha]], listw = sp_grifos[[prod]][[fecha]], R = 100, useHESS = F)
+simp_impactos <- function(spa_reg_list, fecha, prod, rep = 100) {
+  impacto <- impacts(spa_reg_list[[fecha]], listw = sp_grifos[[prod]][[fecha]], R = rep, useHESS = F)
   intervalos <- summary(impacto, zstats=TRUE, short = TRUE)
   t <- tibble(attr(impacto, "bnames"),
               "directo" = impacto$res$direct,
@@ -479,9 +469,9 @@ simp_impactos <- function(spa_reg_list, fecha, prod) {
 }
 
 diesel_4_sar_imp <- simp_impactos(sar_DB5, "01-03-2018", prod = "DB5")
-g90_4_durbin_imp <- simp_impactos(durbin_G90, "01-03-2018", prod = "G90")
-
-nombres_tabla <- c(
+#g90_4_durbin_imp <- simp_impactos(durbin_G90, "01-03-2018", prod = "G90", rep = 1000)
+saveRDS(g90_4_durbin_imp, here::here("data","processed","2019.04.30_g90-impact-t3.rds"))
+  nombres_tabla <- c(
 `tipo_banderaABANDERADA PETROPERU` = "Abanderada Petroperu",
 `tipo_banderaABANDERADA PECSA` = "Abanderada Pecsa",
 `tipo_banderaABANDERADA PRIMAX` = "Abanderada Primax",
@@ -524,7 +514,8 @@ g90_4_durbin_imp %>%
   rename(" " = OLS) %>% 
   kable(., escape = FALSE, caption = "Comparación para Gasohol 90 (Marzo-18)")  %>%
   kable_styling(bootstrap_options = "striped", full_width = F) %>% 
-  add_header_above(c("", "OLS" = 1, "Efectos - SDM" = 3 ))
+  add_header_above(c("", "OLS" = 1, "Efectos - SDM" = 3 )) %>% 
+  footnote("Impactos calculados mediante 1000 simulaciones siguiendo xxx ()", general_title = "Nota: ")
 #'
 #' Ahora para diesel
 #' 
