@@ -27,6 +27,19 @@ library(magrittr)
 '%ni%' <- Negate('%in%')
 conflict_prefer("filter", "dplyr")
 
+mes_nombres <- c("01" = "Ene",
+                 "02" = "Feb",
+                 "03"="Mar",
+                 "04"="Abr",
+                 "05"="May",
+                 "06"="Jun",
+                 "07"="Jul",
+                 "08"="Ago",
+                 "09"="Set",
+                 "10"="Oct",
+                 "11"="Nov",
+                 "12" = "Dic")
+
 #' ## Cargamos datos
 #' 
 #+ cargar-datos
@@ -59,11 +72,17 @@ modelo_1 <- precio_de_venta ~ tipo_bandera + sc + distancia_avg + distancia_min 
 
 fechas <- list("01-08-2017", "01-12-2017", "01-03-2018", "01-07-2018")
 
+fechas_formato <- map(fechas, ~str_remove(string = .x, pattern = "01-")) %>% 
+  map(., ~str_remove(string = .x, pattern = "20")) %>% 
+  flatten_chr() %>% 
+  str_replace_all(mes_nombres)
+
 ols_modelo_1_DB5 <- map(fechas,
     ~ reg_lineal(data_total, .x, modelo_1, "DIESEL"))
 names(ols_modelo_1_DB5) <- fechas
 
 #' Hacemos otra regresión con otro modelo
+
 #+ diesel-modelo2
 modelo_2 <- precio_de_venta ~ tipo_bandera + sc + distancia_avg + distancia_min +
   num_grifos_cerc + tiene_mecanico + lavado + cajero + con_gnv + con_glp +
@@ -93,9 +112,7 @@ etiquetas_cov = c("Abanderada Petroperu", "Abanderada Pecsa", "Abanderada Primax
                "Propia Repsol", "SC", "DPROM", "DMIN", "NCERC",
                "MECANICO", "LAVADO", "CAJERO",  "GNV", "GLP",
                "INGRESO", "DENPOB", "LOGVIAJES")
-fechas_formato <- map(fechas, ~str_remove(string = .x, pattern = "01-")) %>% 
-  map(., ~str_remove(string = .x, pattern = "20")) %>% 
-  flatten_chr()
+
 stargazer(ols_modelo_2_DB5, type = "html",
           covariate.labels = etiquetas_cov,
           dep.var.labels=c("Precio de venta - Diésel (soles/galón)"),
@@ -110,21 +127,12 @@ stargazer(ols_modelo_2_DB5, type = "html",
 
 #+ g90-modelo1
 
-modelo_1 <- precio_de_venta ~ tipo_bandera + sc + distancia_avg + distancia_min +
-  num_grifos_cerc + tiene_mecanico + lavado + cajero + con_gnv + con_glp +
-  ingresos_2012 + densidad_2017 
-
-fechas <- list("01-07-2017", "01-10-2017", "01-03-2018", "01-07-2018")
-
 ols_modelo_1_G90 <- map(fechas,
                     ~ reg_lineal(data_total, .x, modelo_1, "G90"))
 names(ols_modelo_1_G90) <- fechas
 
 #' Hacemos otra regresión con otro modelo
 #+ g90-modelo2
-modelo_2 <- precio_de_venta ~ tipo_bandera + sc + distancia_avg + distancia_min +
-  num_grifos_cerc + tiene_mecanico + lavado + cajero + con_gnv + con_glp +
-  ingresos_2012 + densidad_2017 + log(num_viajes)
 
 ols_modelo_2_G90 <- map(fechas,
                     ~ reg_lineal(data_total, .x, modelo_2, "G90"))
@@ -208,18 +216,6 @@ res_tabla <- test_df %>%
   filter(test %in% c("RLMerr", "RLMlag"),
          str_detect(fecha, "12|03"))
 
-mes_nombres <- c("01" = "Ene",
-                 "02" = "Feb",
-                 "03"="Mar",
-                 "04"="Abr",
-                 "05"="May",
-                 "06"="Jun",
-                 "07"="Jul",
-                 "08"="Ago",
-                 "09"="Set",
-                 "10"="Oct",
-                 "11"="Nov",
-                 "12" = "Dic")
 res_tabla %>% 
   mutate_at(vars(-fecha, -test), round, digits = 3) %>% 
   mutate_at(vars(starts_with("stati")), format, digits = 2, nsmall = 2, trim = F) %>% 
@@ -335,6 +331,7 @@ tabla_test_LR <- inner_join(tabla_test_LR_DB5, tabla_test_LR_G90,
   select(1, Nula, everything()) %>% 
   filter(fecha %in% c("01-10-2017", "01-03-2018"))
 
+
 tabla_test_LR %>% 
   mutate(Nula = if_else(Nula == "SAR", 
                         "\u03B8 = 0 (SAR)",
@@ -354,7 +351,7 @@ tabla_test_LR %>%
   spread(key = fecha, value = stat) %>% 
   arrange(producto) %>% 
   select(1, 4, 3) %>% 
-kable( escape = F)  %>%
+  kable( escape = F)  %>%
   kable_styling(bootstrap_options = "striped", full_width = F) %>% 
   footnote(general = "N. grados de libertad igual a 19 para todos las pruebas.",
            general_title = "Nota: ") %>% 
@@ -367,15 +364,88 @@ kable( escape = F)  %>%
 
 #+ sar-output, results = 'asis'
 
-stargazer(sar_DB5, type = "html",
-          covariate.labels = etiquetas_cov, 
-          out = here::here("doc", "tables", "sar_db5.htm"))
+lista_sar <- sar_DB5[c(2,3)]
+rho <- map_dbl(lista_sar, "rho") %>% round(3)
+LL <- c(sar_DB5[[2]]$LL, )
 
-summary(durbin_G90$`01-07-2017`)
+lista_sar2 <- list(sar_DB5[[2]], ols_modelo_2_DB5[[2]],
+                   sar_DB5[[3]], ols_modelo_2_DB5[[3]])
+
+LL <- c(lista_sar2[[1]]$LL, lista_sar2[[1]]$logLik_lm.model, 
+        lista_sar2[[3]]$LL, lista_sar2[[3]]$logLik_lm.model) %>% 
+  round(1)
+
+s2 <- c(lista_sar2[[1]]$s2, sigma(lista_sar2[[2]])^2, 
+        lista_sar2[[3]]$s2, sigma(lista_sar2[[4]])^2) %>%  
+  round(3)
+
+aic_vec <- c(AIC(lista_sar2[[1]]), lista_sar2[[1]]$AIC_lm.model, 
+             AIC(lista_sar2[[1]]), lista_sar2[[3]]$AIC_lm.model) %>% 
+  round(1)
+
+stargazer(lista_sar2,
+          type = "html",
+          covariate.labels = etiquetas_cov,
+          dep.var.labels=c("Precio de venta - Diésel (soles/galón)"),
+          dep.var.caption = "",
+          model.numbers	= F,
+          no.space = T,
+          column.labels =  rep(fechas_formato[2:3], times = c(2,2)), 
+          omit.stat	= c("rsq", "adj.rsq", "f", "ll", "sigma2", "res.dev", "ser", "aic"),
+          add.lines = list(append("rho", rho), append("Log.Lik", LL),
+                           append("<p>&sigma;<sup>2</sub></p>", s2),
+                           append("AIC", aic_vec)),
+          single.row = T, out = here::here("doc", "tables", "sar_db5.htm"))
+
+#+ durbin-g90, results = 'asis'
+
+summary(durbin_G90$`01-03-2018`)
+
+lista_sar <- durbin_G90[c(2,3)]
+rho <- map_dbl(lista_sar, "rho") %>% round(3)
+rho_se <- map_dbl(lista_sar, "rho.se") %>% round(3)
+rho_char <- str_c(rho, " (", rho_se, ")")
+LL <- c(durbin_G90[[2]]$LL, )
+
+lista_sar2 <- list(durbin_G90[[2]], ols_modelo_2_G90[[2]],
+                   durbin_G90[[3]], ols_modelo_2_G90[[3]])
+
+LL <- c(lista_sar2[[1]]$LL, lista_sar2[[1]]$logLik_lm.model, 
+        lista_sar2[[3]]$LL, lista_sar2[[3]]$logLik_lm.model) %>% 
+  round(1)
+
+s2 <- c(lista_sar2[[1]]$s2, sigma(lista_sar2[[2]])^2, 
+        lista_sar2[[3]]$s2, sigma(lista_sar2[[4]])^2) %>%  
+  round(3)
+
+aic_vec <- c(AIC(lista_sar2[[1]]), lista_sar2[[1]]$AIC_lm.model, 
+             AIC(lista_sar2[[3]]), lista_sar2[[3]]$AIC_lm.model) %>% 
+  round(1)
+
+
+stargazer(lista_sar2,
+          type = "html",
+          covariate.labels = etiquetas_cov,
+          dep.var.labels=c("Precio de venta - Gasohol 90 (soles/galón)"),
+          dep.var.caption = "",
+          model.numbers	= F,
+          no.space = T,
+          column.labels =  rep(fechas_formato[2:3], times = c(2,2)), 
+          omit.stat	= c("rsq", "adj.rsq", "f", "ll", "sigma2", "res.dev", "ser", "aic"),
+          add.lines = list(append("<p>&rho;</p>", rho_char), 
+                           append("Log.Lik", LL),
+                           append("<p>&sigma;<sup>2</sub></p>", s2),
+                           append("AIC", aic_vec)),
+          omit = c("lag"),
+          notes = "Se omiten rezagos espaciales de variables dependientes.",
+          notes.label = "Notas: ",
+          single.row = T, 
+          out = here::here("doc", "tables", "durbin_G90.htm"))
 
 #' Vemos los impactos que tiene el cuarto periodo
 #'
 #' Impactos para DB5
+#' 
 #+ impactos-4
 im_4 <- impacts(sar_DB5[[4]], listw = sp_grifos_DB5[[4]], R = 100, useHESS = F)
 
@@ -405,15 +475,80 @@ simp_impactos <- function(spa_reg_list, fecha, prod) {
   to_app_pvalue = ".pvalue"
   tabla_impacto <- rename_at(t, cols_SE, funs( paste0(., to_app_SE) ) ) %>%
     rename_at(cols_pvalue, funs( paste0(., to_app_pvalue) ) )
-  tabla_4_impactos
+  tabla_impacto
 }
 
 diesel_4_sar_imp <- simp_impactos(sar_DB5, "01-03-2018", prod = "DB5")
 g90_4_durbin_imp <- simp_impactos(durbin_G90, "01-03-2018", prod = "G90")
 
-kable(g90_4_durbin_imp, digits = 4)  %>%
-  kable_styling(bootstrap_options = "striped", full_width = F)
+nombres_tabla <- c(
+`tipo_banderaABANDERADA PETROPERU` = "Abanderada Petroperu",
+`tipo_banderaABANDERADA PECSA` = "Abanderada Pecsa",
+`tipo_banderaABANDERADA PRIMAX` = "Abanderada Primax",
+`tipo_banderaABANDERADA REPSOL` = "Abanderada Repsol",
+`tipo_banderaPROPIA PECSA` = "Propia Pecsa",
+`tipo_banderaPROPIA PRIMAX`  = "Propia Primax",
+`tipo_banderaPROPIA REPSOL` = "Propia Repsol",
+sc = "SC", 
+distancia_avg = "DPROM",
+distancia_min = "DMIN", 
+num_grifos_cerc = "NCER",
+tiene_mecanico = "MECANICO",
+lavado = "LAVADO",
+cajero = "CAJERO",
+con_gnv = "GNV",
+con_glp = "GLP",
+ingresos_2012 = "INGRESO", 
+densidad_2017 = "DENPOB",
+`log(num_viajes)` = "LOGVIAJES"
+)
+
+g90_4_durbin_imp %>% 
+  rename("Variable" = 1,) %>% 
+  select(-ends_with("SE")) %>% 
+  bind_cols(tibble("OLS" =  ols_modelo_2_G90$`01-03-2018`$coefficients[-1],
+                   "OLS_pvalue" = summary(ols_modelo_2_G90$`01-03-2018`)$coefficients[,4][-1])) %>%
+  mutate_at(vars(-Variable), round, 3) %>% 
+  mutate_at(vars(ends_with("pvalue")), ~case_when(
+    . > 0.1 ~ '',
+    . > 0.05 ~ "<sup>*</sub>",
+    . > 0.01 ~ "<sup>**</sub>",
+    TRUE ~ "<sup>***</sub>"
+  )) %>% 
+  mutate(Variable = recode(Variable, !!!nombres_tabla),
+         Directo = str_c(directo, " ", Direct1.pvalue),
+         Indirecto = str_c(indirecto, " ", Indirect1.pvalue),
+         Total = str_c(total, " ", Total1.pvalue),
+         OLS = str_c(OLS,  " ", OLS_pvalue)) %>% 
+  select(-2:-7, -9, 10:12, 8) %>% 
+  rename(" " = OLS) %>% 
+  kable(., escape = FALSE, caption = "Comparación para Gasohol 90 (Marzo-18)")  %>%
+  kable_styling(bootstrap_options = "striped", full_width = F) %>% 
+  add_header_above(c("", "OLS" = 1, "Efectos - SDM" = 3 ))
 #'
-#'
+#' Ahora para diesel
+#' 
+diesel_4_sar_imp %>% 
+  rename("Variable" = 1,) %>% 
+  select(-ends_with("SE")) %>% 
+  bind_cols(tibble("OLS" =  ols_modelo_2_DB5$`01-03-2018`$coefficients[-1],
+                   "OLS_pvalue" = summary(ols_modelo_2_DB5$`01-03-2018`)$coefficients[,4][-1])) %>%
+  mutate_at(vars(-Variable), round, 3) %>% 
+  mutate_at(vars(ends_with("pvalue")), ~case_when(
+    . > 0.1 ~ '',
+    . > 0.05 ~ "<sup>*</sub>",
+    . > 0.01 ~ "<sup>**</sub>",
+    TRUE ~ "<sup>***</sub>"
+  )) %>% 
+  mutate(Variable = recode(Variable, !!!nombres_tabla),
+         Directo = str_c(directo, " ", Direct1.pvalue),
+         Indirecto = str_c(indirecto, " ", Indirect1.pvalue),
+         Total = str_c(total, " ", Total1.pvalue),
+         OLS = str_c(OLS,  " ", OLS_pvalue)) %>% 
+  select(-2:-7, -9, 10:12, 8) %>% 
+  rename(" " = OLS) %>% 
+  kable(., escape = FALSE, caption = "Comparación para Diésel (Marzo-18)")  %>%
+  kable_styling(bootstrap_options = "striped", full_width = F) %>% 
+  add_header_above(c("", "OLS" = 1, "Efectos - SDM" = 3 ))
 
 
