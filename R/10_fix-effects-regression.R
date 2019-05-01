@@ -27,6 +27,7 @@ library(lmtest)
 library(plm)
 library(lubridate)
 library(stargazer)
+library(kableExtra)
 '%ni%' <- Negate('%in%')
 source(here::here("R","funcion04_formato-tablas-reproducibles.R"), encoding = "UTF-8")
 
@@ -67,74 +68,99 @@ calcular_reg_fe(df = data_total, modelo = modelo3, inicio, fin,
 
 calcular_reg_fe(df = data_total, modelo = modelo3, inicio, fin, 
                 producto = "G90", output = "fe-g90-dist.htm")
-
-
+#'  Hausman test (plm)
+#'  
+#'  
+wi <- plm(modelo3, data = balancear_panel(data_total, "DIESEL"), model = "within", effect = "twoways")
+re <- plm(modelo3, data = balancear_panel(data_total, "DIESEL"), model = "random")
+phtest(wi, re)
+print(hausman_panel <- phtest(modelo3, 
+                              data = balancear_panel(data_total, "DIESEL"),
+                              index = c("codigo_de_osinergmin", "fecha"),
+                              model = c("within", "random")))
 #' ## Spatial fixed effects:
 
 
 #' Creamos matriz de pesos para ambos casos:
 #
 
-crear_spatial_w <- function(df, prod) {
-    #solo grifos que operaron todo la ventana
-    grifos_creados_luego <- df %>%
-        filter(producto == !!prod) %>%
-        count(codigo_de_osinergmin, sort = T) %>%
-        filter(n < max(n)) %>%
-        pull(codigo_de_osinergmin)
-    
-    df_balanceado <- df %>%
-        filter(producto == !!prod,
-               codigo_de_osinergmin %ni% grifos_creados_luego) 
-    
-    coords_db5 <- df_balanceado %>%
-        distinct(codigo_de_osinergmin, .keep_all = T) %>%
-        select(codigo_de_osinergmin, lon, lat) %>%
-        as.matrix()
-    
-    #creamos la matriz de distancias
-    grifos_nb <- tri2nb(coords_db5[,2:3], row.names = coords_db5[,1])
-    
-    sp_grifos <- nb2listw(grifos_nb)
-    sp_grifos
-}
 
 spatial_w <- map(c("DIESEL", "G90"), ~ crear_spatial_w(data_total, .x))
 names(spatial_w) <- c("DIESEL", "G90")
 
 
-fm <- precio_de_venta ~ COMPRADA  + vecino_pecsa_thiessen + sc + fecha
+fm <- precio_de_venta ~ COMPRADA  + SUMINISTRO + vecino_pecsa_thiessen + sc + fecha
 
 #' ### Regresión de efectos fijos
 #'
 #corremos regresión
-#' Creamos una función para balancear el panel (removemos grifos que no abrieron o 
-#' cerrarone en la ventana, son menos de 10)
 
-balancear_panel <- function(df, prod) {
-    grifos_creados_luego <- df %>%
-        filter(producto == !!prod) %>%
-        count(codigo_de_osinergmin, sort = T) %>%
-        filter(n < max(n)) %>%
-        pull(codigo_de_osinergmin)
-    
-    df_balanceado <- df %>%
-        filter(producto == !!prod) %>%
-        filter(codigo_de_osinergmin %ni% grifos_creados_luego)
-    
-    df_balanceado
-}
 
 #' Regresión por efectos fijos con el modelo completo
 sararfemod <- spml(formula = fm, data = balancear_panel(data_total, "DIESEL"), index = NULL,
-                   listw = spatial_w$DIESEL, lag = TRUE, spatial.error = "b", model = "within",
+                   listw = spatial_w$DIESEL, lag = TRUE, spatial.error = "none", model = "within",
                    effect = "individual", method = "eigen", na.action = na.fail,
-                   quiet = TRUE, zero.policy = NULL,
+                   quiet = TRUE, zero.policy = NULL, hess = FALSE,
                    tol.solve = 1e-13, control = list(), legacy = FALSE)
+
 summary(sararfemod)
+str(summary(sararfemod))
+
+nombres_variables <- c(lambda = "\u03bb",
+                       COMPRADA = "COMPRADA",
+                       vecino_pecsa_thiessen = "VECINO",
+                       sc  = "sc" )
+
+
+summary(sararfemod)$CoefTable %>% 
+    as_tibble(rownames = "Variable") %>% 
+    mutate_at(vars(starts_with("Pr")), ~case_when(
+        . > 0.1 ~ '',
+        . > 0.05 ~ "<sup>*</sub>",
+        . > 0.01 ~ "<sup>**</sub>",
+        TRUE ~ "<sup>***</sub>"
+    )) %>% 
+    mutate(Estimate = round(Estimate, 3),
+           `Std. Error` = round(`Std. Error`, 4),
+           Estimado = str_c("<span>", Estimate, `Pr(>|t|)`, "</span>", " (", `Std. Error`, ")"),
+           Variable = recode(Variable, !!!nombres_variables)) %>% 
+    select(-2:-5) %>% 
+    filter(!str_detect(Variable, "fecha")) %>% 
+    kable(escape = FALSE) %>% 
+    kable_styling(bootstrap_options = "striped", full_width = F)
+
 
 imp1 <- impacts(sararfemod, listw = spatial_w$DIESEL, time = 21, R = 200)
-summary(imp1, zstats = TRUE, short = T)
+t <- summary(imp1, zstats = TRUE, short = T)
+imp_measures <-  tibble(Variables = rownames(t$direct_sum$statistics),
+                        "Directo" = t$direct_sum$statistics[,"Mean"],
+                        "Indirecto" = t$indirect_sum$statistics[,"Mean"],
+                        "Total" = t$total_sum$statistics[,"Mean"])
+
+se_measures <- as_tibble(t$semat, rownames = "Variables") %>% 
+    rename_if(is.numeric, ~ str_c(., "_SE"))
+
+pvalues_measures <- as_tibble(t$pzmat, rownames = "Variables") %>% 
+    rename_if(is.numeric, ~ str_c(., "_pvalue"))
+
+inner_join(imp_measures, se_measures, by = "Variables") %>% 
+    inner_join(pvalues_measures, by = "Variables") %>% 
+    mutate_at(vars(2:4), round, 3) %>% 
+    mutate_at(vars(5:7), round, 4) %>% 
+    mutate_at(vars(ends_with("pvalue")), ~case_when(
+        . > 0.1 ~ '',
+        . > 0.05 ~ "<span><sup>*</sub></span>",
+        . > 0.01 ~ "<span><sup>**</sub></span>",
+        TRUE ~ "<span><sup>***</sub></span>"
+    )) %>% 
+    mutate(Directo = str_c(Directo, Direct_pvalue, " (", Direct_SE, ")"),
+           Indirecto = str_c(Indirecto, Indirect_pvalue, " (", Indirect_SE, ")"),
+           Total = str_c(Total, Total_pvalue, " (", Total_SE, ")"),
+           Variables = recode(Variables, vecino_pecsa_thiessen = "VECINO")) %>% 
+    select(1:4) %>% 
+    filter(!str_detect(Variables, "fecha")) %>% 
+    kable(escape = FALSE) %>% 
+    kable_styling(bootstrap_options = "striped", full_width = F)
 
 #' Solo spatial error tipo b 
 summary(verdoorn_SEM_FE<- spml(fm, data = balancear_panel(data_total, "DIESEL"),
@@ -168,8 +194,7 @@ test_lag
 #'
 #'
 #'
-# Hausman test (plm)
-print(hausman_panel <- phtest(fm, data = balancear_panel(data_total, "DIESEL")))
+
 
 # Hausman test robust to spatial autocorrelation (splm) for error model
 print(
@@ -206,6 +231,14 @@ slmtest(fm, data=balancear_panel(data_total, "DIESEL"), listw = spatial_w$DIESEL
 # Test 4
 slmtest(fm, data=balancear_panel(data_total, "DIESEL"), listw = spatial_w$DIESEL, test="rlme",
         model="within")
+
+# Test 3
+slmtest(fm, data=balancear_panel(data_total, "G90"), listw = spatial_w$G90, test="rlml",
+        model="within")
+# Test 4
+slmtest(fm, data=balancear_panel(data_total, "G90"), listw = spatial_w$G90, test="rlme",
+        model="within")
+
 
 # Random effects model
 # Test 1

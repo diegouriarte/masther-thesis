@@ -221,3 +221,47 @@ calcular_reg_fe <- function(df, modelo, inicio, fin, producto, output) {
                    single.row = T, out = here::here("doc", "tables", output))
     list(modelos_fe, producto)
 }
+
+# Spatial Panel data =====================
+
+crear_spatial_w <- function(df, prod) {
+    #solo grifos que operaron todo la ventana
+    grifos_creados_luego <- df %>%
+        filter(producto == !!prod) %>%
+        count(codigo_de_osinergmin, sort = T) %>%
+        filter(n < max(n)) %>%
+        pull(codigo_de_osinergmin)
+    
+    df_balanceado <- df %>%
+        filter(producto == !!prod,
+               codigo_de_osinergmin %ni% grifos_creados_luego) 
+    
+    coords_db5 <- df_balanceado %>%
+        distinct(codigo_de_osinergmin, .keep_all = T) %>%
+        select(codigo_de_osinergmin, lon, lat) %>%
+        as.matrix()
+    
+    #creamos la matriz de distancias
+    grifos_nb <- tri2nb(coords_db5[,2:3], row.names = coords_db5[,1])
+    
+    sp_grifos <- nb2listw(grifos_nb)
+    sp_grifos
+}
+
+
+
+balancear_panel <- function(df, prod) {
+    #Creamos una función para balancear el panel (removemos grifos que no abrieron o 
+    #cerraron en la ventana, son menos de 10)
+    grifos_creados_luego <- df %>%
+        filter(producto == !!prod) %>%
+        count(codigo_de_osinergmin, sort = T) %>%
+        filter(n < max(n)) %>%
+        pull(codigo_de_osinergmin)
+    
+    df_balanceado <- df %>%
+        filter(producto == !!prod) %>%
+        filter(codigo_de_osinergmin %ni% grifos_creados_luego)
+    
+    df_balanceado
+}
