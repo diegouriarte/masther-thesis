@@ -26,7 +26,9 @@ library(splm)
 library(lmtest)
 library(plm)
 library(lubridate)
+library(stargazer)
 '%ni%' <- Negate('%in%')
+source(here::here("R","funcion04_formato-tablas-reproducibles.R"), encoding = "UTF-8")
 
 conflict_prefer("filter", "dplyr")
 # ----
@@ -52,61 +54,19 @@ fin <- list("01-10-2018", "01-04-2018")
 modelo2 <- precio_de_venta ~ COMPRADA  + SUMINISTRO + vecino_pecsa_thiessen + sc + fecha
 
 
-#' Función para hacer la regresión de efectos fijos filtrando solo las estaciones que
-#' estuvieron activas durante todo el periodo
-#' 
-calc_fe_fechas <- function(df, inicio, fin, modelo, prod) {
-    grifos_creados_luego <- df %>% 
-        filter(producto == !!prod) %>% 
-        count(codigo_de_osinergmin) %>% 
-        arrange(n) %>% 
-        filter(n < max(n)) %>% 
-        pull(codigo_de_osinergmin)
-    
-    df_panel_balanceado <- df %>% 
-        filter(codigo_de_osinergmin %ni% grifos_creados_luego)
-    
-    panel_df <- df_panel_balanceado %>% 
-        filter(producto == !!prod) %>% 
-        filter(fecha >= dmy(inicio), fecha <= dmy(fin)) %>% 
-        pdata.frame(., index = c("codigo_de_osinergmin", "fecha"))
-    
-    fe <- plm(modelo, data= panel_df, model="within")
-    fe
-}
+calcular_reg_fe(df = data_total, modelo = modelo2, inicio, fin, 
+                producto = "DIESEL", output = "fe-db5.htm")
 
-#' ### FE para DB5
+calcular_reg_fe(df = data_total, modelo = modelo2, inicio, fin, 
+                producto = "G90", output = "fe-g90.htm")
 
-modelos_fe_db5 <-
-    map2(inicio,
-         fin,
-         ~ calc_fe_fechas(data_total, .x, .y, modelo2, "DIESEL"))
+modelo3 <- precio_de_venta ~ COMPRADA  + SUMINISTRO + vecino_pecsa_dist + sc + fecha
 
-names(modelos_fe_db5) <- inicio
+calcular_reg_fe(df = data_total, modelo = modelo3, inicio, fin, 
+                producto = "DIESEL", output = "fe-db5-dist.htm")
 
-map(modelos_fe_db5, ~summary(.x))
-
-
-#' Calculos errores estándares clusterizados
-
-map(modelos_fe_db5, 
-    ~coeftest(.x, vcov = vcovHC(.x, type = "sss", cluster = "group")))
-
-#' ### FE para G90
-
-modelos_fe_g90 <-
-    map2(inicio,
-         fin,
-         ~ calc_fe_fechas(data_total, .x, .y, modelo2, "G90"))
-
-names(modelos_fe_g90) <- inicio
-
-map(modelos_fe_g90, ~summary(.x))
-
-#' Calculos errores estándares clusterizados
-
-map(modelos_fe_g90, 
-    ~coeftest(.x, vcov = vcovHC(.x, type = "sss", cluster = "group")))
+calcular_reg_fe(df = data_total, modelo = modelo3, inicio, fin, 
+                producto = "G90", output = "fe-g90-dist.htm")
 
 
 #' ## Spatial fixed effects:

@@ -155,3 +155,69 @@ imprimir_modelo <- function(lista_spa, lista_ols, prod, out, durbin = F ) {
               notes.label = "Notas: ",
               single.row = T, out = here::here("doc", "tables", out))
 }
+
+# Panel data ==================
+
+#' Función para hacer la regresión de efectos fijos filtrando solo las estaciones que
+#' estuvieron activas durante todo el periodo
+#' 
+calc_fe_fechas <- function(df, inicio, fin, modelo, prod) {
+    grifos_creados_luego <- df %>% 
+        filter(producto == !!prod) %>% 
+        count(codigo_de_osinergmin) %>% 
+        arrange(n) %>% 
+        filter(n < max(n)) %>% 
+        pull(codigo_de_osinergmin)
+    
+    df_panel_balanceado <- df %>% 
+        filter(codigo_de_osinergmin %ni% grifos_creados_luego)
+    
+    panel_df <- df_panel_balanceado %>% 
+        filter(producto == !!prod) %>% 
+        filter(fecha >= dmy(inicio), fecha <= dmy(fin)) %>% 
+        pdata.frame(., index = c("codigo_de_osinergmin", "fecha"))
+    
+    fe <- plm(modelo, data= panel_df, model="within")
+    fe
+}
+
+calcular_reg_fe <- function(df, modelo, inicio, fin, producto, output) {
+    modelos_fe <-
+        map2(inicio,
+             fin,
+             ~ calc_fe_fechas(df, .x, .y, modelo, producto))
+    
+    names(modelos_fe) <- inicio
+    
+    #' Calculos errores estándares clusterizados
+    
+    clust_error <- map(modelos_fe, 
+                       ~coeftest(.x, vcov = vcovHC(.x, type = "sss", cluster = "group")))
+    
+    se <- map(clust_error, ~.x[,"Std. Error"])
+    p.value <- map(clust_error, ~.x[,"Pr(>|t|)"])
+    
+    
+    #' Imprimos tabla
+    producto_label <- ifelse(producto == "DIESEL", "Diésel", "Gasohol 90")
+    
+    etiquetas_cov <- c("COMPRADA", "SUMINISTRO", "VECINO", "sc")
+    
+    t <- stargazer(modelos_fe,
+                   type = "html",
+                   covariate.labels = etiquetas_cov,
+                   dep.var.labels=str_c("Precio de venta - ", producto_label, " (soles/galón)"),
+                   dep.var.caption = "",
+                   model.numbers	= F,
+                   column.labels = c("18 meses", "6 meses"),
+                   no.space = T,
+                   se = se,
+                   p = p.value,
+                   omit.stat = "f",
+                   omit = "fecha",
+                   omit.labels = "¿Dummies por mes?",
+                   omit.yes.no = c("Sí", "No"),
+                   notes.label = "Notas: ",
+                   single.row = T, out = here::here("doc", "tables", output))
+    list(modelos_fe, producto)
+}
