@@ -26,19 +26,7 @@ library(kableExtra)
 library(magrittr)
 '%ni%' <- Negate('%in%')
 conflict_prefer("filter", "dplyr")
-
-mes_nombres <- c("01" = "Ene",
-                 "02" = "Feb",
-                 "03"="Mar",
-                 "04"="Abr",
-                 "05"="May",
-                 "06"="Jun",
-                 "07"="Jul",
-                 "08"="Ago",
-                 "09"="Set",
-                 "10"="Oct",
-                 "11"="Nov",
-                 "12" = "Dic")
+source(here::here("R","funcion04_formato-tablas-reproducibles.R"), encoding = "UTF-8")
 
 #' ## Cargamos datos
 #' 
@@ -66,11 +54,13 @@ reg_lineal <- function(df, fecha_char, modelo, prod) {
 
 #+ diesel-modelo1
 
+fechas <- list("01-08-2017", "01-12-2017", "01-03-2018", "01-07-2018")
+
+
 modelo_1 <- precio_de_venta ~ tipo_bandera + sc + distancia_avg + distancia_min +
   num_grifos_cerc + tiene_mecanico + lavado + cajero + con_gnv + con_glp +
   ingresos_2012 + densidad_2017 
 
-fechas <- list("01-08-2017", "01-12-2017", "01-03-2018", "01-07-2018")
 
 fechas_formato <- map(fechas, ~str_remove(string = .x, pattern = "01-")) %>% 
   map(., ~str_remove(string = .x, pattern = "20")) %>% 
@@ -113,23 +103,17 @@ etiquetas_cov = c("Abanderada Petroperu", "Abanderada Pecsa", "Abanderada Primax
                "MECANICO", "LAVADO", "CAJERO",  "GNV", "GLP",
                "INGRESO", "DENPOB", "LOGVIAJES")
 
-stargazer(ols_modelo_2_DB5, type = "html",
+stargazer(ols_modelo_2_DB5[c(2,3)], type = "html",
           covariate.labels = etiquetas_cov,
           dep.var.labels=c("Precio de venta - Diésel (soles/galón)"),
           dep.var.caption = "",
           model.numbers	= F,
           no.space = T,
           column.labels =  fechas_formato, 
-          single.row = T, out = here::here("doc", "tables", "ols-model2.htm"))
+          single.row = T, out = here::here("doc", "tables", "ols-model2-db5.htm"))
 
 
 #' ### G90
-
-#+ g90-modelo1
-
-ols_modelo_1_G90 <- map(fechas,
-                    ~ reg_lineal(data_total, .x, modelo_1, "G90"))
-names(ols_modelo_1_G90) <- fechas
 
 #' Hacemos otra regresión con otro modelo
 #+ g90-modelo2
@@ -141,7 +125,7 @@ names(ols_modelo_2_G90) <- fechas
 #' Resultados
 #+tabla-ols-g90, results = 'asis'
 
-stargazer(ols_modelo_2_G90$`01-12-2017`, ols_modelo_2_G90$`01-03-2018`, type = "html",
+stargazer(ols_modelo_2_G90[c(2,3)], type = "html",
           covariate.labels = etiquetas_cov,
           dep.var.labels=c("Precio de venta - Gasohol 90 (soles/galón)"),
           dep.var.caption = "",
@@ -309,6 +293,8 @@ test_SEM_DB5 <- map2(durbin_DB5, SEM_DB5, ~ LR.sarlm(.x, .y))
 test_SAR_G90 <- map2(durbin_G90, sar_G90, ~ LR.sarlm(.x, .y))
 test_SEM_G90 <- map2(durbin_G90, SEM_G90, ~ LR.sarlm(.x, .y))
 
+
+#' Consolidamos en un solo dataframe
 extraer_test_LR <- function(lista_con_test) {
   map_df(lista_con_test, magrittr::extract, c("statistic", "p.value", "parameter")) %>%
     bind_cols(as.data.frame(names(lista_con_test))) %>%
@@ -331,6 +317,7 @@ tabla_test_LR <- inner_join(tabla_test_LR_DB5, tabla_test_LR_G90,
   select(1, Nula, everything()) %>% 
   filter(fecha %in% c("01-10-2017", "01-03-2018"))
 
+#' Imprimimos el dataframe
 
 tabla_test_LR %>% 
   mutate(Nula = if_else(Nula == "SAR", 
@@ -350,7 +337,6 @@ tabla_test_LR %>%
   rename("Hip. Nula" = Nula) %>% 
   spread(key = fecha, value = stat) %>% 
   arrange(producto) %>% 
-  select(1, 4, 3) %>% 
   kable( escape = F)  %>%
   kable_styling(bootstrap_options = "striped", full_width = F) %>% 
   footnote(general = "N. grados de libertad igual a 19 para todos las pruebas.",
@@ -358,188 +344,40 @@ tabla_test_LR %>%
   add_header_above(c(" " = 1, "Estadístico [valor p]" = 2)) %>% 
   pack_rows(index = c("Diésel" = 2, "Gasohol 90" = 2))
 
-#' ## Modelo escogido para corte transversal
+#' ## Modelos escogidos para corte transversal
 #' Ahora que hemos determinado que el mejor modelo es el autoregresivo para Diesel
 #' y el de Durbin para G90, creamos su tabla
 
 #+ sar-output, results = 'asis'
 
-lista_sar <- sar_DB5[c(2,3)]
-rho <- map_dbl(lista_sar, "rho") %>% round(3)
-LL <- c(sar_DB5[[2]]$LL, )
+imprimir_modelo(sar_DB5, ols_modelo_2_DB5, prod = "Diésel", out = "xx.htm", durbin = F)
 
-lista_sar2 <- list(sar_DB5[[2]], ols_modelo_2_DB5[[2]],
-                   sar_DB5[[3]], ols_modelo_2_DB5[[3]])
-
-LL <- c(lista_sar2[[1]]$LL, lista_sar2[[1]]$logLik_lm.model, 
-        lista_sar2[[3]]$LL, lista_sar2[[3]]$logLik_lm.model) %>% 
-  round(1)
-
-s2 <- c(lista_sar2[[1]]$s2, sigma(lista_sar2[[2]])^2, 
-        lista_sar2[[3]]$s2, sigma(lista_sar2[[4]])^2) %>%  
-  round(3)
-
-aic_vec <- c(AIC(lista_sar2[[1]]), lista_sar2[[1]]$AIC_lm.model, 
-             AIC(lista_sar2[[1]]), lista_sar2[[3]]$AIC_lm.model) %>% 
-  round(1)
-
-stargazer(lista_sar2,
-          type = "html",
-          covariate.labels = etiquetas_cov,
-          dep.var.labels=c("Precio de venta - Diésel (soles/galón)"),
-          dep.var.caption = "",
-          model.numbers	= F,
-          no.space = T,
-          column.labels =  rep(fechas_formato[2:3], times = c(2,2)), 
-          omit.stat	= c("rsq", "adj.rsq", "f", "ll", "sigma2", "res.dev", "ser", "aic"),
-          add.lines = list(append("rho", rho), append("Log.Lik", LL),
-                           append("<p>&sigma;<sup>2</sub></p>", s2),
-                           append("AIC", aic_vec)),
-          single.row = T, out = here::here("doc", "tables", "sar_db5.htm"))
 
 #+ durbin-g90, results = 'asis'
 
-summary(durbin_G90$`01-03-2018`)
+imprimir_modelo(durbin_G90, ols_modelo_2_G90, prod = "Gasohol 90", out = "G90-durbin.htm", durbin = T)
 
-lista_sar <- durbin_G90[c(2,3)]
-rho <- map_dbl(lista_sar, "rho") %>% round(3)
-rho_se <- map_dbl(lista_sar, "rho.se") %>% round(3)
-rho_char <- str_c(rho, " (", rho_se, ")")
-LL <- c(durbin_G90[[2]]$LL, )
-
-lista_sar2 <- list(durbin_G90[[2]], ols_modelo_2_G90[[2]],
-                   durbin_G90[[3]], ols_modelo_2_G90[[3]])
-
-LL <- c(lista_sar2[[1]]$LL, lista_sar2[[1]]$logLik_lm.model, 
-        lista_sar2[[3]]$LL, lista_sar2[[3]]$logLik_lm.model) %>% 
-  round(1)
-
-s2 <- c(lista_sar2[[1]]$s2, sigma(lista_sar2[[2]])^2, 
-        lista_sar2[[3]]$s2, sigma(lista_sar2[[4]])^2) %>%  
-  round(3)
-
-aic_vec <- c(AIC(lista_sar2[[1]]), lista_sar2[[1]]$AIC_lm.model, 
-             AIC(lista_sar2[[3]]), lista_sar2[[3]]$AIC_lm.model) %>% 
-  round(1)
-
-
-stargazer(lista_sar2,
-          type = "html",
-          covariate.labels = etiquetas_cov,
-          dep.var.labels=c("Precio de venta - Gasohol 90 (soles/galón)"),
-          dep.var.caption = "",
-          model.numbers	= F,
-          no.space = T,
-          column.labels =  rep(fechas_formato[2:3], times = c(2,2)), 
-          omit.stat	= c("rsq", "adj.rsq", "f", "ll", "sigma2", "res.dev", "ser", "aic"),
-          add.lines = list(append("<p>&rho;</p>", rho_char), 
-                           append("Log.Lik", LL),
-                           append("<p>&sigma;<sup>2</sub></p>", s2),
-                           append("AIC", aic_vec)),
-          omit = c("lag"),
-          notes = "Se omiten rezagos espaciales de variables dependientes.",
-          notes.label = "Notas: ",
-          single.row = T, 
-          out = here::here("doc", "tables", "durbin_G90.htm"))
 
 #' Vemos los impactos que tiene el cuarto periodo
 #'
 #' Impactos para DB5
 #' 
 
-#' Convertimos a tablas para imprimir
+#' Convertimos a tablas para imprimir calculando impactos para tercer periodo
 
-simp_impactos <- function(spa_reg_list, fecha, prod, rep = 100) {
-  impacto <- impacts(spa_reg_list[[fecha]], listw = sp_grifos[[prod]][[fecha]], R = rep, useHESS = F)
-  intervalos <- summary(impacto, zstats=TRUE, short = TRUE)
-  t <- tibble(attr(impacto, "bnames"),
-              "directo" = impacto$res$direct,
-              "indirecto" = impacto$res$indirect,
-              "total" = impacto$res$total) %>%
-    bind_cols(intervalos$semat %>% as.data.frame()) %>%
-    bind_cols(intervalos$pzmat %>% as.data.frame())
-  
-  cols_SE = c("Indirect", "Direct", "Total")
-  to_app_SE = ".SE"
-  cols_pvalue = c("Indirect1", "Direct1", "Total1")
-  to_app_pvalue = ".pvalue"
-  tabla_impacto <- rename_at(t, cols_SE, funs( paste0(., to_app_SE) ) ) %>%
-    rename_at(cols_pvalue, funs( paste0(., to_app_pvalue) ) )
-  tabla_impacto
-}
 
-diesel_4_sar_imp <- simp_impactos(sar_DB5, "01-03-2018", prod = "DB5")
-#g90_4_durbin_imp <- simp_impactos(durbin_G90, "01-03-2018", prod = "G90", rep = 1000)
-saveRDS(g90_4_durbin_imp, here::here("data","processed","2019.04.30_g90-impact-t3.rds"))
-  nombres_tabla <- c(
-`tipo_banderaABANDERADA PETROPERU` = "Abanderada Petroperu",
-`tipo_banderaABANDERADA PECSA` = "Abanderada Pecsa",
-`tipo_banderaABANDERADA PRIMAX` = "Abanderada Primax",
-`tipo_banderaABANDERADA REPSOL` = "Abanderada Repsol",
-`tipo_banderaPROPIA PECSA` = "Propia Pecsa",
-`tipo_banderaPROPIA PRIMAX`  = "Propia Primax",
-`tipo_banderaPROPIA REPSOL` = "Propia Repsol",
-sc = "SC", 
-distancia_avg = "DPROM",
-distancia_min = "DMIN", 
-num_grifos_cerc = "NCER",
-tiene_mecanico = "MECANICO",
-lavado = "LAVADO",
-cajero = "CAJERO",
-con_gnv = "GNV",
-con_glp = "GLP",
-ingresos_2012 = "INGRESO", 
-densidad_2017 = "DENPOB",
-`log(num_viajes)` = "LOGVIAJES"
-)
+diesel_4_sar_imp <- simp_impactos(sar_DB5, "01-03-2018", prod = "DB5", rep = 10)
+g90_4_durbin_imp <- simp_impactos(durbin_G90, "01-03-2018", prod = "G90", rep = 10)
 
-g90_4_durbin_imp %>% 
-  rename("Variable" = 1,) %>% 
-  select(-ends_with("SE")) %>% 
-  bind_cols(tibble("OLS" =  ols_modelo_2_G90$`01-03-2018`$coefficients[-1],
-                   "OLS_pvalue" = summary(ols_modelo_2_G90$`01-03-2018`)$coefficients[,4][-1])) %>%
-  mutate_at(vars(-Variable), round, 3) %>% 
-  mutate_at(vars(ends_with("pvalue")), ~case_when(
-    . > 0.1 ~ '',
-    . > 0.05 ~ "<sup>*</sub>",
-    . > 0.01 ~ "<sup>**</sub>",
-    TRUE ~ "<sup>***</sub>"
-  )) %>% 
-  mutate(Variable = recode(Variable, !!!nombres_tabla),
-         Directo = str_c(directo, " ", Direct1.pvalue),
-         Indirecto = str_c(indirecto, " ", Indirect1.pvalue),
-         Total = str_c(total, " ", Total1.pvalue),
-         OLS = str_c(OLS,  " ", OLS_pvalue)) %>% 
-  select(-2:-7, -9, 10:12, 8) %>% 
-  rename(" " = OLS) %>% 
-  kable(., escape = FALSE, caption = "Comparación para Gasohol 90 (Marzo-18)")  %>%
-  kable_styling(bootstrap_options = "striped", full_width = F) %>% 
-  add_header_above(c("", "OLS" = 1, "Efectos - SDM" = 3 )) %>% 
-  footnote("Impactos calculados mediante 1000 simulaciones siguiendo xxx ()", general_title = "Nota: ")
+# saveRDS(g90_4_durbin_imp, here::here("data","processed","2019.04.30_g90-impact-t3.rds"))
+#g90_4_durbin_imp <- read_rds(here::here("data","processed","2019.04.30_g90-impact-t3.rds"))
+
 #'
-#' Ahora para diesel
+#' Imprimimos tablas de impactos
 #' 
-diesel_4_sar_imp %>% 
-  rename("Variable" = 1,) %>% 
-  select(-ends_with("SE")) %>% 
-  bind_cols(tibble("OLS" =  ols_modelo_2_DB5$`01-03-2018`$coefficients[-1],
-                   "OLS_pvalue" = summary(ols_modelo_2_DB5$`01-03-2018`)$coefficients[,4][-1])) %>%
-  mutate_at(vars(-Variable), round, 3) %>% 
-  mutate_at(vars(ends_with("pvalue")), ~case_when(
-    . > 0.1 ~ '',
-    . > 0.05 ~ "<sup>*</sub>",
-    . > 0.01 ~ "<sup>**</sub>",
-    TRUE ~ "<sup>***</sub>"
-  )) %>% 
-  mutate(Variable = recode(Variable, !!!nombres_tabla),
-         Directo = str_c(directo, " ", Direct1.pvalue),
-         Indirecto = str_c(indirecto, " ", Indirect1.pvalue),
-         Total = str_c(total, " ", Total1.pvalue),
-         OLS = str_c(OLS,  " ", OLS_pvalue)) %>% 
-  select(-2:-7, -9, 10:12, 8) %>% 
-  rename(" " = OLS) %>% 
-  kable(., escape = FALSE, caption = "Comparación para Diésel (Marzo-18)")  %>%
-  kable_styling(bootstrap_options = "striped", full_width = F) %>% 
-  add_header_above(c("", "OLS" = 1, "Efectos - SDM" = 3 ))
 
+#+ diesel-tercer-periodo
+imprimir_impacto(diesel_4_sar_imp, ols_modelo_2_DB5)
 
+#+ g90-tercer-periodo
+imprimir_impacto(g90_4_durbin_imp, ols_modelo_2_G90)

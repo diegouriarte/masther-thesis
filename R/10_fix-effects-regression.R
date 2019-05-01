@@ -44,8 +44,8 @@ data_total <- readRDS(file = here::here("data", "processed", "data-final-regresi
 
 #' Ahora hacemos la regresión por efectos fijos 10 meses y 3 meses antes y después:
     
-inicio <- list("01-03-2017", "01-10-2017")
-fin <- list("01-10-2018", "01-03-2018")
+inicio <- list("01-05-2017", "01-11-2017")
+fin <- list("01-10-2018", "01-04-2018")
 
 #' El modelo es:
 #' 
@@ -54,6 +54,7 @@ modelo2 <- precio_de_venta ~ COMPRADA  + SUMINISTRO + vecino_pecsa_thiessen + sc
 
 #' Función para hacer la regresión de efectos fijos filtrando solo las estaciones que
 #' estuvieron activas durante todo el periodo
+#' 
 calc_fe_fechas <- function(df, inicio, fin, modelo, prod) {
     grifos_creados_luego <- df %>% 
         filter(producto == !!prod) %>% 
