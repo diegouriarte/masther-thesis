@@ -232,7 +232,69 @@ slmtest(fm, data=balancear_panel(data_total, "DIESEL"), listw = spatial_w$DIESEL
 slmtest(fm, data=balancear_panel(data_total, "DIESEL"), listw = spatial_w$DIESEL, test="rlme",
         model="within")
 
+tests <- list("lml", "lme", "rlml", "rlme")
+prods <- list("DIESEL", "G90")
+
+slmtest_tes <- function(prod, tests, fecha_lim = c("01-05-2017", "01-10-2018")) {
+    data_periodo <- balancear_panel(data_total, prod, fecha_lim)
+    w_prod <- crear_spatial_w(data_periodo, prod)
+    slmtest(fm, data = data_periodo, listw = w_prod, test=tests,
+            model="within")   
+}
+
+test_panel_diesel <- map(tests, ~slmtest_tes("DIESEL", .x))
+test_panel_g90 <- map(tests, ~slmtest_tes("G90", .x))
+
+
+df_test_diesel <- map_df(test_panel_diesel, magrittr::extract, c("method", "alternative", "statistic", "p.value"))  
+
+df_test_g90 <- map_df(test_panel_g90, magrittr::extract, c("method", "alternative", "statistic", "p.value")) 
+
+inner_join(df_test_diesel, df_test_g90, by = c("method", "alternative"), suffix = c(".DB5", ".G90")) %>% 
+    mutate_at(vars(starts_with("statis")), round, 2) %>% 
+    mutate_at(vars(starts_with("statis")), format, c(nsmall = 2)) %>% 
+    mutate_at(vars(starts_with("p.value")), round, 4) %>% 
+    mutate_at(vars(starts_with("p.value")), format, c(nsmall = 4)) %>% 
+    mutate(`Diésel` = str_c(statistic.DB5, " (", p.value.DB5, ")"),
+           `Gasohol 90` = str_c(statistic.G90, " (", p.value.G90, ")")) %>% 
+    select(-3:-6) %>% 
+    
+    kable(escape = FALSE)  %>%
+    kable_styling(bootstrap_options = "striped", full_width = F)
+
+
+test_panel_diesel_short <- map(tests, ~slmtest_tes("DIESEL", .x, fecha_lim = c("1-11-2017", "1-04-2018")))
+test_panel_g90_short <- map(tests, ~slmtest_tes("G90", .x, fecha_lim = c("1-11-2017", "1-04-2018")))
+
+
+
+df_test_diesel <- map_df(test_panel_diesel_short, magrittr::extract, c("method", "alternative", "statistic", "p.value"))  
+
+df_test_g90 <- map_df(test_panel_g90_short, magrittr::extract, c("method", "alternative", "statistic", "p.value")) 
+
+inner_join(df_test_diesel, df_test_g90, by = c("method", "alternative"), suffix = c(".DB5", ".G90")) %>% 
+    mutate_at(vars(starts_with("statis")), round, 2) %>% 
+    mutate_at(vars(starts_with("statis")), format, c(nsmall = 2)) %>% 
+    mutate_at(vars(starts_with("p.value")), round, 4) %>% 
+    mutate_at(vars(starts_with("p.value")), format, c(nsmall = 4)) %>% 
+    mutate(`Diésel` = str_c(statistic.DB5, " (", p.value.DB5, ")"),
+           `Gasohol 90` = str_c(statistic.G90, " (", p.value.G90, ")")) %>% 
+    select(-3:-6) %>% 
+    
+    kable(escape = FALSE)  %>%
+    kable_styling(bootstrap_options = "striped", full_width = F)
+
+
+
+
+
+
+
+
+
+
 # Test 3
+
 slmtest(fm, data=balancear_panel(data_total, "G90"), listw = spatial_w$G90, test="rlml",
         model="within")
 # Test 4
