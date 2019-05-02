@@ -109,7 +109,7 @@ stargazer(ols_modelo_2_DB5[c(2,3)], type = "html",
           dep.var.caption = "",
           model.numbers	= F,
           no.space = T,
-          column.labels =  fechas_formato, 
+          column.labels =  fechas_formato[c(2,3)], 
           single.row = T, out = here::here("doc", "tables", "ols-model2-db5.htm"))
 
 
@@ -131,7 +131,9 @@ stargazer(ols_modelo_2_G90[c(2,3)], type = "html",
           dep.var.caption = "",
           model.numbers	= F,
           no.space = T,
-          column.labels =  fechas_formato[2:3], 
+          omit.stat = c("rsq"),
+          column.labels =  fechas_formato[2:3],
+          notes.label = "Nota: ",
           single.row = T, out = here::here("doc", "tables", "ols-model2-g90.htm"))
 
 
@@ -206,7 +208,7 @@ res_tabla %>%
   mutate_at(vars(starts_with("p.value")), format, digits = 3, nsmall = 2) %>% 
   mutate(DB5 = paste(statistic_DB5, " [", p.value_DB5, "]", sep = ""),
          G90 = paste(statistic_G90, " [", p.value_G90, "]", sep = ""),
-         fecha = str_remove(fecha, "01-"),
+         fecha = str_remove_all(fecha, "01-|20"),
          test = if_else(test == "RLMerr", 
                         "Test LM Robusto SEM",
                         "Test LM Robusto SAR"),
@@ -315,7 +317,7 @@ tabla_test_LR <- inner_join(tabla_test_LR_DB5, tabla_test_LR_G90,
                       by = c("fecha","Nula"), 
                       suffix = c("_DB5", "_G90")) %>% 
   select(1, Nula, everything()) %>% 
-  filter(fecha %in% c("01-10-2017", "01-03-2018"))
+  filter(fecha %in% c("01-12-2017", "01-03-2018"))
 
 #' Imprimimos el dataframe
 
@@ -334,9 +336,10 @@ tabla_test_LR %>%
   select(-starts_with("statistic_"), -starts_with("p.value_")) %>% 
   gather(key = "producto", value = "stat", -fecha, -Nula) %>% 
   mutate(producto = if_else(producto == "stat_db5", "Diésel", "Gasohol 90")) %>% 
-  rename("Hip. Nula" = Nula) %>% 
+  rename("Hipótesis Nula" = Nula) %>% 
   spread(key = fecha, value = stat) %>% 
   arrange(producto) %>% 
+  select(-producto) %>% 
   kable( escape = F)  %>%
   kable_styling(bootstrap_options = "striped", full_width = F) %>% 
   footnote(general = "N. grados de libertad igual a 19 para todos las pruebas.",
@@ -350,13 +353,56 @@ tabla_test_LR %>%
 
 #+ sar-output, results = 'asis'
 
-imprimir_modelo(sar_DB5, ols_modelo_2_DB5, prod = "Diésel", out = "xx.htm", durbin = F)
-
+imprimir_modelo(sar_DB5, ols_modelo_2_DB5, prod = "Diésel", out = "sar_db5.htm", durbin = F)
+imprimir_modelo(durbin_DB5, ols_modelo_2_DB5, prod = "Diésel", out = "durbin_db5.htm", durbin = T)
 
 #+ durbin-g90, results = 'asis'
 
-imprimir_modelo(durbin_G90, ols_modelo_2_G90, prod = "Gasohol 90", out = "G90-durbin.htm", durbin = T)
+imprimir_modelo(durbin_G90, ols_modelo_2_G90, prod = "Gasohol 90", out = "durbin_g90.htm", durbin = T)
 
+
+#' Imprimimos para un mes la comparativa lado a lado de G90 y DB5
+#' 
+lista_spa <- list(sar_DB5[[3]], durbin_G90[[3]])
+rho <- map_dbl(lista_spa, "rho") %>% round(3)
+se_rho <- map_dbl(lista_spa, "rho.se") %>% round(3)
+pvalue_rho <- map_dbl(lista_spa, ~c(summary(.x)$LR1$p.value)) %>% round(4)
+
+pvalue_rho_ch <- case_when(
+  pvalue_rho > 0.1 ~ '',
+  pvalue_rho > 0.05 ~ "<sup>*</sub>",
+  pvalue_rho > 0.01 ~ "<sup>**</sub>",
+  TRUE ~ "<sup>***</sub>"
+) 
+
+rho_with_se <- str_c("<span>", rho, pvalue_rho_ch, "</span>", " (", se_rho, ")")
+
+LL <- map_dbl(lista_spa, "LL") %>% 
+  round(1)
+
+s2 <- map_dbl(lista_spa, "s2")%>%  
+  round(3)
+
+
+stargazer(lista_spa,
+          type = "html",
+          covariate.labels = etiquetas_cov,
+          dep.var.labels="Precio de venta (soles/galón)",
+          dep.var.caption = "",
+          model.numbers	= F,
+          model.names = F,
+          no.space = T,
+          column.labels =  c("Diésel", "Gasohol 90"), 
+          omit = c("lag", "Constant"),
+          omit.stat	= c("rsq", "adj.rsq", "f", "ll", 
+                        "sigma2", "res.dev", "ser", "aic",
+                        "wald", "lr"),
+          add.lines = list(append("rho", rho_with_se), 
+                           append("Log.Lik", LL),
+                           append("<p>&sigma;<sup>2</sub></p>", s2)),
+          notes = "Se omiten rezagos espaciales de variables dependientes (para SDM)",
+          notes.label = "Notas: ",
+          single.row = T, out = here::here("doc", "tables", "comp-db5-g90.htm"))
 
 #' Vemos los impactos que tiene el cuarto periodo
 #'
@@ -365,9 +411,20 @@ imprimir_modelo(durbin_G90, ols_modelo_2_G90, prod = "Gasohol 90", out = "G90-du
 
 #' Convertimos a tablas para imprimir calculando impactos para tercer periodo
 
+# 
+# diesel_3_sar_imp <- simp_impactos(sar_DB5, "01-03-2018", prod = "DB5", rep = 1000)
+# g90_3_durbin_imp <- simp_impactos(durbin_G90, "01-03-2018", prod = "G90", rep = 1000)
+# diesel_3_durbin_imp <- simp_impactos(durbin_DB5, "01-03-2018", prod = "DB5", rep = 1000)
+# 
+# diesel_2_sar_imp <- simp_impactos(sar_DB5, "01-12-2017", prod = "DB5", rep = 1000)
+# g90_2_durbin_imp <- simp_impactos(durbin_G90, "01-12-2017", prod = "G90", rep = 1000)
+# diesel_2_durbin_imp <- simp_impactos(durbin_DB5, "01-12-2017", prod = "DB5", rep = 1000)
+# 
+# impactos_1000_rep <- list(diesel_2_sar_imp, diesel_2_durbin_imp, g90_2_durbin_imp,
+#      diesel_3_sar_imp, diesel_3_durbin_imp, g90_3_durbin_imp,
+#      "Simulacion con 1000 repeticiones")
 
-diesel_4_sar_imp <- simp_impactos(sar_DB5, "01-03-2018", prod = "DB5", rep = 10)
-g90_4_durbin_imp <- simp_impactos(durbin_G90, "01-03-2018", prod = "G90", rep = 10)
+#saveRDS(impactos_1000_rep, here::here("data","processed","imp_1000_rep.rds"))
 
 # saveRDS(g90_4_durbin_imp, here::here("data","processed","2019.04.30_g90-impact-t3.rds"))
 #g90_4_durbin_imp <- read_rds(here::here("data","processed","2019.04.30_g90-impact-t3.rds"))
@@ -377,7 +434,9 @@ g90_4_durbin_imp <- simp_impactos(durbin_G90, "01-03-2018", prod = "G90", rep = 
 #' 
 
 #+ diesel-tercer-periodo
-imprimir_impacto(diesel_4_sar_imp, ols_modelo_2_DB5)
-
+imprimir_impacto(diesel_3_sar_imp, ols_modelo_2_DB5)
+imprimir_impacto(diesel_3_durbin_imp, ols_modelo_2_DB5)
+imprimir_impacto(diesel_2_durbin_imp, ols_modelo_2_DB5)
 #+ g90-tercer-periodo
-imprimir_impacto(g90_4_durbin_imp, ols_modelo_2_G90)
+imprimir_impacto(g90_2_durbin_imp, ols_modelo_2_G90)
+imprimir_impacto(g90_3_durbin_imp, ols_modelo_2_G90)

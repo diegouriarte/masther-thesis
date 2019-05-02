@@ -119,7 +119,19 @@ imprimir_impacto <- function(lista_impacto, ols_lista) {
 imprimir_modelo <- function(lista_spa, lista_ols, prod, out, durbin = F ) {
     
     rho <- map_dbl(lista_spa[c(2,3)], "rho") %>% round(3)
+    se_rho <- map_dbl(lista_spa[c(2,3)], "rho.se") %>% round(3)
+    pvalue_rho <- map_dbl(lista_spa[c(2,3)], ~c(summary(.x)$LR1$p.value)) %>% round(4)
     
+    pvalue_rho_ch <- case_when(
+        pvalue_rho > 0.1 ~ '',
+        pvalue_rho > 0.05 ~ "<sup>*</sub>",
+        pvalue_rho > 0.01 ~ "<sup>**</sub>",
+        TRUE ~ "<sup>***</sub>"
+    ) 
+    
+    rho_with_se <- str_c("<span>", rho, pvalue_rho_ch, "</span>", " (", se_rho, ")")
+    
+    rho_with_se <- c(as.character(rho_with_se[1]), "", as.character(rho_with_se[2]), "")
     lista_sar2 <- list(lista_spa[[2]], lista_ols[[2]],
                        lista_spa[[3]], lista_ols[[3]])
     
@@ -132,7 +144,7 @@ imprimir_modelo <- function(lista_spa, lista_ols, prod, out, durbin = F ) {
         round(3)
     
     aic_vec <- c(AIC(lista_sar2[[1]]), lista_sar2[[1]]$AIC_lm.model, 
-                 AIC(lista_sar2[[1]]), lista_sar2[[3]]$AIC_lm.model) %>% 
+                 AIC(lista_sar2[[3]]), lista_sar2[[3]]$AIC_lm.model) %>% 
         round(1)
     
     notas_str <- ifelse(durbin == T, "Se omiten rezagos espaciales de variables dependientes.",
@@ -146,9 +158,67 @@ imprimir_modelo <- function(lista_spa, lista_ols, prod, out, durbin = F ) {
               model.numbers	= F,
               no.space = T,
               column.labels =  rep(fechas_formato[2:3], times = c(2,2)), 
-              omit = c("lag"),
-              omit.stat	= c("rsq", "adj.rsq", "f", "ll", "sigma2", "res.dev", "ser", "aic"),
-              add.lines = list(append("rho", rho), append("Log.Lik", LL),
+              omit = c("lag", "Constant"),
+              omit.stat	= c("rsq", "adj.rsq", "f", "ll", 
+                            "sigma2", "res.dev", "ser", "aic",
+                            "wald", "lr"),
+              add.lines = list(append("rho", rho_with_se), 
+                               append("Log.Lik", LL),
+                               append("<p>&sigma;<sup>2</sub></p>", s2),
+                               append("AIC", aic_vec)),
+              notes = notas_str,
+              notes.label = "Notas: ",
+              single.row = T, out = here::here("doc", "tables", out))
+}
+
+imprimir_modelo_com <- function(lista_spa_1, lista_spa_2, prod, out, durbin = F ) {
+    
+    rho <- map_dbl(lista_spa[c(2,3)], "rho") %>% round(3)
+    se_rho <- map_dbl(lista_spa[c(2,3)], "rho.se") %>% round(3)
+    pvalue_rho <- map_dbl(lista_spa[c(2,3)], ~c(summary(.x)$LR1$p.value)) %>% round(4)
+    
+    pvalue_rho_ch <- case_when(
+        pvalue_rho > 0.1 ~ '',
+        pvalue_rho > 0.05 ~ "<sup>*</sub>",
+        pvalue_rho > 0.01 ~ "<sup>**</sub>",
+        TRUE ~ "<sup>***</sub>"
+    ) 
+    
+    rho_with_se <- str_c("<span>", rho, pvalue_rho_ch, "</span>", " (", se_rho, ")")
+    
+    rho_with_se <- c(as.character(rho_with_se[1]), "", as.character(rho_with_se[2]), "")
+    lista_sar2 <- list(lista_spa[[2]], lista_ols[[2]],
+                       lista_spa[[3]], lista_ols[[3]])
+    
+    LL <- c(lista_sar2[[1]]$LL, lista_sar2[[1]]$logLik_lm.model, 
+            lista_sar2[[3]]$LL, lista_sar2[[3]]$logLik_lm.model) %>% 
+        round(1)
+    
+    s2 <- c(lista_sar2[[1]]$s2, sigma(lista_sar2[[2]])^2, 
+            lista_sar2[[3]]$s2, sigma(lista_sar2[[4]])^2) %>%  
+        round(3)
+    
+    aic_vec <- c(AIC(lista_sar2[[1]]), lista_sar2[[1]]$AIC_lm.model, 
+                 AIC(lista_sar2[[3]]), lista_sar2[[3]]$AIC_lm.model) %>% 
+        round(1)
+    
+    notas_str <- ifelse(durbin == T, "Se omiten rezagos espaciales de variables dependientes.",
+                        "")
+    
+    stargazer(lista_sar2,
+              type = "html",
+              covariate.labels = etiquetas_cov,
+              dep.var.labels=str_c("Precio de venta - ", prod, " (soles/galón)"),
+              dep.var.caption = "",
+              model.numbers	= F,
+              no.space = T,
+              column.labels =  rep(fechas_formato[2:3], times = c(2,2)), 
+              omit = c("lag", "Constant"),
+              omit.stat	= c("rsq", "adj.rsq", "f", "ll", 
+                            "sigma2", "res.dev", "ser", "aic",
+                            "wald", "lr"),
+              add.lines = list(append("rho", rho_with_se), 
+                               append("Log.Lik", LL),
                                append("<p>&sigma;<sup>2</sub></p>", s2),
                                append("AIC", aic_vec)),
               notes = notas_str,
