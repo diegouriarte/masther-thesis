@@ -2,6 +2,8 @@
 title: "Spatial clustering luego de venta"
 output:
   html_notebook: default
+editor_options: 
+  chunk_output_type: console
 ---
 
 # Cargamos librerías
@@ -200,38 +202,22 @@ precios_tabla %>%
   kable(format = "html", digits = c(0, 0, 3, 3, 1, 1)) %>%
   kable_styling(full_width = FALSE, position = "left")
 ```
-Añadimos variables a nivel distrital:
+
+Ahora importamos archivo final
 
 ```{r}
-# cargamos data de distritos
-
-data_distrital_raw <- read_csv(here::here("data", "demo-distrital", "data_pop_lima.csv")) %>%
-    janitor::clean_names()
-
-## Limpiamos archivo distrital:
-
-data_distrital_clean <- data_distrital_raw %>%
-    rename(
-        "pop_2017" = poblacion_total_30_06_2017,
-        "densidad_2017" = densidad_poblacional_hab_km2,
-        "ingresos_2012" = ingreso_per_capita
-    ) %>%
-    mutate(
-        pop_2017 = str_remove(pop_2017, " ") %>% parse_number(),
-        densidad_2017 = str_remove(densidad_2017, " ") %>% parse_number(),
-        distrito = str_to_upper(distrito)
-    )
+data_total <- readRDS(here::here("data", "processed", "data-final-regresiones.rds"))
+```
 
 
-
+```{r}
 ## Creamos archivos con info
-grifos_sc <- grifos_sc %>%
-   left_join(data_distrital_clean, by = "distrito")
 
-tabla_distrito <- grifos_sc %>% 
+tabla_distrito <- data_total %>% 
   select(distrito, 
-         "Densidad poblacional (habitantes por km2)" = densidad_2017, 
-         "Ingreso per cápita (soles por persona)" = ingresos_2012) %>% 
+         "Densidad poblacional (10,000 habitantes por km2)" = densidad_2017, 
+         "Ingreso per cápita (miles de soles por persona)" = ingresos_2012,
+         "Número de viajes hacia el distrito (millones de viajes)" = num_viajes_millon) %>% 
   distinct() %>% 
   gather(key = "Descripción", value = "value", -distrito, convert = TRUE) %>% 
   group_by(`Descripción`) %>% 
@@ -244,8 +230,13 @@ tabla_distrito <- grifos_sc %>%
 
 tabla_distrito$Variable <- c(
   "DENPOB",
-  "INGRESO"
+  "INGRESO",
+  "VIAJES"
 )
+```
+
+
+```{r}
 ```
 
 
@@ -311,92 +302,5 @@ bind_rows(precios_tabla, tabla, tabla_distrito) %>%
   pack_rows("Variable dependiente", 1, 2) %>%
   pack_rows("Características espaciales", 3, 6) %>%
   pack_rows("Características de la estación", 7, 13) %>% 
-  pack_rows("Características del distrito", 14, 15)
+  pack_rows("Características del distrito", 14, 16)
 ```
-
-##  Por si queremos hacer por tipo-bandera (PENDIENTE)
-```{r}
-options(
-  qwraps2_markup = "markdown",
-  show_n = "never"
-)
-
-our_summary1 <-
-  list(
-    "Agrupamiento espacial" =
-      list(
-        "min" = ~ min(sc_pre, na.rm = TRUE),
-        "max" = ~ max(sc_pre, na.rm = TRUE),
-        "mean (sd)" = ~ qwraps2::mean_sd(sc_pre,
-          na_rm = TRUE,
-          denote_sd = "paren",
-          show_n = "never"
-        )
-      ),
-    "Lavado" =
-      list(
-        "min" = ~ min(lavado, na.rm = TRUE),
-        "max" = ~ max(lavado, na.rm = TRUE),
-        "mean (sd)" = ~ qwraps2::mean_sd(lavado,
-          na_rm = TRUE,
-          denote_sd = "paren",
-          show_n = "never"
-        )
-      ),
-    "Mecánico" =
-      list(
-        "min" = ~ min(tiene_mecanico, na.rm = TRUE),
-        "max" = ~ max(tiene_mecanico, na.rm = TRUE),
-        "mean (sd)" = ~ qwraps2::mean_sd(tiene_mecanico,
-          na_rm = TRUE,
-          denote_sd = "paren",
-          show_n = "never"
-        )
-      )
-  )
-
-summary_table(grifos_sc, our_summary1)
-```
-
-
-## Ahora sacamos la matriz de correlación
-
-```{r}
-
-
-mydata <- data_db5 %>%
-  select(
-    "P_it" = precio_de_venta,
-    "SC" = sc_pre,
-    "DMIN" = distancia_min,
-    "DPROM" = distancia_avg,
-    "NCERC" = num_grifos_cerc,
-    "BAHIAS" = islas_comb_liq,
-    "GLP" = con_glp,
-    "GNV" = con_gnv,
-    "MECANICA" = tiene_mecanico,
-    "LAVADO" = lavado,
-    "TIENDA" = tienda,
-    "CAJERO" = cajero
-  )
-
-
-mydata.cor <- cor(mydata, use = "complete.obs")
-
-mydata.cor %>%
-  kable(format = "html") %>%
-  kable_styling(full_width = FALSE, position = "left")
-
-
-upper <- round(mydata.cor, 2)
-upper[upper.tri(mydata.cor)] <- ""
-upper <- as.data.frame(upper)
-upper
-
-
-upper %>%
-  kable(format = "html") %>%
-  kable_styling(full_width = FALSE, position = "left")
-corrplot::corrplot(mydata.cor)
-```
-
