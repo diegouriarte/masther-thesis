@@ -113,6 +113,7 @@ stargazer(ols_modelo_2_DB5[c(2,3)], type = "html",
           single.row = T, out = here::here("doc", "tables", "ols-model2-db5.htm"))
 
 
+
 #' ### G90
 
 #' Hacemos otra regresión con otro modelo
@@ -135,6 +136,7 @@ stargazer(ols_modelo_2_G90[c(2,3)], type = "html",
           column.labels =  fechas_formato[2:3],
           notes.label = "Nota: ",
           single.row = T, out = here::here("doc", "tables", "ols-model2-g90.htm"))
+
 
 
 #' ## Test de Anselin 1996
@@ -182,7 +184,59 @@ resumen <- function(lista_test, test ) {
 nombres_test <- list("LMerr", "LMlag", "RLMerr", "RLMlag")
 
 test_df_DB5 <- map_dfr(nombres_test, ~resumen(LMtest_DB5, .x))
+
+listar_anselin <- function(df_test) {
+  tabla_word <- df_test %>% 
+    mutate(statistic = round(statistic, 2) %>%  format(nsmall = 2) ,
+           p.value = round(p.value, 4) %>% format(nsmall = 4),
+           stat = str_c(statistic, " [", p.value, "]") %>%  format(justify = "right")) %>% 
+    select(fecha, test, stat) %>% 
+    spread(key = fecha, value = stat) %>% 
+    bind_cols(tibble("Nombre" = c("Test LM SEM", "Test LM SAR", 
+                                  "Test LM Robusto SEM", "Test LM Robusto SAR"))) %>% 
+    select(6, everything(), -1) 
+  print(tabla_word)
+  map(list(tabla_word[1,], tabla_word[2,], tabla_word[3,], tabla_word[4,]),
+                      as.vector, mode = "character") %>% 
+    map(format, width = 20, justify = "right")
+}
+
+test_anselin_db5 <- listar_anselin(test_df_DB5)
+#' Añadimos a tabla para word
+#' 
+stargazer(ols_modelo_2_DB5, type = "html",
+          covariate.labels = etiquetas_cov,
+          add.lines = test_anselin_db5,
+          dep.var.labels=c("Precio de venta - Diésel (soles/galón)"),
+          align = T,
+          dep.var.caption = "",
+          model.numbers	= F,
+          omit = "Constant",
+          omit.stat = c("rsq", "f", "sigma2", "ser"),
+          no.space = T,
+          notes.label = "Nota: ",
+          column.labels =  fechas_formato, 
+          single.row = T, 
+          out = here::here("doc", "tables", "ols-model2-db5_word.htm"))
+
+
+
 test_df_G90 <- map_dfr(nombres_test, ~resumen(LMtest_G90, .x))
+test_anselin_g90 <- listar_anselin(test_df_G90)
+
+stargazer(ols_modelo_2_G90, type = "html",
+          covariate.labels = etiquetas_cov,
+          add.lines = test_anselin_g90,
+          align = T, 
+          dep.var.labels=c("Precio de venta - Gasohol 90 (soles/galón)"),
+          dep.var.caption = "",
+          model.numbers	= F,
+          no.space = T,
+          omit = "Constant",
+          omit.stat = c("rsq", "f", "sigma2", "ser"),
+          column.labels =  fechas_formato,
+          notes.label = "Nota: ",
+          single.row = T, out = here::here("doc", "tables", "ols-model2-g90-word.htm"))
 
 test_df <- inner_join(test_df_DB5, test_df_G90, 
            by = c("fecha", "test"), 
@@ -263,7 +317,7 @@ names(sar_G90) <- fechas
 
 #' ### Corremos el modelo de errores espaciales
 
-#+ ser
+#+ sem
 
 reg_errores <- function(df, fecha_char, sp_grifos, prod) {
 
@@ -344,7 +398,7 @@ tabla_test_LR %>%
   kable_styling(bootstrap_options = "striped", full_width = F) %>% 
   footnote(general = "N. grados de libertad igual a 19 para todos las pruebas.",
            general_title = "Nota: ") %>% 
-  add_header_above(c(" " = 1, "Estadístico [valor p]" = 2)) %>% 
+  add_header_above(c(" " = 1, "Estadístico [valor p]" = 4)) %>% 
   pack_rows(index = c("Diésel" = 2, "Gasohol 90" = 2))
 
 #' ## Modelos escogidos para corte transversal
