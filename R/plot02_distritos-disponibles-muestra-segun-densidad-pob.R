@@ -39,8 +39,6 @@ data_total <- readRDS(file = here::here("data", "processed", "data-final-regresi
 crs <- CRS("+init=epsg:32718")
 
 distritos <- st_read(here::here("data","shapes-files","data-mapa-peru", "PER_adm3.shp"))
-proj4string(distritos_lima) <- crs
-
 # distritos_no <- c("Ancon", "San Juan de Lurigancho", "Carabayllo", 
 #                   "Puente Piedra", "Comas", "Villa Maria del Triunfo", 
 #                   "Cieneguilla", "Pachacamac", "Punta Hermosa", "Punta Negra",
@@ -68,6 +66,21 @@ data_distrital_clean
 
 distritos_muestra <- unique(data_total$distrito)
 
+# Ahora los grifos
+lista_grifos <- data_total %>% 
+    distinct(codigo_de_osinergmin, lon, lat) %>% 
+    mutate(grifo = "grifo") %>% 
+    filter(codigo_de_osinergmin != 7563) #grifo inubicable
+lista_grifos_sp <- lista_grifos
+coordinates(lista_grifos_sp) = c("lon", "lat")
+#Proyectamos en UTM
+# proj4string(lista_grifos_sp) <- crs
+
+
+
+
+
+
 distritos_lima <- distritos_lima %>% 
     mutate("En muestra" = if_else(distrito %in% distritos_muestra, "Sí", "No")) %>% 
     left_join(data_distrital_clean, by = "distrito")
@@ -80,9 +93,16 @@ tm1
 
 
 tm2 <- tm_shape(distritos_lima) + 
-   # tm_borders(col = "black", lty = "solid") +
     tm_polygons(col = "En muestra", palette = "Greys", alpha = 0.5) +
-    tm_scale_bar(breaks = c(0, 5, 10), size = 0.5, position = c("right", "top"))
+    tm_shape(lista_grifos_sp) + 
+    tm_dots(col = "red", size = 0.05, alpha = 0.5) +
+    tm_scale_bar(breaks = c(0, 5, 10), size = 0.5, position = c("right", "top"))+
+    tm_add_legend(type="symbol", 
+                  col="red", 
+                  labels=c("Ubicación de grifos"), 
+                  title="")
+
+
 
 tm_arrange <- tmap_arrange(tm1, tm2)
 tm_arrange

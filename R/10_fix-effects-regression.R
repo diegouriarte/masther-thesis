@@ -74,10 +74,6 @@ calcular_reg_fe(df = data_total, modelo = modelo3, inicio, fin,
 wi <- plm(modelo3, data = balancear_panel(data_total, "DIESEL"), model = "within", effect = "twoways")
 re <- plm(modelo3, data = balancear_panel(data_total, "DIESEL"), model = "random")
 phtest(wi, re)
-print(hausman_panel <- phtest(modelo3, 
-                              data = balancear_panel(data_total, "DIESEL"),
-                              index = c("codigo_de_osinergmin", "fecha"),
-                              model = c("within", "random")))
 #' ## Spatial fixed effects:
 
 
@@ -96,9 +92,12 @@ fm <- precio_de_venta ~ COMPRADA  + SUMINISTRO + vecino_pecsa_thiessen + sc + fe
 #corremos regresión
 
 
-#' Regresión por efectos fijos con el modelo completo
-sararfemod <- spml(formula = fm, data = balancear_panel(data_total, "DIESEL"), index = NULL,
-                   listw = spatial_w$DIESEL, lag = TRUE, spatial.error = "none", model = "within",
+#' Regresión por efectos fijos con el modelo SAR
+sararfemod <- spml(formula = fm, 
+                   data = balancear_panel(data_total, "DIESEL"), 
+                   index = NULL,
+                   listw = crear_spatial_w(balancear_panel(data_total, "DIESEL"), "DIESEL"), 
+                   lag = TRUE, spatial.error = "none", model = "within",
                    effect = "individual", method = "eigen", na.action = na.fail,
                    quiet = TRUE, zero.policy = NULL, hess = FALSE,
                    tol.solve = 1e-13, control = list(), legacy = FALSE)
@@ -163,13 +162,23 @@ inner_join(imp_measures, se_measures, by = "Variables") %>%
     kable_styling(bootstrap_options = "striped", full_width = F)
 
 #' Solo spatial error tipo b 
-summary(verdoorn_SEM_FE<- spml(fm, data = balancear_panel(data_total, "DIESEL"),
-                               listw = spatial_w$DIESEL, lag=FALSE,model="within", effect="individual", spatial.error="b"))
+summary(verdoorn_SEM_FE<- spml(fm, 
+                               data = balancear_panel(data_total, "DIESEL"),
+                               listw = crear_spatial_w(balancear_panel(data_total, "DIESEL"), "DIESEL"), 
+                               lag=FALSE,
+                               model="within", 
+                               effect="individual", 
+                               spatial.error="b"))
 
 #' Solo spatial error tipo kkp 
 
-summary(verdoorn_SEM_FE<- spml(fm, data = balancear_panel(data_total, "DIESEL"),
-                               listw = spatial_w$DIESEL, lag=FALSE,model="within", effect="individual", spatial.error="kkp"))
+summary(verdoorn_SEM_FE<- spml(fm, 
+                               data = balancear_panel(data_total, "DIESEL"),
+                               listw = crear_spatial_w(balancear_panel(data_total, "DIESEL"), "DIESEL"), 
+                               lag=FALSE,
+                               model="within", 
+                               effect="individual", 
+                               spatial.error="kkp"))
 
 #' ### Regresión de efectos aleatorios
 
@@ -185,8 +194,11 @@ summary(verdoorn_SEM_FE<- spml(fm, data = balancear_panel(data_total, "DIESEL"),
 
 #' Hacemos test de Hausman espacial para modelo con lag
 #'
-test_lag <- sphtest(x = fm, data = balancear_panel(data_total, "DIESEL"), listw = spatial_w$DIESEL,
-                  spatial.model = "lag", method = "ML")
+test_lag <- sphtest(x = fm, 
+                    data = balancear_panel(data_total, "DIESEL"), 
+                    listw = crear_spatial_w(balancear_panel(data_total, "DIESEL"), "DIESEL"),
+                    spatial.model = "lag", 
+                    method = "ML")
 
 test_lag
 
@@ -220,16 +232,24 @@ print(
 
 # Fixed effects model
 # Test 1
-slmtest(fm, data=balancear_panel(data_total, "DIESEL"), listw = spatial_w$DIESEL, test="lml",
+slmtest(fm, data=balancear_panel(data_total, "DIESEL"), 
+        listw = crear_spatial_w(balancear_panel(data_total, "DIESEL"), "DIESEL"),
+        test="lml",
         model="within")
 # Test 2
-slmtest(fm, data=balancear_panel(data_total, "DIESEL"), listw = spatial_w$DIESEL, test="lme",
+slmtest(fm, data=balancear_panel(data_total, "DIESEL"), 
+        listw = crear_spatial_w(balancear_panel(data_total, "DIESEL"), "DIESEL"), 
+        test="lme",
         model="within")
 # Test 3
-slmtest(fm, data=balancear_panel(data_total, "DIESEL"), listw = spatial_w$DIESEL, test="rlml",
+slmtest(fm, data=balancear_panel(data_total, "DIESEL"), 
+        listw = crear_spatial_w(balancear_panel(data_total, "DIESEL"), "DIESEL"), 
+        test="rlml",
         model="within")
 # Test 4
-slmtest(fm, data=balancear_panel(data_total, "DIESEL"), listw = spatial_w$DIESEL, test="rlme",
+slmtest(fm, data=balancear_panel(data_total, "DIESEL"), 
+        listw = crear_spatial_w(balancear_panel(data_total, "DIESEL"), "DIESEL"), 
+        test="rlme",
         model="within")
 
 tests <- list("lml", "lme", "rlml", "rlme")
@@ -255,10 +275,9 @@ inner_join(df_test_diesel, df_test_g90, by = c("method", "alternative"), suffix 
     mutate_at(vars(starts_with("statis")), format, c(nsmall = 2)) %>% 
     mutate_at(vars(starts_with("p.value")), round, 4) %>% 
     mutate_at(vars(starts_with("p.value")), format, c(nsmall = 4)) %>% 
-    mutate(`Diésel` = str_c(statistic.DB5, " (", p.value.DB5, ")"),
-           `Gasohol 90` = str_c(statistic.G90, " (", p.value.G90, ")")) %>% 
+    mutate(`Diésel` = str_c(statistic.DB5, " [", p.value.DB5, "]"),
+           `Gasohol 90` = str_c(statistic.G90, " [", p.value.G90, "]")) %>% 
     select(-3:-6) %>% 
-    
     kable(escape = FALSE)  %>%
     kable_styling(bootstrap_options = "striped", full_width = F)
 
@@ -268,17 +287,17 @@ test_panel_g90_short <- map(tests, ~slmtest_tes("G90", .x, fecha_lim = c("1-11-2
 
 
 
-df_test_diesel <- map_df(test_panel_diesel_short, magrittr::extract, c("method", "alternative", "statistic", "p.value"))  
+df_test_diesel_short <- map_df(test_panel_diesel_short, magrittr::extract, c("method", "alternative", "statistic", "p.value"))  
 
-df_test_g90 <- map_df(test_panel_g90_short, magrittr::extract, c("method", "alternative", "statistic", "p.value")) 
+df_test_g90_short <- map_df(test_panel_g90_short, magrittr::extract, c("method", "alternative", "statistic", "p.value")) 
 
-inner_join(df_test_diesel, df_test_g90, by = c("method", "alternative"), suffix = c(".DB5", ".G90")) %>% 
+inner_join(df_test_diesel_short, df_test_g90_short, by = c("method", "alternative"), suffix = c(".DB5", ".G90")) %>% 
     mutate_at(vars(starts_with("statis")), round, 2) %>% 
     mutate_at(vars(starts_with("statis")), format, c(nsmall = 2)) %>% 
     mutate_at(vars(starts_with("p.value")), round, 4) %>% 
     mutate_at(vars(starts_with("p.value")), format, c(nsmall = 4)) %>% 
-    mutate(`Diésel` = str_c(statistic.DB5, " (", p.value.DB5, ")"),
-           `Gasohol 90` = str_c(statistic.G90, " (", p.value.G90, ")")) %>% 
+    mutate(`Diésel` = str_c(statistic.DB5, " [", p.value.DB5, "]"),
+           `Gasohol 90` = str_c(statistic.G90, " [", p.value.G90, "]")) %>% 
     select(-3:-6) %>% 
     
     kable(escape = FALSE)  %>%
