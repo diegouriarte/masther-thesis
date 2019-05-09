@@ -113,3 +113,59 @@ st=format(Sys.time(), "%Y-%m-%d")
 #           width = 800, height = 500, dpi = 100 )
 tmap_save(tm_arrange, filename = here::here("plots", paste("muestra-distritos_1",st, ".png", sep = "")),
           width = 1600, height = 1000, dpi = 200 )
+
+
+#' Gráfico vecinos thiessen
+#' 
+grifos_thissen <- readRDS(here::here("data", "processed", "shape_file_grifos_thiessen.rds"))
+lista_grifos_sp <- st_as_sf(lista_grifos_sp)  
+grifos_thissen <- st_as_sf(c)
+
+
+(thiessen_plot <-
+  tm_shape(distritos_lima %>% filter(distrito %in% c("SAN ISIDRO", "MIRAFLORES"))) +
+  tm_borders(col = NULL) + 
+  tm_shape(distritos_lima %>% filter(distrito == "SAN ISIDRO")) +
+  tm_borders(col = "black", lwd = 2) +
+  tm_text("distrito", col = "black", ymod = 3.5, fontface = "bold") + 
+  tm_scale_bar(
+    breaks = c(0, 0.5, 1),
+    size = 0.8,
+    position = c("left", "bottom")
+  ) +
+  tm_shape(grifos_thissen) +
+  tm_polygons(
+    col = "tipo_bandera",
+    title = "Razon social de estación",
+    palette = c("grey", "red", "blue", "orange"),
+    alpha = 0.4
+  ) +
+  tm_layout(
+    legend.outside = T,
+    legend.outside.position = "bottom",
+    legend.stack = "vertical",
+    legend.frame = T,
+    legend.bg.color = T,
+    legend.text.size	= 0.9,
+    legend.title.size = 1,
+    legend.title.fontface = "bold"
+  ) +
+  tm_shape(lista_grifos_sp) +
+  tm_dots(col = "red", size = 0.1, alpha = 0.8) +
+  tm_add_legend(
+    type = "symbol",
+    col = "red",
+    size = 2,
+    labels = c("Ubicación de grifos"),
+    title = ""
+  ) +
+  tm_shape(filter(grifos_thissen, codigo_de_osinergmin == 6765)) +
+  tm_borders(col = "red", lwd = 3)
+)
+DPI <- 300
+width_in <- 7 / 2.54
+heigth_in <- 12 / 2.54
+tmap_save(thiessen_plot, filename = here::here("plots", paste("san-isidro-thiessen_",st, ".png", sep = "")),
+          width = width_in*DPI, height = heigth_in*DPI , dpi = DPI, scale = 0.5)
+
+

@@ -3,6 +3,8 @@ title: "Polígonos Thiessen para dataset"
 output: 
   html_notebook: 
     code_folding: hide
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r}
@@ -14,6 +16,7 @@ suppressMessages(library(deldir))
 library(sp)
 library(leaflet)
 source(here::here("R","funcion02_thiessen.R"))
+conflict_prefer("select", "dplyr")
 ```
 
 
@@ -143,9 +146,27 @@ dsp_xy <- spTransform(dsp_df, CRS("+proj=longlat +datum=WGS84"))
 
 grifos_filtrado <- grifos %>% 
   distinct(lat,lon, .keep_all = TRUE) %>%
+  mutate(tipo_bandera = recode_factor(tipo_bandera, 
+                                      "ABANDERADA PECSA" = "OTRA",
+                                      "ABANDERADA PRIMAX" = "OTRA",
+                                      "ABANDERADA REPSOL" = "OTRA",
+                                      "INDEPENDIENTE" = "OTRA",
+                                      "ABANDERADA PETROPERU" = "OTRA",
+                                      "PROPIA PECSA" = "PERUANA DE COMBUSTIBLES (PECSA)",
+                                      "PROPIA REPSOL" = "REPSOL COMERCIAL",
+                                      "PROPIA PRIMAX" = "COESTI (PRIMAX)"
+                                      )
+         ) %>% 
   rownames_to_column("rowname")
 
 grifos_thissen <- merge(dsp_xy, grifos_filtrado, by.x="id", by.y="rowname")
+saveRDS(grifos_thissen, here::here("data", "processed", "shape_file_grifos_thiessen.rds"))
+```
+
+Gráfico usando leaflet
+
+```{r}
+
 
 pal <- colorFactor("plasma", unique(grifos_thissen$bandera))
 pal2 <- colorFactor(c("white", "green", "red", "orange", "blue"), unique(grifos_thissen$bandera))
@@ -153,13 +174,12 @@ pal3 <- colorFactor(c("white", "green",
                       "darksalmon", "lightgoldenrodyellow", "dodgerblue",
                       "red", "orange", "blue"), unique(grifos_thissen$tipo_bandera))
 pal4 <- colorFactor("plasma", unique(grifos_thissen$tipo_bandera)) 
-
 leaflet() %>%
   addMarkers(data = grifos_filtrado, 
              lat = ~ lat, 
              lng = ~ lon, 
              popup = paste0(grifos$razon_social," ",grifos$codigo_de_osinergmin),
-             label = grifos$tipo_bandera,
+             label = grifos_thissen$tipo_bandera,
              labelOptions = labelOptions(noHide = F))  %>%
   # addPolygons(data = dsp_xy, 
   #             color = "green", 
@@ -171,6 +191,8 @@ leaflet() %>%
               color = "black") %>%
   addTiles()
 ```
+
+
 
 # Pruebas
 
