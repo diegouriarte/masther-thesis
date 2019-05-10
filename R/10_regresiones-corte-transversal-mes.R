@@ -339,6 +339,7 @@ reg_errores <- function(df, fecha_char, sp_grifos, prod) {
 SEM_DB5 <- map2(fechas, sp_grifos_DB5, ~ reg_errores(data_total, .x, .y, prod = "DIESEL"))
 SEM_G90 <- map2(fechas, sp_grifos_G90, ~ reg_errores(data_total, .x, .y, prod = "G90"))
 
+stargazer(SEM_DB5, type = "html", out = here::here("doc", "tables","sem_db5.htm"))
 #' # Realizamos los test para distinguir entre ambos
 
 #+ test-LR, message = FALSE, warning = FALSE
