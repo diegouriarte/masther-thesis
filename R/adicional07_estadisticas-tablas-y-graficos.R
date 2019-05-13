@@ -53,99 +53,96 @@ perc_repsol
 
 library(tidyverse)
 library(spdep)
-
+library(lubridate)
 
 # Cargamos datos
-
-# data grifos
-grifos_sc <-
-    readRDS(here::here("data", "processed", "grifos_con_sc_razon_social.RDS"))
-
-# cargamos los precios para 2017 de DB5
-rutas_fuel <- list(
-    here::here("data", "processed", "data_diesel_mensual.rds"),
-    here::here("data", "processed", "data_g90_mensual.rds")
-)
-
-data_precios <- map(
-    rutas_fuel,
-    ~ readRDS(.x) %>%
-        filter(
-            `año` >= 2017,
-            codigo_de_osinergmin %in% grifos_sc$codigo_de_osinergmin
-        ) %>%
-        mutate(dia = 1) %>%
-        unite(fecha, dia, mes, `año`, sep = "-", remove = FALSE) %>%
-        select(-dia) %>%
-        filter(
-            mes != 13,
-            precio_de_venta > 6
-        )
-)
-
-
-precios_db5 <- data_precios[[1]]
-
-precios_g90 <- data_precios[[2]]
-
-# cargamos data de distritos
-
-data_distrital_raw <- read_csv(here::here("data", "demo-distrital", "data_pop_lima.csv")) %>%
-    janitor::clean_names()
-
-## Limpiamos archivo distrital:
-
-data_distrital_clean <- data_distrital_raw %>%
-    rename(
-        "pop_2017" = poblacion_total_30_06_2017,
-        "densidad_2017" = densidad_poblacional_hab_km2,
-        "ingresos_2012" = ingreso_per_capita
-    ) %>%
-    mutate(
-        pop_2017 = str_remove(pop_2017, " ") %>% parse_number(),
-        densidad_2017 = str_remove(densidad_2017, " ") %>% parse_number(),
-        distrito = str_to_upper(distrito)
-    )
+data_total <- readRDS(file = here::here("data", "processed", "data-final-regresiones.rds"))
 
 
 
-## Creamos archivos con info
-grifos_sc <- grifos_sc %>%
-    mutate(
-        serv_mecanico = if_else(mecanico + aceite + llanteria > 0, 1, 0),
-        serv_mecanico = as.factor(serv_mecanico)
-    )
-
-
-data_total <- map(
-    list(precios_db5, precios_g90),
-    ~ left_join(grifos_sc, .x, by = "codigo_de_osinergmin") %>%
-        left_join(., data_distrital_clean, by = "distrito")
-)
-
-data_db5 <- data_total[[1]]
-data_g90 <- data_total[[2]]
-
-data_db5_g90 <- bind_rows(data_db5, data_g90)
-
-
-p1 <- data_db5_g90 %>% 
-    mutate(fecha = lubridate::dmy(fecha)) %>% 
-    filter(fecha <= lubridate::dmy("2-10-2018")) %>% 
+p1 <- data_total %>% 
+    filter(fecha <= dmy("2-10-2018")) %>% 
     group_by(fecha, producto, tipo) %>% 
     summarise(precio_promedio = mean(precio_de_venta)) %>% 
     arrange(fecha) %>% 
     ggplot(aes(x = fecha, y = precio_promedio, color = tipo)) +
-    geom_line(size = 0.8) + 
+    geom_line() +
+    geom_vline(xintercept = dmy("01-02-2018"),
+               linetype = "dashed",
+               size = 1.2) +
+    annotate("text", x = dmy("01-02-2018"), y = -Inf, vjust = -0.9, 
+             hjust = -0.05, label = "Venta de Pecsa") +
     facet_grid(~ producto) +
     theme(panel.spacing.x = unit(0.8, "cm")) +
-    labs(x = "Fecha", y = "Precio promedio") 
+    labs(x = "Fecha", y = "Precio promedio", color = "Tipo de estación") +
+    theme_bw() + 
+    scale_color_brewer(palette = "Set1") + 
+    theme(
+        legend.background = element_rect(fill = "grey85", colour = "black", size = 1),
+        legend.title = element_text(face = "bold", size = 12),
+        legend.text = element_text(colour = "black"),
+        legend.key = element_rect(colour = "black", size = 0.25),
+        axis.title = element_text(face = "bold")
+    )
     
-    
-p1    
-ggsave("precios-tipo-grifo.wmf", 
-           path = here::here("plots"), device = "wmf", 
-            dpi = 300, scale = 0.7)
+p1 
+
+distritos_con_pecsa <- data_total %>% 
+    distinct(distrito, tipo_bandera) %>% 
+    filter(tipo_bandera == "PROPIA PECSA") %>% 
+    pull(distrito)
+
+
+
+f_labels <- data.frame(producto = c("DIESEL", "G90"), label = c("", "Venta de Pecsa"))
+
+
+(p2 <- data_total %>% 
+    filter(fecha <= dmy("2-10-2018"),
+           distrito %in% distritos_con_pecsa) %>% 
+    group_by(fecha, producto, tipo_bandera) %>% 
+    summarise(precio_promedio = mean(precio_de_venta)) %>% 
+    filter(tipo_bandera %in% c("PROPIA PRIMAX", "PROPIA PECSA")) %>%
+    mutate(tipo_bandera = fct_relevel(tipo_bandera, "PROPIA PRIMAX")) %>% 
+    ggplot() +
+    geom_line(aes(x = fecha, y = precio_promedio, linetype = tipo_bandera),
+              size = 1) +
+    geom_line(data = data_total %>%
+                  filter(fecha <= dmy("2-10-2018"),
+                         distrito %in% distritos_con_pecsa) %>%
+                  group_by(fecha, producto, tipo) %>%
+                  summarise(precio_promedio = mean(precio_de_venta)) ,
+              aes(x = fecha, y = precio_promedio, color = tipo),
+              size = 1.2) +
+    facet_grid(producto ~ .) +
+    geom_vline(xintercept = dmy("01-02-2018"),
+               linetype = "dashed",
+               size = 1.2, color = "grey55") +
+    geom_text(x = dmy("01-02-2018"), y = -Inf, vjust = -0.9, 
+              hjust = -0.1, aes(label = label), data = f_labels,
+              color = "grey55", fontface = "bold") +
+    labs(x = "Fecha", y = "Precio promedio", 
+         color = "Tipo de estación",
+         linetype = "Venta Pecsa") +
+    theme_bw() + 
+    scale_color_brewer(palette = "Set1") + 
+    theme(
+        panel.spacing.x = unit(0.8, "cm"),
+        legend.background = element_rect(fill = "grey85", colour = "black", size = 0.5),
+        legend.title = element_text(face = "bold", size = 10),
+        legend.text = element_text(colour = "black"),
+        legend.key = element_rect(colour = "black", size = 0.5),
+        axis.title = element_text(face = "bold"),
+        legend.position = "right"
+        
+    )
+)
+
+ggsave("precios-tipo-grifo.png", 
+       path = here::here("plots"), device = "png", unit = "cm",
+       height = 15,
+       width = 15,
+       dpi = 300)
     
 data_db5 %>% 
     mutate(fecha = lubridate::dmy(fecha)) %>% 

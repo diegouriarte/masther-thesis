@@ -1,12 +1,12 @@
 ---
-title: Regresión panel
+title: "Regresión panel"
 author: "Diego Uriarte"
 date: "`r format(Sys.Date())`"
 output:
   html_notebook:
-    toc: true
-    toc_float: true
-editor_options: 
+    toc: yes
+    toc_float: yes
+editor_options:
   chunk_output_type: console
 ---
 
