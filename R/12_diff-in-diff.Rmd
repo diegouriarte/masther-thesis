@@ -1,0 +1,87 @@
+---
+title: "Análisis de diferencias en diferencias"
+author: "Diego Uriarte"
+date: "`r format(Sys.Date())`"
+output:
+  html_notebook:
+    toc: yes
+    toc_float: yes
+editor_options:
+  chunk_output_type: console
+---
+
+```{r setup, include = FALSE, cache = FALSE}
+knitr::opts_chunk$set(
+    collapse = TRUE,
+    comment = "#>",
+    error = TRUE,
+    message = FALSE,
+    warning = FALSE
+)
+options(tidyverse.quiet = TRUE)
+
+```
+
+```{r  body, warning = FALSE, message = FALSE}
+library(conflicted)
+library(tidyverse)
+library(lubridate)
+library(stargazer)
+'%ni%' <- Negate('%in%')
+conflict_prefer("filter", "dplyr")
+```
+
+## Cargamos datos
+
+
+```{r cargar-datos}
+
+data_total <- readRDS(file = here::here("data", "processed", "data-final-regresiones.rds"))
+```
+
+## Creamos variables
+Con la data tipo panel debes tener una dummy que identifique cada observación (grifo-mes) acorde con si pertenece al grupo de tratamiento/control y otra para identificar si su período corresponde a antes/después de la fusión
+
+a) variable tratamiento/control: la idea es ver el impacto de la fusión. Entonces el tratamiento debería ser algo relacionado a ser afectado por la fusión. Hay varias alternativas. Podría ser "ser un grifo del grupo fusionado Primax" o "ser un grifo colindante con un grifo que pertenece a la fusión". Diría que la 2da es más relevante, pero la 1era también es interesante. La dummy sería igual a 1 para todo grifo que pase eventualmente por el tratamiento, sea como sea que lo definas, e igual a cero para los grifos que pasen a formar parte de tu grupo de control.
+
+b) variable timing: lo más sencillo sería una dummy = 0 para todo mes antes de la fusión, =1 para todo mes posterior. Se puede elaborar más y tener una dummy por trimestre o mes. 
+
+
+Ahora especificamos modelos:
+
+```{r}
+modelo_diff <- precio_de_venta ~ vecino_pecsa_thiessen_did * timing_did + 
+  tipo_bandera + fecha + codigo_de_osinergmin
+
+mod_vecino_did_DB5 <- lm(formula = modelo_diff, data = filter(data_total, producto == "DIESEL"))  
+stargazer(mod_vecino_did_DB5, type = "text", 
+          omit = c("tipo_ba", "fecha", "codigo"))
+
+mod_vecino_did_G90 <- lm(formula = modelo_diff, data = filter(data_total, producto == "G90"))  
+stargazer(mod_vecino_did_G90, type = "text", 
+          omit = c("tipo_ba", "fecha", "codigo"))
+```
+
+
+
+```{r}
+modelo_diff <- precio_de_venta ~ COMPRADA_DID * timing_did + 
+  tipo_bandera + fecha + codigo_de_osinergmin
+
+mod_vecino_did_DB5 <- lm(formula = modelo_diff, data = filter(data_total, producto == "DIESEL"))  
+stargazer(mod_vecino_did_DB5, type = "text", 
+          omit = c("tipo_ba", "fecha", "codigo"))
+
+mod_vecino_did_G90 <- lm(formula = modelo_diff, data = filter(data_total, producto == "G90"))  
+stargazer(mod_vecino_did_G90, type = "text", 
+          omit = c("tipo_ba", "fecha", "codigo"))
+```
+
+
+```{r}
+data_total_diff %>% 
+  filter(vecino_pecsa_thiessen == 1) %>% 
+  select(codigo_de_osinergmin, fecha, vecino_pecsa_thiessen) %>% 
+  arrange(fecha)
+```
+

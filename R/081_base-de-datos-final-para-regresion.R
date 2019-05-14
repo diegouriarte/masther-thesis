@@ -121,12 +121,14 @@ data_total <- data_precios %>%
 #+ variable-comprada
 data_total <- data_total %>%
     mutate(
-        COMPRADA = case_when(fecha <= dmy("31-01-2018")  ~ 0,
+        COMPRADA_FE = case_when(fecha <= dmy("31-01-2018")  ~ 0,
                              tipo_bandera == "PROPIA PECSA" ~ 1,
                              TRUE ~ 0),
+        COMPRADA_DID = if_else(tipo_bandera == "PROPIA PECSA", 1, 0),
         SUMINISTRO = case_when(fecha <= dmy("31-01-2018")  ~ 0,
                                tipo_bandera == "ABANDERADA PECSA" ~ 1,
-                               TRUE ~ 0)
+                               TRUE ~ 0),
+        timing_did = if_else(fecha > dmy("31-01-2018"), 1, 0)
     )
 
 
@@ -148,12 +150,15 @@ vecinos_pecsa_thissen <- grifos_vecinos %>%
     select("codigo_de_osinergmin" = codigo_de_osinergmin.princ, vecino_pecsa_thiessen)
 
 # solo toma el valor de 1 para las estaciones que tienen como vecino 
-# una estación de Pecsa luego de la compra
+# una estación de Pecsa luego de la compra para las variables de la esp. efectos fijos
+# y siempre para la esp. diff-in-diff
 
 data_total <- data_total %>% 
     left_join(vecinos_pecsa_thissen, by = "codigo_de_osinergmin") %>% 
-    mutate(vecino_pecsa_dist = if_else(`año` == 2017, 0, vecino_pecsa_dist),
-           vecino_pecsa_thiessen = if_else(`año` == 2017, 0, vecino_pecsa_thiessen))
+    mutate(vecino_pecsa_dist_fe = if_else(`año` == 2017, 0, vecino_pecsa_dist),
+           vecino_pecsa_thiessen_fe = if_else(`año` == 2017, 0, vecino_pecsa_thiessen)) %>% 
+    rename("vecino_pecsa_dist_did" = vecino_pecsa_dist, 
+           "vecino_pecsa_thiessen_did" = vecino_pecsa_thiessen)
 
 
 data_total <- data_total %>%
