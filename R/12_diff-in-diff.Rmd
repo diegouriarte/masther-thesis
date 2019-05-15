@@ -27,6 +27,9 @@ library(conflicted)
 library(tidyverse)
 library(lubridate)
 library(stargazer)
+library(multiwayvcov)
+library(lmtest)
+source(here::here("R","funcion04_formato-tablas-reproducibles.R"), encoding = "UTF-8")
 '%ni%' <- Negate('%in%')
 conflict_prefer("filter", "dplyr")
 ```
@@ -37,6 +40,9 @@ conflict_prefer("filter", "dplyr")
 ```{r cargar-datos}
 
 data_total <- readRDS(file = here::here("data", "processed", "data-final-regresiones.rds"))
+
+data_total <- data_total %>% 
+  mutate(codigo_de_osinergmin = factor(codigo_de_osinergmin))
 ```
 
 ## Creamos variables
@@ -50,38 +56,309 @@ b) variable timing: lo más sencillo sería una dummy = 0 para todo mes antes de
 Ahora especificamos modelos:
 
 ```{r}
-modelo_diff <- precio_de_venta ~ vecino_pecsa_thiessen_did * timing_did + 
+reg_clust <- function(form, data, producto, filtrado = FALSE){
+  if (filtrado == TRUE) {
+    data_filtrada <- balancear_panel(data_total, prod = producto) %>% 
+      filter(fecha >= dmy("01-04-2018") | fecha <= dmy("01-11-2017")) %>% 
+      mutate(fecha = factor(fecha)) 
+  } else {
+    data_filtrada <- balancear_panel(data_total, prod = producto) %>% 
+      mutate(fecha = factor(fecha))
+  }
+
+  modelo <- lm(formula = form, 
+                           data = data_filtrada)  
+  m1.vcovCL <- cluster.vcov(modelo,data_filtrada$codigo_de_osinergmin)
+list(modelo, coeftest(modelo, m1.vcovCL))
+}
+```
+
+### DiD para vecinos thiessen
+```{r}
+modelo_vecino <- precio_de_venta ~ vecino_pecsa_thiessen_did * timing_did + 
   tipo_bandera + fecha + codigo_de_osinergmin
 
-mod_vecino_did_DB5 <- lm(formula = modelo_diff, data = filter(data_total, producto == "DIESEL"))  
-stargazer(mod_vecino_did_DB5, type = "text", 
-          omit = c("tipo_ba", "fecha", "codigo"))
+reg_clust(modelo_vecino, data_total, "DIESEL")
 
-mod_vecino_did_G90 <- lm(formula = modelo_diff, data = filter(data_total, producto == "G90"))  
-stargazer(mod_vecino_did_G90, type = "text", 
+reg_vecino_clust <- map(c("DIESEL", "G90"), ~reg_clust(modelo_vecino, data_total, .x ))
+names(reg_vecino_clust) <- c("DIESEL", "G90")
+stargazer(reg_vecino_clust, 
+          type = "text", 
           omit = c("tipo_ba", "fecha", "codigo"))
 ```
 
-
-
+### DiD para vecinos thiessen
 ```{r}
-modelo_diff <- precio_de_venta ~ COMPRADA_DID * timing_did + 
+modelo_vecino <- precio_de_venta ~ vecino_pecsa_thiessen_did * timing_did + 
+  tipo_bandera + fecha + codigo_de_osinergmin + ingresos_2012 + num_grifos_cerc
+
+reg_clust(modelo_vecino, data_total, "DIESEL")
+
+reg_vecino_clust <- map(c("DIESEL", "G90"), ~reg_clust(modelo_vecino, data_total, .x ))
+names(reg_vecino_clust) <- c("DIESEL", "G90")
+stargazer(reg_vecino_clust, 
+          type = "text", 
+          omit = c("tipo_ba", "fecha", "codigo"))
+```
+
+### DiD para vecinos distancia
+```{r}
+modelo_vecino_dist <- precio_de_venta ~ vecino_pecsa_dist_did * timing_did + 
   tipo_bandera + fecha + codigo_de_osinergmin
 
-mod_vecino_did_DB5 <- lm(formula = modelo_diff, data = filter(data_total, producto == "DIESEL"))  
-stargazer(mod_vecino_did_DB5, type = "text", 
-          omit = c("tipo_ba", "fecha", "codigo"))
-
-mod_vecino_did_G90 <- lm(formula = modelo_diff, data = filter(data_total, producto == "G90"))  
-stargazer(mod_vecino_did_G90, type = "text", 
+reg_vecino_did_clust <- map(c("DIESEL", "G90"), ~reg_clust(modelo_vecino_dist, data_total, .x ))
+names(reg_vecino_did_clust) <- c("DIESEL", "G90")
+stargazer(reg_vecino_did_clust, 
+          type = "text", 
           omit = c("tipo_ba", "fecha", "codigo"))
 ```
 
+### DiD para propias estaciones
+
+Primero para el diésel con estaciones compradas
 
 ```{r}
-data_total_diff %>% 
-  filter(vecino_pecsa_thiessen == 1) %>% 
-  select(codigo_de_osinergmin, fecha, vecino_pecsa_thiessen) %>% 
-  arrange(fecha)
+
+diesel_full_sin_controles <- reg_clust(precio_de_venta ~ COMPRADA_DID * timing_did, data_total, "DIESEL")
+
+diesel_sin3meses_ni_controles <- reg_clust(precio_de_venta ~ COMPRADA_DID * timing_did, 
+                                 data_total, 
+                                 "DIESEL",
+                                 filtrado = TRUE)
+
+modelo_compradas_ef <- precio_de_venta ~ COMPRADA_DID * timing_did + 
+ fecha + codigo_de_osinergmin
+
+diesel_full_con_ef <- reg_clust(modelo_compradas_ef, data_total, "DIESEL")
+
+modelo_compradas_ef_sc <- precio_de_venta ~ COMPRADA_DID * timing_did + tipo_bandera + 
+ fecha + codigo_de_osinergmin + sc 
+
+diesel_full_ef_sc <- reg_clust(modelo_compradas_ef_sc, data_total, "DIESEL")
+
+# modelo_compradas_controles <- precio_de_venta ~ COMPRADA_DID * timing_did + tipo_bandera + 
+#  fecha + grifo_mas_cercano + distancia_min + num_grifos_cerc + 
+#   tiene_mecanico + densidad_2017 + ingresos_2012 + num_viajes_millon + sc
+# diesel_full_full_controls <- reg_clust(modelo_compradas_controles, data_total, "DIESEL")
+
+lista_reg <- list(diesel_full_sin_controles, diesel_sin3meses_ni_controles,
+                  diesel_full_con_ef, diesel_full_ef_sc)
+
+t <- map(lista_reg, 2)
+se <- map(lista_reg, 2) %>% 
+  map(~ .[,2])
+
+pe <- map(lista_reg, 2) %>% 
+  map(~ .[,4])
+
+stargazer(map(lista_reg, 1),
+          type = "html",
+          dep.var.labels=str_c("Precio de venta - Diésel (soles/galón)"),
+          dep.var.caption = "",
+          model.numbers	= T,
+          no.space = F,
+          covariate.labels = c("Dum.Comprada", "Dum.FechaCompra", "sc", 
+                               "Dum.Comprada*Dum.FechaCompra", "Constante" ),
+          column.labels =  "", 
+          se = se,
+          p = pe,
+          omit = c("tipo_bandera", "fecha", "codigo_de_osinergmin"),
+          omit.labels = c("Tipo de estación", "Efectos fijos por meses", "Efectos fijos por estación"),
+          omit.yes.no = c("Sí", "No"),
+          omit.stat	= c("f", "ll", 
+                        "sigma2", "res.dev", "ser", "aic",
+                        "wald", "lr"),
+          notes= "Los errores estándares clusterizados por estación se muestran entre paréntesis. ",
+          notes.label = "Notas: ",
+          single.row = F, 
+          out = here::here("doc", "tables", "diesel_did_compra.htm"))
 ```
 
+### Ahora para gasohol 90 compra
+
+```{r}
+
+g90_full_sin_controles <- reg_clust(precio_de_venta ~ COMPRADA_DID * timing_did, data_total, "G90")
+
+g90_sin3meses_ni_controles <- reg_clust(precio_de_venta ~ COMPRADA_DID * timing_did, 
+                                 data_total, 
+                                 "G90",
+                                 filtrado = TRUE)
+
+modelo_compradas_ef <- precio_de_venta ~ COMPRADA_DID * timing_did + 
+ fecha + codigo_de_osinergmin
+
+g90_full_con_ef <- reg_clust(modelo_compradas_ef, data_total, "G90")
+
+modelo_compradas_ef_sc <- precio_de_venta ~ COMPRADA_DID * timing_did + tipo_bandera + 
+ fecha + codigo_de_osinergmin + sc 
+
+g90_full_ef_sc <- reg_clust(modelo_compradas_ef_sc, data_total, "G90")
+
+# modelo_compradas_controles <- precio_de_venta ~ COMPRADA_DID * timing_did + tipo_bandera + 
+#  fecha + grifo_mas_cercano + distancia_min + num_grifos_cerc + 
+#   tiene_mecanico + densidad_2017 + ingresos_2012 + num_viajes_millon + sc
+# g90_full_full_controls <- reg_clust(modelo_compradas_controles, data_total, "G90")
+
+lista_reg <- list(g90_full_sin_controles, g90_sin3meses_ni_controles,
+                  g90_full_con_ef, g90_full_ef_sc)
+
+t <- map(lista_reg, 2)
+se <- map(lista_reg, 2) %>% 
+  map(~ .[,2])
+
+pe <- map(lista_reg, 2) %>% 
+  map(~ .[,4])
+
+stargazer(map(lista_reg, 1),
+          type = "html",
+          dep.var.labels=str_c("Precio de venta - Gasohol 90 (soles/galón)"),
+          dep.var.caption = "",
+          model.numbers	= T,
+          no.space = F,
+          covariate.labels = c("Dum.Comprada", "Dum.FechaCompra", "sc", 
+                               "Dum.Comprada*Dum.FechaCompra", "Constante" ),
+          column.labels =  "", 
+          se = se,
+          p = pe,
+          omit = c("tipo_bandera", "fecha", "codigo_de_osinergmin"),
+          omit.labels = c("Tipo de estación", "Efectos fijos por meses", "Efectos fijos por estación"),
+          omit.yes.no = c("Sí", "No"),
+          omit.stat	= c("f", "ll", 
+                        "sigma2", "res.dev", "ser", "aic",
+                        "wald", "lr"),
+          notes= "Los errores estándares clusterizados por estación se muestran entre paréntesis. ",
+          notes.label = "Notas: ",
+          single.row = F, 
+          out = here::here("doc", "tables", "g90_did_compra.htm"))
+```
+
+### Para vecinos
+
+#### Diesel
+
+```{r}
+# modelo_vecino <- precio_de_venta ~ vecino_pecsa_thiessen_did * timing_did + 
+#   tipo_bandera + fecha + codigo_de_osinergmin + ingresos_2012 + num_grifos_cerc
+# 
+# reg_clust(modelo_vecino, data_total, "DIESEL")
+# 
+# reg_vecino_clust <- map(c("DIESEL", "G90"), ~reg_clust(modelo_vecino, data_total, .x ))
+# names(reg_vecino_clust) <- c("DIESEL", "G90")
+# stargazer(reg_vecino_clust, 
+#           type = "text", 
+#           omit = c("tipo_ba", "fecha", "codigo"))
+
+diesel_full_sin_controles <- reg_clust(precio_de_venta ~ vecino_pecsa_thiessen_did * timing_did, data_total, "DIESEL")
+
+diesel_sin3meses_ni_controles <- reg_clust(precio_de_venta ~ vecino_pecsa_thiessen_did * timing_did, 
+                                 data_total, 
+                                 "DIESEL",
+                                 filtrado = TRUE)
+
+modelo_compradas_ef <- precio_de_venta ~ vecino_pecsa_thiessen_did * timing_did + 
+ fecha + codigo_de_osinergmin
+
+diesel_full_con_ef <- reg_clust(modelo_compradas_ef, data_total, "DIESEL")
+
+modelo_compradas_ef_sc <- precio_de_venta ~ vecino_pecsa_thiessen_did * timing_did + tipo_bandera + 
+ fecha + codigo_de_osinergmin + sc 
+
+diesel_full_ef_sc <- reg_clust(modelo_compradas_ef_sc, data_total, "DIESEL")
+
+# modelo_compradas_controles <- precio_de_venta ~ COMPRADA_DID * timing_did + tipo_bandera + 
+#  fecha + grifo_mas_cercano + distancia_min + num_grifos_cerc + 
+#   tiene_mecanico + densidad_2017 + ingresos_2012 + num_viajes_millon + sc
+# diesel_full_full_controls <- reg_clust(modelo_compradas_controles, data_total, "DIESEL")
+
+lista_reg <- list(diesel_full_sin_controles, diesel_sin3meses_ni_controles,
+                  diesel_full_con_ef, diesel_full_ef_sc)
+
+t <- map(lista_reg, 2)
+se <- map(lista_reg, 2) %>% 
+  map(~ .[,2])
+
+pe <- map(lista_reg, 2) %>% 
+  map(~ .[,4])
+
+stargazer(map(lista_reg, 1),
+          type = "html",
+          dep.var.labels=str_c("Precio de venta - Diésel (soles/galón)"),
+          dep.var.caption = "",
+          model.numbers	= T,
+          no.space = F,
+          covariate.labels = c("Dum.Vecino", "Dum.FechaCompra", "sc", 
+                               "Dum.Vecino*Dum.FechaCompra", "Constante" ),
+          column.labels =  "", 
+          se = se,
+          p = pe,
+          omit = c("tipo_bandera", "fecha", "codigo_de_osinergmin"),
+          omit.labels = c("Tipo de estación", "Efectos fijos por meses", "Efectos fijos por estación"),
+          omit.yes.no = c("Sí", "No"),
+          omit.stat	= c("f", "ll", 
+                        "sigma2", "res.dev", "ser", "aic",
+                        "wald", "lr"),
+          notes= "Los errores estándares clusterizados por estación se muestran entre paréntesis. ",
+          notes.label = "Notas: ",
+          single.row = F, 
+          out = here::here("doc", "tables", "diesel_did_vecino.htm"))
+```
+
+#### Gasohol 90
+
+```{r}
+
+g90_full_sin_controles <- reg_clust(precio_de_venta ~ vecino_pecsa_thiessen_did * timing_did, data_total, "G90")
+
+g90_sin3meses_ni_controles <- reg_clust(precio_de_venta ~ vecino_pecsa_thiessen_did * timing_did, 
+                                 data_total, 
+                                 "G90",
+                                 filtrado = TRUE)
+
+modelo_compradas_ef <- precio_de_venta ~ vecino_pecsa_thiessen_did * timing_did + 
+ fecha + codigo_de_osinergmin
+
+g90_full_con_ef <- reg_clust(modelo_compradas_ef, data_total, "G90")
+
+modelo_compradas_ef_sc <- precio_de_venta ~ vecino_pecsa_thiessen_did * timing_did + tipo_bandera + 
+ fecha + codigo_de_osinergmin + sc 
+
+g90_full_ef_sc <- reg_clust(modelo_compradas_ef_sc, data_total, "G90")
+
+# modelo_compradas_controles <- precio_de_venta ~ vecino_pecsa_thiessen_did * timing_did + tipo_bandera + 
+#  fecha + grifo_mas_cercano + distancia_min + num_grifos_cerc + 
+#   tiene_mecanico + densidad_2017 + ingresos_2012 + num_viajes_millon + sc
+# g90_full_full_controls <- reg_clust(modelo_compradas_controles, data_total, "G90")
+
+lista_reg <- list(g90_full_sin_controles, g90_sin3meses_ni_controles,
+                  g90_full_con_ef, g90_full_ef_sc)
+
+t <- map(lista_reg, 2)
+se <- map(lista_reg, 2) %>% 
+  map(~ .[,2])
+
+pe <- map(lista_reg, 2) %>% 
+  map(~ .[,4])
+
+stargazer(map(lista_reg, 1),
+          type = "html",
+          dep.var.labels=str_c("Precio de venta - Gasohol 90 (soles/galón)"),
+          dep.var.caption = "",
+          model.numbers	= T,
+          no.space = F,
+          covariate.labels = c("Dum.Vecino", "Dum.FechaCompra", "sc", 
+                               "Dum.Vecino*Dum.FechaCompra", "Constante" ),
+          column.labels =  "", 
+          se = se,
+          p = pe,
+          omit = c("tipo_bandera", "fecha", "codigo_de_osinergmin"),
+          omit.labels = c("Tipo de estación", "Efectos fijos por meses", "Efectos fijos por estación"),
+          omit.yes.no = c("Sí", "No"),
+          omit.stat	= c("f", "ll", 
+                        "sigma2", "res.dev", "ser", "aic",
+                        "wald", "lr"),
+          notes= "Los errores estándares clusterizados por estación se muestran entre paréntesis. ",
+          notes.label = "Notas: ",
+          single.row = F, 
+          out = here::here("doc", "tables", "g90_did_vecino.htm"))
+```
