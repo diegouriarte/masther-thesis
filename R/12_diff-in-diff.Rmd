@@ -42,7 +42,14 @@ conflict_prefer("filter", "dplyr")
 data_total <- readRDS(file = here::here("data", "processed", "data-final-regresiones.rds"))
 
 data_total <- data_total %>% 
-  mutate(codigo_de_osinergmin = factor(codigo_de_osinergmin))
+  mutate(codigo_de_osinergmin = factor(codigo_de_osinergmin)) %>% 
+  mutate(tri_menos_4 = if_else(fecha <= dmy("01-04-2017") & fecha >= dmy("01-02-2017"), 1, 0),
+         tri_menos_3 = if_else(fecha <= dmy("01-07-2017") & fecha >= dmy("01-05-2017"), 1, 0),
+         tri_menos_2 = if_else(fecha <= dmy("01-10-2017") & fecha >= dmy("01-08-2017"), 1, 0),
+         tri_menos_1 = if_else(fecha <= dmy("01-01-2018") & fecha >= dmy("01-11-2017"), 1, 0),
+         tri_mas_1 = if_else(fecha <= dmy("01-04-2018") & fecha >= dmy("01-02-2018"), 1, 0),
+         tri_mas_2 = if_else(fecha <= dmy("01-07-2018") & fecha >= dmy("01-05-2018"),1,0),
+         tri_mas_3 = if_else(fecha <= dmy("01-10-2018") & fecha >= dmy("01-08-2018"),1,0))
 ```
 
 ## Creamos variables
@@ -55,7 +62,7 @@ b) variable timing: lo más sencillo sería una dummy = 0 para todo mes antes de
 
 Ahora especificamos modelos:
 
-```{r}
+```{r func-reg}
 reg_clust <- function(form, 
                       data, 
                       producto, 
@@ -77,76 +84,64 @@ list(modelo, coeftest(modelo, m1.vcovCL))
 }
 ```
 
-### DiD para vecinos thiessen
-```{r}
-modelo_vecino <- precio_de_venta ~ vecino_pecsa_thiessen_did * timing_did + 
-  tipo_bandera + fecha + codigo_de_osinergmin
+### DiD efecto compra
 
-reg_clust(modelo_vecino, data_total, "DIESEL")
+```{r modelos-compra}
 
-reg_vecino_clust <- map(c("DIESEL", "G90"), ~reg_clust(modelo_vecino, data_total, .x ))
-names(reg_vecino_clust) <- c("DIESEL", "G90")
-stargazer(reg_vecino_clust, 
-          type = "text", 
-          omit = c("tipo_ba", "fecha", "codigo"))
-```
-
-### DiD para vecinos thiessen
-```{r}
-modelo_vecino <- precio_de_venta ~ vecino_pecsa_thiessen_did * timing_did + 
-  tipo_bandera + fecha + codigo_de_osinergmin + ingresos_2012 + num_grifos_cerc
-
-reg_clust(modelo_vecino, data_total, "DIESEL")
-
-reg_vecino_clust <- map(c("DIESEL", "G90"), ~reg_clust(modelo_vecino, data_total, .x ))
-names(reg_vecino_clust) <- c("DIESEL", "G90")
-stargazer(reg_vecino_clust, 
-          type = "text", 
-          omit = c("tipo_ba", "fecha", "codigo"))
-```
-
-### DiD para vecinos distancia
-```{r}
-modelo_vecino_dist <- precio_de_venta ~ vecino_pecsa_dist_did * timing_did + 
-  tipo_bandera + fecha + codigo_de_osinergmin
-
-reg_vecino_did_clust <- map(c("DIESEL", "G90"), ~reg_clust(modelo_vecino_dist, data_total, .x ))
-names(reg_vecino_did_clust) <- c("DIESEL", "G90")
-stargazer(reg_vecino_did_clust, 
-          type = "text", 
-          omit = c("tipo_ba", "fecha", "codigo"))
-```
-
-### DiD para propias estaciones
-
-Primero para el diésel con estaciones compradas
-
-```{r}
-
-diesel_full_sin_controles <- reg_clust(precio_de_venta ~ COMPRADA_DID * timing_did, data_total, "DIESEL")
-
-diesel_sin3meses_ni_controles <- reg_clust(precio_de_venta ~ COMPRADA_DID * timing_did, 
-                                 data_total, 
-                                 "DIESEL",
-                                 filtrado = TRUE)
+modelo_sin_controles <- precio_de_venta ~ COMPRADA_DID * timing_did
 
 modelo_compradas_ef <- precio_de_venta ~ COMPRADA_DID * timing_did + 
- fecha + codigo_de_osinergmin
+ fecha + distrito
 
-diesel_full_con_ef <- reg_clust(modelo_compradas_ef, data_total, "DIESEL")
+modelo_compradas_controles <- precio_de_venta ~ COMPRADA_DID * timing_did + 
+  fecha + 
+  tipo_bandera + grifo_mas_cercano + distancia_min + num_grifos_cerc +
+  tiene_mecanico + densidad_2017 + ingresos_2012 + 
+  num_viajes_millon + sc + distrito 
 
-modelo_compradas_ef_sc <- precio_de_venta ~ COMPRADA_DID * timing_did + tipo_bandera + 
- fecha + codigo_de_osinergmin + sc 
+modelo_tri <- precio_de_venta ~ 
+  COMPRADA_DID * timing_did +
+  COMPRADA_DID * tri_menos_1 + 
+  # COMPRADA_DID * tri_menos_3 + 
+  COMPRADA_DID * tri_mas_1 + 
+  COMPRADA_DID * tri_mas_2 + 
+  COMPRADA_DID * tri_mas_3 +
+  tipo_bandera + grifo_mas_cercano + distancia_min + num_grifos_cerc +
+  tiene_mecanico + densidad_2017 + ingresos_2012 + 
+  num_viajes_millon + sc + distrito +
+  fecha + 
+  COMPRADA_DID * tri_menos_2 
+```
 
-diesel_full_ef_sc <- reg_clust(modelo_compradas_ef_sc, data_total, "DIESEL")
 
-modelo_compradas_controles <- precio_de_venta ~ COMPRADA_DID * timing_did + tipo_bandera +
- fecha + grifo_mas_cercano + distancia_min + num_grifos_cerc +
-  tiene_mecanico + densidad_2017 + ingresos_2012 + num_viajes_millon + sc + distrito
-diesel_full_controls <- reg_clust(modelo_compradas_controles, data_total, "DIESEL")
-stargazer(diesel_full_controls, type = "text")
-lista_reg <- list(diesel_full_sin_controles, diesel_sin3meses_ni_controles,
-                  diesel_full_con_ef, diesel_full_ef_sc)
+### Diesel efecto compra 
+
+
+```{r reg-diesel-compra}
+diesel_full_sin_controles <- reg_clust(modelo_sin_controles, data_total,
+                                       "DIESEL",
+                                       fecha_lim = c("01-08-2017","01-10-2018" ))
+
+diesel_full_con_ef <- reg_clust(modelo_compradas_ef, data_total, 
+                                "DIESEL",
+                                fecha_lim = c("01-08-2017","01-10-2018" ))
+
+diesel_full_controls <- reg_clust(modelo_compradas_controles, data_total, 
+                                  "DIESEL",
+                                  fecha_lim = c("01-08-2017","01-10-2018" ))
+
+reg_diesel_tri_compra <- reg_clust(modelo_tri, data_total, "DIESEL", c("01-08-2017","01-10-2018" ))
+
+```
+
+
+```{r ouput-stargarzer-diesel-compra}
+lista_reg <- list(diesel_full_sin_controles, 
+                  # diesel_sin3meses_ni_controles,
+                  diesel_full_con_ef, 
+                  # diesel_full_ef_sc, 
+                  diesel_full_controls,
+                  reg_diesel_tri_compra)
 
 t <- map(lista_reg, 2)
 se <- map(lista_reg, 2) %>% 
@@ -161,13 +156,14 @@ stargazer(map(lista_reg, 1),
           dep.var.caption = "",
           model.numbers	= T,
           no.space = F,
-          covariate.labels = c("Dum.Comprada", "Dum.FechaCompra", "sc", 
-                               "Dum.Comprada*Dum.FechaCompra", "Constante" ),
+          # covariate.labels = c("Dum.Comprada", "Dum.FechaCompra", "sc", 
+                               # "Dum.Comprada*Dum.FechaCompra", "Constante" ),
           column.labels =  "", 
           se = se,
           p = pe,
-          omit = c("tipo_bandera", "fecha", "codigo_de_osinergmin"),
-          omit.labels = c("Tipo de estación", "Efectos fijos por meses", "Efectos fijos por estación"),
+          omit = c("tipo_bandera", "fecha", 
+                   "codigo_de_osinergmin", "distrito", "^tri_m"),
+          # omit.labels = c("Tipo de estación", "Efectos fijos por meses", "Efectos fijos por estación", "EF Distritos"),
           omit.yes.no = c("Sí", "No"),
           omit.stat	= c("f", "ll", 
                         "sigma2", "res.dev", "ser", "aic",
@@ -178,34 +174,30 @@ stargazer(map(lista_reg, 1),
           out = here::here("doc", "tables", "diesel_did_compra.htm"))
 ```
 
-### Ahora para gasohol 90 compra
 
-```{r}
+### Gasohol 90 compra
 
-g90_full_sin_controles <- reg_clust(precio_de_venta ~ COMPRADA_DID * timing_did, data_total, "G90")
+```{r reg-gasohol-compra}
+g90_full_sin_controles <- reg_clust(modelo_sin_controles, data_total,
+                                    "G90",
+                                    fecha_lim = c("01-08-2017","01-10-2018" ))
 
-g90_sin3meses_ni_controles <- reg_clust(precio_de_venta ~ COMPRADA_DID * timing_did, 
-                                 data_total, 
-                                 "G90",
-                                 filtrado = TRUE)
+g90_full_con_ef <- reg_clust(modelo_compradas_ef, data_total, 
+                             "G90",
+                             fecha_lim = c("01-08-2017","01-10-2018" ))
 
-modelo_compradas_ef <- precio_de_venta ~ COMPRADA_DID * timing_did + 
- fecha + codigo_de_osinergmin
+g90_full_controls <- reg_clust(modelo_compradas_controles, data_total, 
+                               "G90",
+                               fecha_lim = c("01-08-2017","01-10-2018" ))
 
-g90_full_con_ef <- reg_clust(modelo_compradas_ef, data_total, "G90")
+g90_trimestre_compra <- reg_clust(modelo_tri, data_total, "G90", c("01-08-2017","01-10-2018" ))
 
-modelo_compradas_ef_sc <- precio_de_venta ~ COMPRADA_DID * timing_did + tipo_bandera + 
- fecha + codigo_de_osinergmin + sc 
+```
 
-g90_full_ef_sc <- reg_clust(modelo_compradas_ef_sc, data_total, "G90")
 
-# modelo_compradas_controles <- precio_de_venta ~ COMPRADA_DID * timing_did + tipo_bandera + 
-#  fecha + grifo_mas_cercano + distancia_min + num_grifos_cerc + 
-#   tiene_mecanico + densidad_2017 + ingresos_2012 + num_viajes_millon + sc
-# g90_full_full_controls <- reg_clust(modelo_compradas_controles, data_total, "G90")
-
-lista_reg <- list(g90_full_sin_controles, g90_sin3meses_ni_controles,
-                  g90_full_con_ef, g90_full_ef_sc)
+```{r output-stargarzer-gasohol-comra}
+lista_reg <- list(g90_full_sin_controles, g90_full_con_ef,
+                  g90_full_controls, g90_trimestre_compra)
 
 t <- map(lista_reg, 2)
 se <- map(lista_reg, 2) %>% 
@@ -216,18 +208,17 @@ pe <- map(lista_reg, 2) %>%
 
 stargazer(map(lista_reg, 1),
           type = "html",
-          dep.var.labels=str_c("Precio de venta - Gasohol 90 (soles/galón)"),
-          dep.var.caption = "",
+          # dep.var.labels=str_c("Precio de venta - Gasohol 90 (soles/galón)"),
+          # dep.var.caption = "",
           model.numbers	= T,
-          no.space = F,
-          covariate.labels = c("Dum.Comprada", "Dum.FechaCompra", "sc", 
-                               "Dum.Comprada*Dum.FechaCompra", "Constante" ),
-          column.labels =  "", 
+          no.space = T,
+          # covariate.labels = c("Dum.Comprada", "Dum.FechaCompra", "sc", 
+                               # "Dum.Comprada*Dum.FechaCompra", "Constante" ),
+          # column.labels =  "", 
           se = se,
           p = pe,
-          omit = c("tipo_bandera", "fecha", "codigo_de_osinergmin"),
-          omit.labels = c("Tipo de estación", "Efectos fijos por meses", "Efectos fijos por estación"),
-          omit.yes.no = c("Sí", "No"),
+          omit = c("tipo_bandera", "fecha", 
+                   "codigo_de_osinergmin", "distrito", "^tri_m"),
           omit.stat	= c("f", "ll", 
                         "sigma2", "res.dev", "ser", "aic",
                         "wald", "lr"),
@@ -237,46 +228,65 @@ stargazer(map(lista_reg, 1),
           out = here::here("doc", "tables", "g90_did_compra.htm"))
 ```
 
-### Para vecinos
 
-#### Diesel
 
-```{r}
-# modelo_vecino <- precio_de_venta ~ vecino_pecsa_thiessen_did * timing_did + 
-#   tipo_bandera + fecha + codigo_de_osinergmin + ingresos_2012 + num_grifos_cerc
-# 
-# reg_clust(modelo_vecino, data_total, "DIESEL")
-# 
-# reg_vecino_clust <- map(c("DIESEL", "G90"), ~reg_clust(modelo_vecino, data_total, .x ))
-# names(reg_vecino_clust) <- c("DIESEL", "G90")
-# stargazer(reg_vecino_clust, 
-#           type = "text", 
-#           omit = c("tipo_ba", "fecha", "codigo"))
 
-diesel_full_sin_controles <- reg_clust(precio_de_venta ~ vecino_pecsa_thiessen_did * timing_did, data_total, "DIESEL")
+## DiD efecto vecinos
 
-diesel_sin3meses_ni_controles <- reg_clust(precio_de_venta ~ vecino_pecsa_thiessen_did * timing_did, 
-                                 data_total, 
-                                 "DIESEL",
-                                 filtrado = TRUE)
+```{r modelos-vecino}
+
+modelo_sin_controles <- precio_de_venta ~ vecino_pecsa_thiessen_did * timing_did
 
 modelo_compradas_ef <- precio_de_venta ~ vecino_pecsa_thiessen_did * timing_did + 
- fecha + codigo_de_osinergmin
+ fecha + distrito
 
-diesel_full_con_ef <- reg_clust(modelo_compradas_ef, data_total, "DIESEL")
+modelo_compradas_controles <- precio_de_venta ~ vecino_pecsa_thiessen_did * timing_did + 
+  fecha + 
+  tipo_bandera + grifo_mas_cercano + distancia_min + num_grifos_cerc +
+  tiene_mecanico + densidad_2017 + ingresos_2012 + 
+  num_viajes_millon + sc + distrito 
 
-modelo_compradas_ef_sc <- precio_de_venta ~ vecino_pecsa_thiessen_did * timing_did + tipo_bandera + 
- fecha + codigo_de_osinergmin + sc 
+modelo_tri <- precio_de_venta ~ 
+  vecino_pecsa_thiessen_did * tri_menos_1 + 
+  # vecino_pecsa_thiessen_did * tri_menos_3 + 
+  vecino_pecsa_thiessen_did * tri_mas_1 + 
+  vecino_pecsa_thiessen_did * tri_mas_2 + 
+  vecino_pecsa_thiessen_did * tri_mas_3 +
+  tipo_bandera + grifo_mas_cercano + distancia_min + num_grifos_cerc +
+  tiene_mecanico + densidad_2017 + ingresos_2012 + 
+  num_viajes_millon + sc + distrito +
+  fecha + 
+  vecino_pecsa_thiessen_did * tri_menos_2 
+```
 
-diesel_full_ef_sc <- reg_clust(modelo_compradas_ef_sc, data_total, "DIESEL")
+### Diesel efecto vecinos 
 
-# modelo_compradas_controles <- precio_de_venta ~ COMPRADA_DID * timing_did + tipo_bandera + 
-#  fecha + grifo_mas_cercano + distancia_min + num_grifos_cerc + 
-#   tiene_mecanico + densidad_2017 + ingresos_2012 + num_viajes_millon + sc
-# diesel_full_full_controls <- reg_clust(modelo_compradas_controles, data_total, "DIESEL")
 
-lista_reg <- list(diesel_full_sin_controles, diesel_sin3meses_ni_controles,
-                  diesel_full_con_ef, diesel_full_ef_sc)
+```{r reg-diesel-vecino}
+diesel_full_sin_controles <- reg_clust(modelo_sin_controles, data_total,
+                                       "DIESEL",
+                                       fecha_lim = c("01-08-2017","01-10-2018" ))
+
+diesel_full_con_ef <- reg_clust(modelo_compradas_ef, data_total, 
+                                "DIESEL",
+                                fecha_lim = c("01-08-2017","01-10-2018" ))
+
+diesel_full_controls <- reg_clust(modelo_compradas_controles, data_total, 
+                                  "DIESEL",
+                                  fecha_lim = c("01-08-2017","01-10-2018" ))
+
+reg_diesel_tri_compra <- reg_clust(modelo_tri, data_total, "DIESEL", c("01-08-2017","01-10-2018" ))
+
+```
+
+
+```{r ouput-stargarzer-diesel-vecinos}
+lista_reg <- list(diesel_full_sin_controles, 
+                  # diesel_sin3meses_ni_controles,
+                  diesel_full_con_ef, 
+                  # diesel_full_ef_sc, 
+                  diesel_full_controls,
+                  reg_diesel_tri_compra)
 
 t <- map(lista_reg, 2)
 se <- map(lista_reg, 2) %>% 
@@ -287,17 +297,16 @@ pe <- map(lista_reg, 2) %>%
 
 stargazer(map(lista_reg, 1),
           type = "html",
-          dep.var.labels=str_c("Precio de venta - Diésel (soles/galón)"),
-          dep.var.caption = "",
           model.numbers	= T,
-          no.space = F,
-          covariate.labels = c("Dum.Vecino", "Dum.FechaCompra", "sc", 
-                               "Dum.Vecino*Dum.FechaCompra", "Constante" ),
+          no.space = T,
+          # covariate.labels = c("Dum.Comprada", "Dum.FechaCompra", "sc", 
+                               # "Dum.Comprada*Dum.FechaCompra", "Constante" ),
           column.labels =  "", 
           se = se,
           p = pe,
-          omit = c("tipo_bandera", "fecha", "codigo_de_osinergmin"),
-          omit.labels = c("Tipo de estación", "Efectos fijos por meses", "Efectos fijos por estación"),
+          omit = c("tipo_bandera", "fecha", 
+                   "codigo_de_osinergmin", "distrito", "^tri_m"),
+          # omit.labels = c("Tipo de estación", "Efectos fijos por meses", "Efectos fijos por estación", "EF Distritos"),
           omit.yes.no = c("Sí", "No"),
           omit.stat	= c("f", "ll", 
                         "sigma2", "res.dev", "ser", "aic",
@@ -308,34 +317,29 @@ stargazer(map(lista_reg, 1),
           out = here::here("doc", "tables", "diesel_did_vecino.htm"))
 ```
 
-#### Gasohol 90
+### Gasohol 90 vecinos
 
-```{r}
+```{r reg-gasohol-vecino}
+g90_full_sin_controles <- reg_clust(modelo_sin_controles, data_total,
+                                    "G90",
+                                    fecha_lim = c("01-08-2017","01-10-2018" ))
 
-g90_full_sin_controles <- reg_clust(precio_de_venta ~ vecino_pecsa_thiessen_did * timing_did, data_total, "G90")
+g90_full_con_ef <- reg_clust(modelo_compradas_ef, data_total, 
+                             "G90",
+                             fecha_lim = c("01-08-2017","01-10-2018" ))
 
-g90_sin3meses_ni_controles <- reg_clust(precio_de_venta ~ vecino_pecsa_thiessen_did * timing_did, 
-                                 data_total, 
-                                 "G90",
-                                 filtrado = TRUE)
+g90_full_controls <- reg_clust(modelo_compradas_controles, data_total, 
+                               "G90",
+                               fecha_lim = c("01-08-2017","01-10-2018" ))
 
-modelo_compradas_ef <- precio_de_venta ~ vecino_pecsa_thiessen_did * timing_did + 
- fecha + codigo_de_osinergmin
+g90_trimestre_compra <- reg_clust(modelo_tri, data_total, "G90", c("01-08-2017","01-10-2018" ))
 
-g90_full_con_ef <- reg_clust(modelo_compradas_ef, data_total, "G90")
+```
 
-modelo_compradas_ef_sc <- precio_de_venta ~ vecino_pecsa_thiessen_did * timing_did + tipo_bandera + 
- fecha + codigo_de_osinergmin + sc 
 
-g90_full_ef_sc <- reg_clust(modelo_compradas_ef_sc, data_total, "G90")
-
-# modelo_compradas_controles <- precio_de_venta ~ vecino_pecsa_thiessen_did * timing_did + tipo_bandera + 
-#  fecha + grifo_mas_cercano + distancia_min + num_grifos_cerc + 
-#   tiene_mecanico + densidad_2017 + ingresos_2012 + num_viajes_millon + sc
-# g90_full_full_controls <- reg_clust(modelo_compradas_controles, data_total, "G90")
-
-lista_reg <- list(g90_full_sin_controles, g90_sin3meses_ni_controles,
-                  g90_full_con_ef, g90_full_ef_sc)
+```{r output-stargarzer-gasohol-vecino}
+lista_reg <- list(g90_full_sin_controles, g90_full_con_ef,
+                  g90_full_controls, g90_trimestre_compra)
 
 t <- map(lista_reg, 2)
 se <- map(lista_reg, 2) %>% 
@@ -346,152 +350,28 @@ pe <- map(lista_reg, 2) %>%
 
 stargazer(map(lista_reg, 1),
           type = "html",
-          dep.var.labels=str_c("Precio de venta - Gasohol 90 (soles/galón)"),
-          dep.var.caption = "",
+          # dep.var.labels=str_c("Precio de venta - Gasohol 90 (soles/galón)"),
+          # dep.var.caption = "",
           model.numbers	= T,
-          no.space = F,
-          covariate.labels = c("Dum.Vecino", "Dum.FechaCompra", "sc", 
-                               "Dum.Vecino*Dum.FechaCompra", "Constante" ),
-          column.labels =  "", 
+          no.space = T,
+          # covariate.labels = c("Dum.Comprada", "Dum.FechaCompra", "sc", 
+                               # "Dum.Comprada*Dum.FechaCompra", "Constante" ),
+          # column.labels =  "", 
           se = se,
           p = pe,
-          omit = c("tipo_bandera", "fecha", "codigo_de_osinergmin"),
-          omit.labels = c("Tipo de estación", "Efectos fijos por meses", "Efectos fijos por estación"),
-          omit.yes.no = c("Sí", "No"),
+          omit = c("tipo_bandera", "fecha", 
+                   "codigo_de_osinergmin", "distrito", "^tri_m"),
           omit.stat	= c("f", "ll", 
                         "sigma2", "res.dev", "ser", "aic",
                         "wald", "lr"),
+          order = c("^vecino_pecsa_thiessen_did", "^timing_did",
+                    "^vecino_pecsa_thiessen_did:timing_did"),
           notes= "Los errores estándares clusterizados por estación se muestran entre paréntesis. ",
           notes.label = "Notas: ",
           single.row = F, 
           out = here::here("doc", "tables", "g90_did_vecino.htm"))
 ```
 
-## Hipótesis de tendencias paralelas
-
-```{r hip-diesel}
-data_total_test <- fastDummies::dummy_cols(data_total, select_columns = c("fecha")) 
-
-data_total_test <- data_total %>% 
-  mutate(timing_test = if_else(fecha < dmy("01-07-2017"), 1, 0))
-
-diesel_full_sin_controles <- reg_clust(precio_de_venta ~ COMPRADA_DID * timing_test, 
-                                       data_total_test, 
-                                       "DIESEL", 
-                                       fecha_lim = c("01-01-2017", "01-10-2017"))
 
 
-modelo_compradas_ef <- precio_de_venta ~ vecino_pecsa_thiessen_did * `fecha_2017-05-01` +
-  COMPRADA_DID * `fecha_2017-06-01` + COMPRADA_DID * `fecha_2017-07-01` +
-  COMPRADA_DID * `fecha_2017-08-01` + COMPRADA_DID * `fecha_2017-09-01` +
-  COMPRADA_DID * `fecha_2017-10-01` + COMPRADA_DID * `fecha_2017-11-01` + 
-  COMPRADA_DID * `fecha_2017-12-01` + COMPRADA_DID * `fecha_2018-01-01` + 
-  COMPRADA_DID * `fecha_2018-02-01` + COMPRADA_DID * `fecha_2018-03-01` +
-  COMPRADA_DID * `fecha_2018-04-01` + COMPRADA_DID * `fecha_2018-05-01` +
-  COMPRADA_DID * `fecha_2018-06-01` + COMPRADA_DID * `fecha_2018-07-01` +
-  COMPRADA_DID * `fecha_2018-08-01` + COMPRADA_DID * `fecha_2018-08-01` +
-  COMPRADA_DID * `fecha_2018-10-01` + 
-  fecha + distrito
 
-diesel_full_con_ef <- reg_clust(modelo_compradas_ef, data_total_test, "DIESEL")
-
-stargazer(diesel_full_con_ef[[2]], type = "text",
-          omit = c("codigo"))
-```
-
-### Ahora por trimestres para Diésel
-
-```{r}
-data_total_tri <- data_total %>%
-  mutate(tri_menos_4 = if_else(fecha <= dmy("01-04-2017") & fecha >= dmy("01-02-2017"), 1, 0),
-         tri_menos_3 = if_else(fecha <= dmy("01-07-2017") & fecha >= dmy("01-05-2017"), 1, 0),
-         tri_menos_2 = if_else(fecha <= dmy("01-10-2017") & fecha >= dmy("01-08-2017"), 1, 0),
-         tri_menos_1 = if_else(fecha <= dmy("01-01-2018") & fecha >= dmy("01-11-2017"), 1, 0),
-         tri_mas_1 = if_else(fecha <= dmy("01-04-2018") & fecha >= dmy("01-02-2018"), 1, 0),
-         tri_mas_2 = if_else(fecha <= dmy("01-07-2018") & fecha >= dmy("01-05-2018"),1,0),
-         tri_mas_3 = if_else(fecha <= dmy("01-10-2018") & fecha >= dmy("01-08-2018"),1,0))
-
-controles <-  "tipo_bandera +grifo_mas_cercano + distancia_min + num_grifos_cerc +
-  tiene_mecanico + densidad_2017 + ingresos_2012 + num_viajes_millon + sc + distrito"
-
-modelo_test <- precio_de_venta ~ 
-   vecino_pecsa_thiessen_did * tri_menos_3 +
-  vecino_pecsa_thiessen_did * tri_menos_2 + 
-  vecino_pecsa_thiessen_did * tri_menos_1 + vecino_pecsa_thiessen_did * tri_mas_1 + 
-  vecino_pecsa_thiessen_did * tri_mas_2 + vecino_pecsa_thiessen_did * tri_mas_3 +
-  vecino_pecsa_thiessen_did * tri_menos_4 + tipo_bandera +grifo_mas_cercano + distancia_min + num_grifos_cerc +
-  tiene_mecanico + densidad_2017 + ingresos_2012 + num_viajes_millon + sc + distrito
-
-test_trend <- reg_clust(modelo_test, data_total_tri, "DIESEL", c("01-02-2017","01-10-2018" ))
-stargazer(test_trend[[2]], type = "text", omit = c("codigo_de"))
-```
-
-```{r}
-
-modelo_test <- precio_de_venta ~ 
-   COMPRADA_DID * tri_menos_3 +
-  COMPRADA_DID * tri_menos_2 + 
-  COMPRADA_DID * tri_menos_1 + COMPRADA_DID * tri_mas_1 + 
-  COMPRADA_DID * tri_mas_2 + COMPRADA_DID * tri_mas_3 +
-  COMPRADA_DID * tri_menos_4 + tipo_bandera +grifo_mas_cercano + distancia_min + num_grifos_cerc +
-  tiene_mecanico + densidad_2017 + ingresos_2012 + num_viajes_millon + sc + distrito
-
-test_trend <- reg_clust(modelo_test, data_total_tri, "DIESEL", c("01-02-2017","01-10-2018" ))
-stargazer(test_trend[[2]], type = "text", omit = c("codigo_de"))
-```
-
-###Para G90
-
-``` {r}
-modelo_test <- precio_de_venta ~ 
-   vecino_pecsa_thiessen_did * tri_menos_3 +
-  vecino_pecsa_thiessen_did * tri_menos_2 + 
-  vecino_pecsa_thiessen_did * tri_menos_1 + vecino_pecsa_thiessen_did * tri_mas_1 + 
-  vecino_pecsa_thiessen_did * tri_mas_2 + vecino_pecsa_thiessen_did * tri_mas_3 +
-  vecino_pecsa_thiessen_did * tri_menos_4 + tipo_bandera + grifo_mas_cercano + distancia_min + num_grifos_cerc +
-  tiene_mecanico + densidad_2017 + ingresos_2012 + num_viajes_millon + sc + distrito
-
-test_trend <- reg_clust(modelo_test, data_total_tri, "G90", c("01-02-2017","01-10-2018" ))
-stargazer(test_trend[[2]], type = "text", omit = c("codigo_de"))
-```
-
-```{r}
-modelo_test <- precio_de_venta ~ 
-   COMPRADA_DID * tri_menos_3 +
-  COMPRADA_DID * tri_menos_2 + 
-  COMPRADA_DID * tri_menos_1 + COMPRADA_DID * tri_mas_1 + 
-  COMPRADA_DID * tri_mas_2 + COMPRADA_DID * tri_mas_3 +
-  COMPRADA_DID * tri_menos_4  + tipo_bandera +grifo_mas_cercano + distancia_min +
-  num_grifos_cerc + tiene_mecanico + densidad_2017 + ingresos_2012 + num_viajes_millon + sc + distrito
-
-test_trend <- reg_clust(modelo_test, data_total_tri, "G90", c("01-02-2017","01-10-2018" ))
-stargazer(test_trend[[2]], type = "text", omit = c("codigo_de"))
-```
-
-###Para G90 menos tiempo
-
-``` {r}
-modelo_test <- precio_de_venta ~ 
-  vecino_pecsa_thiessen_did * tri_menos_2 + 
-  vecino_pecsa_thiessen_did * tri_menos_1 + vecino_pecsa_thiessen_did * tri_mas_1 + 
-  vecino_pecsa_thiessen_did * tri_mas_2 + vecino_pecsa_thiessen_did * tri_mas_3 +
-+ tipo_bandera + grifo_mas_cercano + distancia_min + num_grifos_cerc +
-  tiene_mecanico + densidad_2017 + ingresos_2012 + num_viajes_millon + sc + distrito +
-   vecino_pecsa_thiessen_did * tri_menos_3
-
-test_trend <- reg_clust(modelo_test, data_total_tri, "G90", c("01-05-2017","01-10-2018" ))
-stargazer(test_trend[[2]], type = "text", omit = c("codigo_de"))
-```
-
-```{r}
-modelo_test <- precio_de_venta ~ 
-  COMPRADA_DID * tri_menos_2 + 
-  COMPRADA_DID * tri_menos_1 + COMPRADA_DID * tri_mas_1 + 
-  COMPRADA_DID * tri_mas_2 + COMPRADA_DID * tri_mas_3 +
-  tipo_bandera +grifo_mas_cercano + distancia_min +
-  num_grifos_cerc + tiene_mecanico + densidad_2017 + ingresos_2012 + num_viajes_millon + sc + distrito +COMPRADA_DID * tri_menos_3 
-
-
-test_trend <- reg_clust(modelo_test, data_total_tri, "G90", c("01-05-2017","01-10-2018" ))
-stargazer(test_trend[[2]], type = "text", omit = c("codigo_de"))
-```

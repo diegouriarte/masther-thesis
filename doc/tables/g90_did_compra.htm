@@ -1,28 +1,45 @@
 
-<table style="text-align:center"><tr><td colspan="5" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left"></td><td colspan="4">Precio de venta - Gasohol 90 (soles/galón)</td></tr>
-<tr><td style="text-align:left"></td><td></td><td></td><td></td><td></td></tr>
+<table style="text-align:center"><tr><td colspan="5" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left"></td><td colspan="4"><em>Dependent variable:</em></td></tr>
+<tr><td></td><td colspan="4" style="border-bottom: 1px solid black"></td></tr>
+<tr><td style="text-align:left"></td><td colspan="4">precio_de_venta</td></tr>
 <tr><td style="text-align:left"></td><td>(1)</td><td>(2)</td><td>(3)</td><td>(4)</td></tr>
-<tr><td colspan="5" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left">Dum.Comprada</td><td>-0.298<sup>***</sup></td><td>-0.315<sup>***</sup></td><td>0.100<sup>***</sup></td><td>0.286<sup>***</sup></td></tr>
-<tr><td style="text-align:left"></td><td>(0.066)</td><td>(0.066)</td><td>(0.023)</td><td>(0.026)</td></tr>
+<tr><td colspan="5" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left">COMPRADA_DID</td><td>-0.275<sup>***</sup></td><td>-0.328<sup>***</sup></td><td>-0.009</td><td>-0.024</td></tr>
+<tr><td style="text-align:left"></td><td>(0.068)</td><td>(0.062)</td><td>(0.065)</td><td>(0.068)</td></tr>
+<tr><td style="text-align:left">timing_did</td><td>0.801<sup>***</sup></td><td>1.832<sup>***</sup></td><td>1.840<sup>***</sup></td><td></td></tr>
+<tr><td style="text-align:left"></td><td>(0.014)</td><td>(0.024)</td><td>(0.024)</td><td></td></tr>
+<tr><td style="text-align:left">COMPRADA_DID:tri_menos_1</td><td></td><td></td><td></td><td>0.030</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td></td><td>(0.030)</td></tr>
+<tr><td style="text-align:left">COMPRADA_DID:tri_mas_1</td><td></td><td></td><td></td><td>0.140<sup>***</sup></td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td></td><td>(0.052)</td></tr>
+<tr><td style="text-align:left">COMPRADA_DID:tri_mas_2</td><td></td><td></td><td></td><td>0.182<sup>***</sup></td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td></td><td>(0.069)</td></tr>
+<tr><td style="text-align:left">COMPRADA_DID:tri_mas_3</td><td></td><td></td><td></td><td>0.130<sup>*</sup></td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td></td><td>(0.073)</td></tr>
+<tr><td style="text-align:left">COMPRADA_DID:tri_menos_2</td><td></td><td></td><td></td><td></td></tr>
 <tr><td style="text-align:left"></td><td></td><td></td><td></td><td></td></tr>
-<tr><td style="text-align:left">Dum.FechaCompra</td><td>0.966<sup>***</sup></td><td>1.185<sup>***</sup></td><td>1.816<sup>***</sup></td><td>1.807<sup>***</sup></td></tr>
-<tr><td style="text-align:left"></td><td>(0.014)</td><td>(0.017)</td><td>(0.026)</td><td>(0.027)</td></tr>
-<tr><td style="text-align:left"></td><td></td><td></td><td></td><td></td></tr>
-<tr><td style="text-align:left">sc</td><td></td><td></td><td></td><td>0.143<sup>**</sup></td></tr>
-<tr><td style="text-align:left"></td><td></td><td></td><td></td><td>(0.066)</td></tr>
-<tr><td style="text-align:left"></td><td></td><td></td><td></td><td></td></tr>
-<tr><td style="text-align:left">Dum.Comprada*Dum.FechaCompra</td><td>0.144<sup>***</sup></td><td>0.163<sup>***</sup></td><td>0.144<sup>***</sup></td><td>0.126<sup>***</sup></td></tr>
-<tr><td style="text-align:left"></td><td>(0.045)</td><td>(0.053)</td><td>(0.046)</td><td>(0.046)</td></tr>
-<tr><td style="text-align:left"></td><td></td><td></td><td></td><td></td></tr>
-<tr><td style="text-align:left">Constante</td><td>11.097<sup>***</sup></td><td>11.023<sup>***</sup></td><td>10.696<sup>***</sup></td><td>10.499<sup>***</sup></td></tr>
-<tr><td style="text-align:left"></td><td>(0.029)</td><td>(0.030)</td><td>(0.016)</td><td>(0.024)</td></tr>
-<tr><td style="text-align:left"></td><td></td><td></td><td></td><td></td></tr>
-<tr><td colspan="5" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left">Tipo de estación</td><td>No</td><td>No</td><td>No</td><td>Sí</td></tr>
-<tr><td style="text-align:left">Efectos fijos por meses</td><td>No</td><td>No</td><td>Sí</td><td>No</td></tr>
-<tr><td style="text-align:left">Efectos fijos por estación</td><td>No</td><td>No</td><td>No</td><td>No</td></tr>
-<tr><td colspan="5" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left">Observations</td><td>7,722</td><td>6,006</td><td>7,722</td><td>7,722</td></tr>
-<tr><td style="text-align:left">R<sup>2</sup></td><td>0.335</td><td>0.439</td><td>0.911</td><td>0.911</td></tr>
-<tr><td style="text-align:left">Adjusted R<sup>2</sup></td><td>0.335</td><td>0.439</td><td>0.905</td><td>0.905</td></tr>
+<tr><td style="text-align:left">grifo_mas_cercano</td><td></td><td></td><td>-0.00000</td><td>-0.00000</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td>(0.00000)</td><td>(0.00000)</td></tr>
+<tr><td style="text-align:left">distancia_min</td><td></td><td></td><td>0.029</td><td>0.029</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td>(0.112)</td><td>(0.112)</td></tr>
+<tr><td style="text-align:left">num_grifos_cerc</td><td></td><td></td><td>-0.011<sup>**</sup></td><td>-0.011<sup>**</sup></td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td>(0.005)</td><td>(0.005)</td></tr>
+<tr><td style="text-align:left">tiene_mecanico</td><td></td><td></td><td>0.043</td><td>0.043</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td>(0.047)</td><td>(0.047)</td></tr>
+<tr><td style="text-align:left">densidad_2017</td><td></td><td></td><td>-0.591<sup>***</sup></td><td>-0.591<sup>***</sup></td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td>(0.167)</td><td>(0.167)</td></tr>
+<tr><td style="text-align:left">ingresos_2012</td><td></td><td></td><td>0.723<sup>*</sup></td><td>0.723<sup>*</sup></td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td>(0.378)</td><td>(0.378)</td></tr>
+<tr><td style="text-align:left">num_viajes_millon</td><td></td><td></td><td>-0.124</td><td>-0.124</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td>(0.103)</td><td>(0.103)</td></tr>
+<tr><td style="text-align:left">sc</td><td></td><td></td><td>-0.127<sup>*</sup></td><td>-0.127<sup>*</sup></td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td>(0.072)</td><td>(0.072)</td></tr>
+<tr><td style="text-align:left">COMPRADA_DID:timing_did</td><td>0.121<sup>**</sup></td><td>0.121<sup>**</sup></td><td>0.136<sup>**</sup></td><td></td></tr>
+<tr><td style="text-align:left"></td><td>(0.052)</td><td>(0.052)</td><td>(0.054)</td><td></td></tr>
+<tr><td style="text-align:left">Constant</td><td>11.262<sup>***</sup></td><td>10.875<sup>***</sup></td><td>11.245<sup>***</sup></td><td>11.246<sup>***</sup></td></tr>
+<tr><td style="text-align:left"></td><td>(0.029)</td><td>(0.072)</td><td>(0.911)</td><td>(0.912)</td></tr>
+<tr><td colspan="5" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left">Observations</td><td>6,450</td><td>6,450</td><td>6,450</td><td>6,450</td></tr>
+<tr><td style="text-align:left">R<sup>2</sup></td><td>0.260</td><td>0.605</td><td>0.661</td><td>0.661</td></tr>
+<tr><td style="text-align:left">Adjusted R<sup>2</sup></td><td>0.259</td><td>0.603</td><td>0.659</td><td>0.658</td></tr>
 <tr><td colspan="5" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left">Notas:</td><td colspan="4" style="text-align:right"><sup>*</sup>p<0.1; <sup>**</sup>p<0.05; <sup>***</sup>p<0.01</td></tr>
 <tr><td style="text-align:left"></td><td colspan="4" style="text-align:right">Los errores estándares clusterizados por estación se muestran entre paréntesis.</td></tr>
 </table>
