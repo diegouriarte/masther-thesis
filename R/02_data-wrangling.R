@@ -69,6 +69,7 @@ productos
 #' Este es el primer cambio al códidgo de hace años, agrego algunas keys
 #' más de diesel
 
+
 level_key <- c("GASOHOL 90 PLUS" = "G90", 
                "GASOHOL 84 PLUS" = "G84",
                "GASOHOL 95 PLUS" = "G95",
