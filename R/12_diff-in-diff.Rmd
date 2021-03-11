@@ -22,7 +22,7 @@ options(tidyverse.quiet = TRUE)
 
 ```
 
-```{r  body, warning = FALSE, message = FALSE}
+```{r  libraries, warning = FALSE, message = FALSE}
 library(conflicted)
 library(tidyverse)
 library(lubridate)
@@ -34,7 +34,7 @@ source(here::here("R","funcion04_formato-tablas-reproducibles.R"), encoding = "U
 conflict_prefer("filter", "dplyr")
 ```
 
-## Cargamos datos
+## Cargamos datos y creamos variables
 
 
 ```{r cargar-datos}
@@ -52,12 +52,7 @@ data_total <- data_total %>%
          tri_mas_3 = if_else(fecha <= dmy("01-10-2018") & fecha >= dmy("01-08-2018"),1,0))
 ```
 
-## Creamos variables
-Con la data tipo panel debes tener una dummy que identifique cada observación (grifo-mes) acorde con si pertenece al grupo de tratamiento/control y otra para identificar si su período corresponde a antes/después de la fusión
-
-a) variable tratamiento/control: la idea es ver el impacto de la fusión. Entonces el tratamiento debería ser algo relacionado a ser afectado por la fusión. Hay varias alternativas. Podría ser "ser un grifo del grupo fusionado Primax" o "ser un grifo colindante con un grifo que pertenece a la fusión". Diría que la 2da es más relevante, pero la 1era también es interesante. La dummy sería igual a 1 para todo grifo que pase eventualmente por el tratamiento, sea como sea que lo definas, e igual a cero para los grifos que pasen a formar parte de tu grupo de control.
-
-b) variable timing: lo más sencillo sería una dummy = 0 para todo mes antes de la fusión, =1 para todo mes posterior. Se puede elaborar más y tener una dummy por trimestre o mes. 
+## Función para regresiones
 
 
 Ahora especificamos modelos:
@@ -372,6 +367,111 @@ stargazer(map(lista_reg, 1),
           out = here::here("doc", "tables", "g90_did_vecino.htm"))
 ```
 
+## Evaluamos dependencia espacial con tests de Anselin (1996)
+
+```{r test-anselin}
+library(spdep)
+library(splm)
+# Fixed effects model
+
+tests <- list("lml", "lme", "rlml", "rlme")
+prods <- list("DIESEL", "G90")
+
+slmtest_tes <- function(prod, df, tests, fecha_lim = c("01-05-2017", "01-10-2018")) {
+    data_periodo <- balancear_panel(df, prod, fecha_lim)
+    w_prod <- crear_spatial_w(data_periodo, prod)
+    slmtest(modelo_compradas_controles, data = data_periodo, listw = w_prod, test=tests,
+            model="within")   
+}
+data_periodo <- balancear_panel(data_total, "G90", c("01-08-2017", "01-10-2018"))
+
+w_prod <- crear_spatial_w(data_periodo, "DIESEL")
+```
+
+```{r}
+grifos_creados_luego <- data_periodo %>%
+  filter(producto == "G90") %>%
+  count(codigo_de_osinergmin, sort = T) %>%
+  filter(n < max(n)) %>%
+  pull(codigo_de_osinergmin)
+
+df_balanceado <- data_periodo %>%
+  filter(producto == "G90",
+         codigo_de_osinergmin %ni% grifos_creados_luego) 
+
+coords_db5 <- data_periodo %>%
+  distinct(codigo_de_osinergmin, .keep_all = T) %>%
+  select(codigo_de_osinergmin, lon, lat) %>%
+  mutate_at(c("lon", "lat"), as.numeric) %>% 
+  mutate_at("codigo_de_osinergmin", as.character)
+    
+    #creamos la matriz de distancias
+grifos_nb <- tri2nb(as.matrix(coords_db5[,2:3]), row.names = coords_db5$codigo_de_osinergmin)
+str(grifos_nb)
+class(grifos_nb)
+sp_grifos <- nb2listw(grifos_nb)
+my_matrix <- nb2mat(sp_grifos$neighbours)
 
 
+```
+
+```{r}
+
+
+modelo_compradas_ef <- precio_de_venta ~ vecino_pecsa_thiessen_did * timing_did + distrito #+ distrito
+
+modelo_compradas_controles <- precio_de_venta ~ vecino_pecsa_thiessen_did * timing_did + 
+  # fecha + 
+  tipo_bandera + grifo_mas_cercano + distancia_min + num_grifos_cerc +
+  tiene_mecanico + densidad_2017 + ingresos_2012 + 
+  num_viajes_millon + sc + distrito 
+
+
+slmtest(modelo_compradas_controles, data = df_balanceado, listw = sp_grifos, test="lme",
+            model="pooling", index = c("codigo_de_osinergmin", "fecha"))   
+```
+
+```{r}
+library(plm)
+x <- plm(modelo_compradas_ef, data = data_periodo, model = "pooling", effect = "twoways",
+         index = c("codigo_de_osinergmin", "fecha") )
+summary(x)
+slmtest(x, listw = sp_grifos, test = "rlme")
+
+
+sararfemod <- spml(formula = modelo_compradas_ef, 
+                   data = data_periodo, 
+                   index = c("codigo_de_osinergmin", "fecha"),
+                   listw = sp_grifos, 
+                   lag = TRUE, spatial.error = "none", model = "pooling",
+                   effect = "individual", method = "eigen", na.action = na.fail,
+                   quiet = TRUE, zero.policy = NULL, hess = FALSE,
+                   tol.solve = 1e-13, control = list(), legacy = FALSE)
+
+summary(sararfemod)
+```
+
+```{r}
+modelo_compradas_ef <- precio_de_venta ~ COMPRADA_DID * timing_did + 
+  distrito
+
+modelo_compradas_controles <- precio_de_venta ~ COMPRADA_DID * timing_did + 
+   grifo_mas_cercano  + distancia_min + num_grifos_cerc #+
+   tiene_mecanico + densidad_2017 + ingresos_2012 
+  # num_viajes_millon + sc + distrito 
+
+t <- spml(formula =  modelo_compradas_ef, 
+                   data = data_periodo, 
+                   index = c("codigo_de_osinergmin", "fecha"),
+                   listw = sp_grifos, 
+                   lag = TRUE, spatial.error = "none", model = "pooling",
+                   effect = "twoways", method = "eigen", na.action = na.fail,
+                   quiet = TRUE, zero.policy = NULL, hess = FALSE,
+                   tol.solve = 1e-13, control = list(), legacy = FALSE)
+
+summary(t)
+imp1 <- impacts(t, listw = sp_grifos, time = 21, R = 100)
+summary(imp1, zstats = TRUE, short = T)
+
+```
 

@@ -399,7 +399,7 @@ tabla_test_LR %>%
   kable_styling(bootstrap_options = "striped", full_width = F) %>% 
   footnote(general = "N. grados de libertad igual a 19 para todos las pruebas.",
            general_title = "Nota: ") %>% 
-  add_header_above(c(" " = 1, "Estadístico [valor p]" = 4)) %>% 
+  add_header_above(c(" " = 1, "Estadístico [valor p]" = 2)) %>% 
   pack_rows(index = c("Diésel" = 2, "Gasohol 90" = 2))
 
 #' ## Modelos escogidos para corte transversal

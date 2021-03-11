@@ -58,7 +58,7 @@ Hacemos una regresión con vecinos definidos a la thiessen
 
 
 ```{r modelo2-fe}
-modelo2 <- precio_de_venta ~ COMPRADA  + SUMINISTRO + vecino_pecsa_thiessen + sc + fecha
+modelo2 <- precio_de_venta ~ COMPRADA_FE  + SUMINISTRO + vecino_pecsa_thiessen_fe + sc + fecha
 
 
 calcular_reg_fe(df = data_total, modelo = modelo2, inicio, fin, 
@@ -71,7 +71,7 @@ calcular_reg_fe(df = data_total, modelo = modelo2, inicio, fin,
 Hacemos una regresión con vecinos definidos a la distancia
 
 ```{r modelo3-fe}
-modelo3 <- precio_de_venta ~ COMPRADA  + SUMINISTRO + vecino_pecsa_dist + sc + fecha
+modelo3 <- precio_de_venta ~ COMPRADA_FE  + SUMINISTRO + vecino_pecsa_dist_fe + sc + fecha
 
 calcular_reg_fe(df = data_total, modelo = modelo3, inicio, fin, 
                 producto = "DIESEL", output = "fe-db5-dist.htm")
@@ -117,7 +117,7 @@ sararfemod <- spml(formula = modelo2,
                    data = balancear_panel(data_total, "DIESEL"), 
                    index = NULL,
                    listw = crear_spatial_w(balancear_panel(data_total, "DIESEL"), "DIESEL"), 
-                   lag = TRUE, spatial.error = "none", model = "within",
+                   lag = TRUE, spatial.error = "b", model = "within",
                    effect = "individual", method = "eigen", na.action = na.fail,
                    quiet = TRUE, zero.policy = NULL, hess = FALSE,
                    tol.solve = 1e-13, control = list(), legacy = FALSE)
@@ -127,7 +127,7 @@ sararfemod <- spml(formula = modelo2,
 Tabla de parámetros
 ```{r sar-resumen}
 nombres_variables <- c(lambda = "\u03bb",
-                       COMPRADA = "COMPRADA",
+                       COMPRADA_FE = "COMPRADA",
                        vecino_pecsa_thiessen = "VECINO",
                        sc  = "sc" )
 
@@ -162,7 +162,7 @@ imp_measures <-  tibble(Variables = rownames(t$direct_sum$statistics),
 se_measures <- as_tibble(t$semat, rownames = "Variables") %>% 
     rename_if(is.numeric, ~ str_c(., "_SE"))
 
-pvalues_measures <- as_tibble(t$pzmat, rownames = "Variables") %>% 
+pvalues_measures <- as_tibble(t$pzmat, row %>% names = "Variables") %>% 
     rename_if(is.numeric, ~ str_c(., "_pvalue"))
 
 inner_join(imp_measures, se_measures, by = "Variables") %>% 
@@ -185,67 +185,67 @@ inner_join(imp_measures, se_measures, by = "Variables") %>%
     kable_styling(bootstrap_options = "striped", full_width = F)
 ```
 
-Solo spatial error tipo b 
+<!-- Solo spatial error tipo b  -->
 
-```{r sem-tipob}
-summary(verdoorn_SEM_FE<- spml(modelo2, 
-                               data = balancear_panel(data_total, "DIESEL"),
-                               listw = crear_spatial_w(balancear_panel(data_total, "DIESEL"), "DIESEL"), 
-                               lag=FALSE,
-                               model="within", 
-                               effect="individual", 
-                               spatial.error="b"))
-```
+<!-- ```{r sem-tipob} -->
+<!-- summary(verdoorn_SEM_FE<- spml(modelo2,  -->
+<!--                                data = balancear_panel(data_total, "DIESEL"), -->
+<!--                                listw = crear_spatial_w(balancear_panel(data_total, "DIESEL"), "DIESEL"),  -->
+<!--                                lag=FALSE, -->
+<!--                                model="within",  -->
+<!--                                effect="individual",  -->
+<!--                                spatial.error="b")) -->
+<!-- ``` -->
 
-Solo spatial error tipo kkp 
+<!-- Solo spatial error tipo kkp  -->
 
-```{r sem-kkp }
-summary(verdoorn_SEM_FE<- spml(modelo2, 
-                               data = balancear_panel(data_total, "DIESEL"),
-                               listw = crear_spatial_w(balancear_panel(data_total, "DIESEL"), "DIESEL"), 
-                               lag=FALSE,
-                               model="within", 
-                               effect="individual", 
-                               spatial.error="kkp"))
-
-
-```
+<!-- ```{r sem-kkp } -->
+<!-- summary(verdoorn_SEM_FE<- spml(modelo2,  -->
+<!--                                data = balancear_panel(data_total, "DIESEL"), -->
+<!--                                listw = crear_spatial_w(balancear_panel(data_total, "DIESEL"), "DIESEL"),  -->
+<!--                                lag=FALSE, -->
+<!--                                model="within",  -->
+<!--                                effect="individual",  -->
+<!--                                spatial.error="kkp")) -->
 
 
-Hacemos test de Hausman espacial para modelo con lag
+<!-- ``` -->
 
 
-```{r hausman-spatial}
-test_lag <- sphtest(x = modelo2, 
-                    data = balancear_panel(data_total, "DIESEL"), 
-                    listw = crear_spatial_w(balancear_panel(data_total, "DIESEL"), "DIESEL"),
-                    spatial.model = "lag", 
-                    method = "ML")
+<!-- Hacemos test de Hausman espacial para modelo con lag -->
 
-test_lag
 
-# Hausman test robust to spatial autocorrelation (splm) for error model
-print(
-    spat_hausman_ML_SEM <- sphtest(
-        modelo2,
-        data = balancear_panel(data_total, "DIESEL"),
-        listw = spatial_w$DIESEL,
-        spatial.model = "error",
-        method = "ML"
-    )
-)
+<!-- ```{r hausman-spatial} -->
+<!-- test_lag <- sphtest(x = modelo2,  -->
+<!--                     data = balancear_panel(data_total, "DIESEL"),  -->
+<!--                     listw = crear_spatial_w(balancear_panel(data_total, "DIESEL"), "DIESEL"), -->
+<!--                     spatial.model = "lag",  -->
+<!--                     method = "ML") -->
 
-# Hausman test robust to spatial autocorrelation (splm) for sarar model
-print(
-    spat_hausman_ML_SEM <- sphtest(
-        modelo2,
-        data = balancear_panel(data_total, "DIESEL"),
-        listw = spatial_w$DIESEL,
-        spatial.model = "sarar",
-        method = "ML"
-    )
-)
-```
+<!-- test_lag -->
+
+<!-- # Hausman test robust to spatial autocorrelation (splm) for error model -->
+<!-- print( -->
+<!--     spat_hausman_ML_SEM <- sphtest( -->
+<!--         modelo2, -->
+<!--         data = balancear_panel(data_total, "DIESEL"), -->
+<!--         listw = spatial_w$DIESEL, -->
+<!--         spatial.model = "error", -->
+<!--         method = "ML" -->
+<!--     ) -->
+<!-- ) -->
+
+<!-- # Hausman test robust to spatial autocorrelation (splm) for sarar model -->
+<!-- print( -->
+<!--     spat_hausman_ML_SEM <- sphtest( -->
+<!--         modelo2, -->
+<!--         data = balancear_panel(data_total, "DIESEL"), -->
+<!--         listw = spatial_w$DIESEL, -->
+<!--         spatial.model = "sarar", -->
+<!--         method = "ML" -->
+<!--     ) -->
+<!-- ) -->
+<!-- ``` -->
 
 ### Tests para determinar modelo correcto
 
@@ -311,4 +311,80 @@ inner_join(df_test_diesel_short, df_test_g90_short, by = c("method", "alternativ
 ```
 
 
+## Regresiones para tesis
 
+```{r estimacion-sar-panel-corto}
+library(openxlsx)
+precio_de_venta ~ COMPRADA_FE + SUMINISTRO + vecino_pecsa_thiessen_fe +  sc + fecha
+spatial_diesel_largo <- crear_spatial_w(panel_largo_db5, "DIESEL")
+my_matrix <- nb2mat(spatial_diesel_largo$neighbours)
+write.xlsx(as_tibble(my_matrix), 
+                file = here::here("data","processed","matriz-distancia-diesel-full.xlsx"))
+
+panel_largo_db5 <- balancear_panel(data_total, "DIESEL", c("01-05-2017", "01-10-2018"))
+
+panel_largo_db5 %>% 
+  select(fecha, codigo_de_osinergmin, precio_de_venta, COMPRADA_FE, SUMINISTRO,
+         vecino_pecsa_thiessen_fe, sc) %>% 
+  arrange(fecha, codigo_de_osinergmin) %>% 
+  mutate_at(vars(1,2), as.character) %>% 
+  write.xlsx(file = here::here("data","processed","datos_diesel_full.xlsx") )
+
+```
+
+```{r}
+panel_largo_g90 <- balancear_panel(data_total, "G90", c("01-05-2017", "01-10-2018"))
+spatial_g90_largo <- crear_spatial_w(panel_largo_g90, "G90")
+my_matrix <- nb2mat(spatial_g90_largo$neighbours)
+write.xlsx(as_tibble(my_matrix), 
+                file = here::here("data","processed","matriz-distancia-g90-full.xlsx"))
+
+panel_largo_g90 %>% 
+  distinct(codigo_de_osinergmin)
+
+panel_largo_g90 %>% 
+  select(fecha, codigo_de_osinergmin, precio_de_venta, COMPRADA_FE, SUMINISTRO,
+         vecino_pecsa_thiessen_fe, sc) %>% 
+  arrange(fecha, codigo_de_osinergmin) %>% 
+  mutate_at(vars(1,2), as.character) %>% 
+  write.xlsx(file = here::here("data","processed","datos_g90_full.xlsx") )
+```
+
+```{r}
+panel_corto_g90 <- balancear_panel(data_total, "G90", c("1-11-2017", "1-04-2018"))
+spatial_g90_corto <- crear_spatial_w(panel_corto_g90, "G90")
+my_matrix <- nb2mat(spatial_g90_corto$neighbours)
+write.xlsx(as_tibble(my_matrix), 
+                file = here::here("data","processed","matriz-distancia-g90-corto.xlsx"))
+
+panel_corto_g90 %>% 
+  distinct(codigo_de_osinergmin) %>% count()
+
+panel_corto_g90 %>% 
+  select(fecha, codigo_de_osinergmin, precio_de_venta, COMPRADA_FE, SUMINISTRO,
+         vecino_pecsa_thiessen_fe, sc) %>% 
+  arrange(fecha, codigo_de_osinergmin) %>% 
+  mutate_at(vars(1,2), as.character) %>% 
+  write.xlsx(file = here::here("data","processed","datos_g90_corto.xlsx") )
+```
+
+
+```{r estimacion-sar-panel-corto}
+panel_corto_db5 <- balancear_panel(data_total, "DIESEL", c("1-11-2017", "1-04-2018"))
+spatial_diesel_corto <- crear_spatial_w(panel_corto_db5, "DIESEL")
+my_matrix <- nb2mat(spatial_diesel_corto$neighbours)
+write.xlsx(as_tibble(my_matrix), 
+                file = here::here("data","processed","matriz-distancia-diesel-corto.xlsx"))
+
+
+panel_corto_db5 %>% 
+  distinct(codigo_de_osinergmin) %>% count()
+
+panel_corto_db5 %>% 
+  select(fecha, codigo_de_osinergmin, precio_de_venta, COMPRADA_FE, SUMINISTRO,
+         vecino_pecsa_thiessen_fe, sc) %>% 
+  arrange(fecha, codigo_de_osinergmin) %>% 
+  mutate_at(vars(1,2), as.character) %>% 
+  write.xlsx(file = here::here("data","processed","datos_diesel_corto.xlsx") )
+
+```

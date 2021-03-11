@@ -178,3 +178,6 @@ head(data_total)
 #' ### Guardamos
 #' 
 saveRDS(data_total, file = here::here("data", "processed", "data-final-regresiones.rds"))
+
+write_excel_csv(data_total, here::here("data", "processed", "data-final-regresiones.csv"))
+
