@@ -8,7 +8,7 @@
 library(here)
 library(tidyverse)
 library(ggplot2)
-library(ggrepel)
+#library(ggrepel)
 library(lubridate)
 '%ni%' <- Negate('%in%')
 
@@ -16,7 +16,7 @@ library(lubridate)
 prices_lima <- readRDS(here::here("data","processed","data_2005_2018_clean.rds")) %>%
     filter(departamento == "LIMA", provincia == "LIMA")
 
-#' Pasemos a semanal toda la data disponible en BreÃ±a para el grifo 17944 
+#' Pasemos a semanal toda la data disponible en Breña para el grifo 17944 
 #' 
 #' 
 #' 
@@ -71,7 +71,7 @@ grifo <- prices_lima %>%
 
 grifo %>% View
 
-#' El problema con el grifo es que tiene años vacíos
+#' El problema con el grifo es que tiene semanas sin precios
 
 for (year in c(min(grifo$año):2018)) {
     if (year == min(grifo$año)) {
@@ -168,7 +168,7 @@ PreciosSemanaGrifo2 <- function(grifo) {
 }
 
 grifo <- prices_lima %>%
-    filter(codigo_de_osinergmin == "9592", producto == "DIESEL") %>%
+    filter(codigo_de_osinergmin == "100155", producto == "DIESEL") %>%
     PrecioPromedioPorSemana(.)
 grifo %>% View()
 
