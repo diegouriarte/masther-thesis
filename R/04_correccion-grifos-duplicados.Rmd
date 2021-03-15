@@ -3,9 +3,8 @@ title: "Corrección grifos duplicados"
 output: html_notebook
 ---
 ```{r}
+library(tidyverse)
 library(lubridate)
-library(stringr)
-suppressMessages(library(tidyverse))
 #Cargamos archivo de 02_data-wrangling.R
 prices <- readRDS(here::here("data","processed","data_2005_2018_clean.rds"))
 #Cargamos archivo de `04_importar-hoja-gdrive.R`
@@ -32,7 +31,10 @@ grifos_repetidos <- grifos %>%
     arrange(lat,codigo_de_osinergmin) %>%
     distinct(codigo_de_osinergmin, .keep_all = TRUE)
 
-#df sin ninguno de los repetidos
+```
+
+```{r}
+#obtenmos un df sin ninguno de los repetidos
 grifos_sin_marca_repetidos <- grifos %>% 
     filter(!is.na(lat),
            !str_detect(razon_social,"COESTI"),
@@ -48,6 +50,10 @@ grifos_1 <- anti_join(grifos,
                       by = NULL) %>%
     bind_rows(grifos_repetidos)
 
+```
+
+
+```{r}
 #Verificamos
 grifos_1 %>% 
     filter(!is.na(lat),
@@ -60,6 +66,7 @@ grifos_1 %>%
     arrange(lat,codigo_de_osinergmin) %>%
     distinct(codigo_de_osinergmin, .keep_all = TRUE)
 ```
+
 
 Ahora, `grifos_1` ya no tiene duplicados con el mismo código, al menos para casos sin grifos conocidos. Como hay grifos de PECSA que podrían haber pasado a COESTI, los filtramos y solo vemos duplicados que tengan que ver con Repsol. En caso duplicado, nos quedamos siempre con la razón social de Repsol:
 
@@ -76,8 +83,10 @@ grifos_repsol_depurado <- grifos_1 %>%
     arrange(codigo_de_osinergmin) %>%
     filter(str_detect(razon_social, "REPSOL")) %>%
     distinct(codigo_de_osinergmin, .keep_all = TRUE)
+```
 
-#filtramos todas las observaciones que 
+```{r}
+#Retiramos del df todos los 
 grifos_repsol_repetidos <- grifos_1 %>%
     filter(!is.na(lat),
            !str_detect(razon_social,"COESTI"),
@@ -104,6 +113,8 @@ grifos_2 %>%
     filter(str_detect(razon_social, "REPSOL")) %>%
     distinct(codigo_de_osinergmin, .keep_all = TRUE)
 ```
+
+
 Ahora debería haber menos grifos repetidos, verificamos:
 
 ```{r}
@@ -136,7 +147,7 @@ grifos_3 %>%
     arrange(codigo_de_osinergmin) %>%
     distinct(codigo_de_osinergmin, .keep_all = TRUE)
 ```
-Ahora ya no hay duplicados por `codigo_de_osinerming` en la base de datos.
+Ahora ya no hay duplicados por `codigo_de_osinergmin` en la base de datos.
 ```{r}
 grifos_3 %>% 
     filter(!is.na(lat)) %>%
@@ -158,6 +169,9 @@ OK, son grifos distintos, de un lado al otro de la avenida.
 En adición, los grifos 83435 y 137688 son los mismos (compra de Repsol, dir AV. BAUZATE Y MEZA N° 1050). Nos quedamos con 137688
 
 ```{r}
+grifos_3 %>%
+    filter(codigo_de_osinergmin %in% c(83435,137688))
+
 grifos_4 <- grifos_3 %>%
     filter(codigo_de_osinergmin != 83435)
 
