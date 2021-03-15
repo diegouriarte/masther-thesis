@@ -45,6 +45,8 @@ grifo <- precios_promedios_mensuales %>%
 
 grifo %>% View
 
+# Como solo figuran promedio para los meses donde había data, jalaremos el último 
+# dato hasta la siguiente vez
 
 for (year in c(min(grifo$año):2018)) {
     if (year == min(grifo$año)) {
@@ -147,7 +149,7 @@ llenar_precios_mensuales <- function(grifo) {
 grifo <- precios_promedios_mensuales %>%
     filter(codigo_de_osinergmin == "9592", producto == "G84")
 
-
+llenar_precios_mensuales(grifo) %>% view #pareciera que hubiese problema
 ## Todo ok, ahora hagamos para todo lima!
 
 # Cálculos de precios promedios para Diesel ----------------------------------
