@@ -29,6 +29,10 @@ grifos_datos_coding <- readRDS(here::here("data","processed","grifo_coding_raw_n
 
 glimpse(grifos_datos_coding)
 
+grifos_datos_coding %>% 
+    filter(str_detect(razon_social,"REPSOL")) %>%
+    select(codigo_de_osinergmin,razon_social, direccion, bandera) %>%
+    mutate(bandera = str_to_upper(bandera)) 
 ```
 
 
@@ -118,7 +122,7 @@ grifo_datos_con_tipo <- grifos_datos_coding_nombres %>%
             TRUE ~ 0),        
         con_gnv = as.factor(con_gnv),
     ) %>%
-    select(-codificador, -ruc, -n, -en_avenida_principal, -revisar)
+    select(-codificador, -ruc, -n, -revisar)
     
 
 glimpse(grifo_datos_con_tipo)
@@ -175,7 +179,7 @@ left_join(
     by = "codigo_de_osinergmin"
 ) %>%
     unite(coordenadas, lat, lon, sep = ", ") %>% 
-    write_excel_csv(path = here::here("data", "processed", "temporal", "grifos-distancia.csv"))
+    write_excel_csv(file = here::here("data", "processed", "temporal", "grifos-distancia.csv"))
 
 ```
 
@@ -184,7 +188,7 @@ left_join(
 Creamos variable con distancia mínima al grifo competidor más cercano
 
 ```{r remedy008}
-#' Pendiente, como hacer para que no considere si el grifo m?s cercano tiene el mismo ruc
+#' Pendiente, como hacer para que no considere si el grifo más cercano tiene el mismo ruc
 grifos_distancia_minima <- as_tibble(matriz_distancias, rownames = "codigo_de_osinergmin") %>%
     gather(key = "grifo_distancia", value = "distancia", -codigo_de_osinergmin) %>%
     filter(distancia != 0) %>%

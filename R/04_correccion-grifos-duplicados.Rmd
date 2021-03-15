@@ -298,13 +298,29 @@ grifos_8 <- grifos_7 %>%
     filter(codigo_de_osinergmin != 88228)
 ```
 
+# Verificamos las banderas
+
+```{r}
+grifos_8 %>% 
+    count(razon_social, bandera, sort = TRUE) %>%
+    filter(str_detect(razon_social, "REPSOL"))
+
+grifos_9 <- grifos_8 %>% 
+    mutate(bandera = case_when(
+        str_detect(razon_social, "REPSOL") ~ "REPSOL",
+        str_detect(razon_social, "COESTI") ~ "PRIMAX",
+        str_detect(razon_social, "PERUANA DE ESTACIONES") ~ "PECSA",
+        TRUE ~ bandera
+    )) 
+ 
+```
 
 
 Guardamos el file de grifos y precios corregidos:
 
 ```{r}
 
-saveRDS(grifos_8,
+saveRDS(grifos_9,
         file = here::here("data", "processed", "grifo_coding_raw_no_duplicate.rds"))
 
 saveRDS(prices_3, 
