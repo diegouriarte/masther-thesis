@@ -282,13 +282,21 @@ Primero vemos que tipos de variables tenemos
 skimr::skim(grifo_full_1)
 ```
 
+```{r}
+grifo_full_2 <- grifo_full_1 %>% 
+  mutate(
+    tiene_mecanico = if_else(mecanico + aceite + lavado > 0, 1, 0),
+    con_glp = as.numeric(con_glp) - 1,
+    con_gnv = as.numeric(con_gnv) - 1
+  )
+```
 
 
 
 #Guardamos
 ```{r remedy011}
 
-saveRDS(grifo_full_1, file = here::here("data","processed","grifo_coding_clean.rds"))
+saveRDS(grifo_full_2, file = here::here("data","processed","grifo_coding_clean.rds"))
 
 
 ```

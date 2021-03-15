@@ -20,7 +20,8 @@ library(qwraps2)
 
 Cargamos los archivos
 ```{r}
-grifos_sc <- readRDS(here::here("data", "processed", "grifos_con_sc_razon_social.RDS"))
+#grifos_sc <- readRDS(here::here("data", "processed", "grifos_con_sc_razon_social.RDS"))
+grifos_clean <- readRDS(here::here("data","processed","grifo_coding_clean.rds"))
 
 ```
 
@@ -144,7 +145,7 @@ Generamos los archivos con precios y caracterísiticas
 precios_db5 <- readRDS(here::here("data", "processed", "data_diesel_mensual.rds")) %>%
   filter(
     `año` >= 2017,
-    codigo_de_osinergmin %in% grifos_sc$codigo_de_osinergmin
+    codigo_de_osinergmin %in% grifos_clean$codigo_de_osinergmin
   ) %>%
   mutate(dia = 1) %>%
   unite(fecha, dia, mes, `año`, sep = "-", remove = FALSE) %>%
@@ -155,13 +156,13 @@ precios_db5 <- readRDS(here::here("data", "processed", "data_diesel_mensual.rds"
   )
 
 
-data_db5 <- left_join(grifos_sc, precios_db5, by = "codigo_de_osinergmin")
+data_db5 <- left_join(grifos_clean, precios_db5, by = "codigo_de_osinergmin")
 
 
 precios_g90 <- readRDS(here::here("data", "processed", "data_g90_mensual.rds")) %>%
   filter(
     `año` >= 2017,
-    codigo_de_osinergmin %in% grifos_sc$codigo_de_osinergmin
+    codigo_de_osinergmin %in% grifos_clean$codigo_de_osinergmin
   ) %>%
   mutate(dia = 1) %>%
   unite(fecha, dia, mes, `año`, sep = "-", remove = FALSE) %>%
@@ -172,7 +173,7 @@ precios_g90 <- readRDS(here::here("data", "processed", "data_g90_mensual.rds")) 
   )
 
 
-data_g90 <- left_join(grifos_sc, precios_g90, by = "codigo_de_osinergmin")
+data_g90 <- left_join(grifos_clean, precios_g90, by = "codigo_de_osinergmin")
 ```
 
 Calculamos el precio promedio de cada uno
@@ -236,16 +237,11 @@ tabla_distrito$Variable <- c(
 ```
 
 
-```{r}
-```
-
-
 Calculos las estádisticas a nivel grifos:
 
 ```{r}
-tabla <- grifos_sc %>%
+tabla <- grifos_clean %>%
   select(codigo_de_osinergmin,
-    "Agrupamiento espacial" = sc_pre,
     "Distancia mínima (km)" = distancia_min,
     "Distancia promedio a grifos vecinos (km)" = distancia_avg,
     "Número de grifos cercanos" = num_grifos_cerc,
@@ -267,7 +263,7 @@ tabla <- grifos_sc %>%
   ) %>%
   mutate(`Descripción` = fct_relevel(
     `Descripción`,
-    "Agrupamiento espacial",
+  #  "Agrupamiento espacial",
     "Distancia mínima (km)",
     "Distancia promedio a grifos vecinos (km)",
     "Número de grifos cercanos",
@@ -282,7 +278,7 @@ tabla <- grifos_sc %>%
   arrange(`Descripción`)
 
 tabla$Variable <- c(
-  "SC",
+ # "SC",
   "DMIN",
   "DPROM",
   "NCERC",
@@ -299,8 +295,8 @@ bind_rows(precios_tabla, tabla, tabla_distrito) %>%
   select(`Variable`, everything()) %>%
   kable(format = "html", digits = c(0, 0, 3, 3, 1, 1)) %>%
   kable_styling(full_width = FALSE, position = "left") %>%
-  pack_rows("Variable dependiente", 1, 2) %>%
-  pack_rows("Características espaciales", 3, 6) %>%
-  pack_rows("Características de la estación", 7, 13) %>% 
-  pack_rows("Características del distrito", 14, 16)
+  pack_rows("Precios", 1, 2) %>%
+  pack_rows("Características espaciales", 3, 5) %>%
+  pack_rows("Características de la estación", 6, 12) %>% 
+  pack_rows("Características del distrito", 13, 15)
 ```
