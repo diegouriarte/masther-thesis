@@ -16,11 +16,12 @@ suppressMessages(library(deldir))
 library(sp)
 library(leaflet)
 source(here::here("R","funcion02_thiessen.R"))
-conflict_prefer("select", "dplyr")
+conflicted::conflict_prefer("select", "dplyr")
+conflicted::conflict_prefer("filter", "dplyr")
 ```
 
 
-Se construirán los pol?gonos de Thiesen para todo el dataset, así como se identificarán los vecinos y de que due?o y bandera son. Además, se construir?n gr?ficos de los vecinos
+Se construirán los polígonos de Thiesen para todo el dataset, así como se identificarán los vecinos y de que dueño y bandera son. Además, se construirán gráficos de los vecinos
 
 Cargamos la base de datos con grifos y ubicaciones:
 
@@ -301,7 +302,7 @@ grifos_thiessen_irr <- readRDS(here::here("data", "processed","grifos_thiessen_i
 
 grifos_con_vecinos <- left_join(
   grifos_thiessen_irr,
-  select(
+  dplyr::select(
     grifos,
     codigo_de_osinergmin,
     bandera.princ = bandera,
@@ -310,7 +311,7 @@ grifos_con_vecinos <- left_join(
   by = c("codigo_de_osinergmin.princ" = "codigo_de_osinergmin")
 ) %>%
   left_join(
-    select(
+    dplyr::select(
       grifos,
       codigo_de_osinergmin,
       bandera.vec = bandera,
@@ -408,5 +409,6 @@ grifos_con_vecinos_post_razon <- left_join(
 
 
 ```{r}
-saveRDS(grifos_con_vecinos_post_razon, file = here::here("data","processed","grifo_con_vecinos_post_razon.RDS"))
+saveRDS(grifos_con_vecinos_post_razon, 
+        file = here::here("data","processed","grifo_con_vecinos_post_razon.RDS"))
 ```
