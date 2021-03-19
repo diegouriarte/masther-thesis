@@ -40,7 +40,7 @@ conflict_prefer("filter", "dplyr")
 ```{r cargar-datos}
 
 data_total <- readRDS(file = here::here("data", "processed", "data-final-regresiones.rds"))
-
+#del archivo 08_base-de-datos-final-para-regresion.R
 data_total <- data_total %>% 
   mutate(codigo_de_osinergmin = factor(codigo_de_osinergmin)) %>% 
   mutate(tri_menos_4 = if_else(fecha <= dmy("01-04-2017") & fecha >= dmy("01-02-2017"), 1, 0),
@@ -94,19 +94,21 @@ modelo_compradas_controles <- precio_de_venta ~ COMPRADA_DID * timing_did +
   tiene_mecanico + densidad_2017 + ingresos_2012 + 
   num_viajes_millon  + distrito 
 
-modelo_tri <- precio_de_venta ~ 
-  COMPRADA_DID * tri_menos_1 +
-  COMPRADA_DID * tri_mas_1 + 
-  COMPRADA_DID * tri_mas_2 + 
-  COMPRADA_DID * tri_mas_3 +
-  tipo_bandera + grifo_mas_cercano + distancia_min + num_grifos_cerc +
-  tiene_mecanico + densidad_2017 + ingresos_2012 + 
-  num_viajes_millon + distrito +
-  fecha  
+# modelo_tri <- precio_de_venta ~ 
+#   COMPRADA_DID * tri_menos_1 + 
+#   COMPRADA_DID * tri_menos_2 + 
+#   COMPRADA_DID * tri_menos_3 + 
+#   COMPRADA_DID * tri_mas_1 + 
+#   COMPRADA_DID * tri_mas_2 + 
+#   COMPRADA_DID * tri_mas_3 +
+#   tipo_bandera + grifo_mas_cercano + distancia_min + num_grifos_cerc +
+#   tiene_mecanico + densidad_2017 + ingresos_2012 + 
+#   num_viajes_millon + distrito +
+#   fecha 
 
-modelo_tri_test <- precio_de_venta ~ 
+modelo_tri <- precio_de_venta ~ 
   COMPRADA_DID * tri_menos_2 +
-  COMPRADA_DID * tri_menos_1 +
+  COMPRADA_DID * tri_menos_1 + 
   COMPRADA_DID * tri_mas_1 + 
   COMPRADA_DID * tri_mas_2 + 
   COMPRADA_DID * tri_mas_3 +
@@ -114,12 +116,6 @@ modelo_tri_test <- precio_de_venta ~
   tiene_mecanico + densidad_2017 + ingresos_2012 + 
   num_viajes_millon + distrito +
   fecha 
-
-modelo_test_mensual <- precio_de_venta ~ 
-  COMPRADA_DID* fecha +
-  tipo_bandera + grifo_mas_cercano + distancia_min + num_grifos_cerc +
-  tiene_mecanico + densidad_2017 + ingresos_2012 + 
-  num_viajes_millon + distrito 
 ```
 
 
@@ -139,30 +135,18 @@ diesel_full_controls <- reg_clust(modelo_compradas_controles, data_total,
                                   "DIESEL",
                                   fecha_lim = c("01-08-2017","01-10-2018" ))
 
-reg_diesel_tri_compra <- reg_clust(modelo_tri, data_total, "DIESEL",
-                                   c("01-08-2017","01-10-2018" ))
+reg_diesel_tri_compra <- reg_clust(modelo_tri, data_total, "DIESEL", c("01-08-2017","01-10-2018" ))
 
-diesel_tri_test <- reg_clust(modelo_tri_test, data_total, "DIESEL", 
-                             c("01-05-2017","01-10-2018" ))
-
-diesel_test_mensual <- reg_clust(modelo_test_mensual, data_total, "DIESEL",
-                                 c("01-08-2017","01-10-2018"))
-
-data_total_2 <- data_total %>% 
-  filter(fecha <= dmy("01-11-2017") | fecha >= dmy("01-04-2018"))
-diesel_test_mensual <- reg_clust(modelo_test_mensual, data_total_2, "DIESEL",
-                                 c("01-05-2017","01-10-2018"))
-diesel_test_mensual
 ```
 
 
 ```{r ouput-stargarzer-diesel-compra}
 lista_reg <- list(diesel_full_sin_controles, 
+                  # diesel_sin3meses_ni_controles,
                   diesel_full_con_ef, 
+                  # diesel_full_ef_sc, 
                   diesel_full_controls,
-                  reg_diesel_tri_compra,
-                  diesel_tri_test,
-                  diesel_test_mensual)
+                  reg_diesel_tri_compra)
 
 t <- map(lista_reg, 2)
 se <- map(lista_reg, 2) %>% 
@@ -213,15 +197,12 @@ g90_full_controls <- reg_clust(modelo_compradas_controles, data_total,
 
 g90_trimestre_compra <- reg_clust(modelo_tri, data_total, "G90", c("01-08-2017","01-10-2018" ))
 
-g90_tri_test <- reg_clust(modelo_tri_test, data_total, "G90", 
-                             c("01-05-2017","01-10-2018" ))
 ```
 
 
 ```{r output-stargarzer-gasohol-comra}
 lista_reg <- list(g90_full_sin_controles, g90_full_con_ef,
-                  g90_full_controls, g90_trimestre_compra,
-                  g90_tri_test)
+                  g90_full_controls, g90_trimestre_compra)
 
 t <- map(lista_reg, 2)
 se <- map(lista_reg, 2) %>% 
