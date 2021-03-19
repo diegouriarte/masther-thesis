@@ -1,5 +1,6 @@
 
 library(tidyverse)
+'%ni%' <- Negate('%in%')
 
 # Datos de porcejtan de estaciones Pecsa y Repsol propias---------------------------------------------
 
@@ -87,62 +88,6 @@ p1 <- data_total %>%
     
 p1 
 
-distritos_con_pecsa <- data_total %>% 
-    distinct(distrito, tipo_bandera) %>% 
-    filter(tipo_bandera == "PROPIA PECSA") %>% 
-    pull(distrito)
-
-
-
-f_labels <- data.frame(producto = c("DIESEL", "G90"), label = c("", "Venta de Pecsa"))
-
-
-(p2 <- data_total %>% 
-    filter(fecha <= dmy("2-10-2018"),
-           distrito %in% distritos_con_pecsa) %>% 
-    group_by(fecha, producto, tipo_bandera) %>% 
-    summarise(precio_promedio = mean(precio_de_venta)) %>% 
-    filter(tipo_bandera %in% c("PROPIA PRIMAX", "PROPIA PECSA")) %>%
-    mutate(tipo_bandera = fct_relevel(tipo_bandera, "PROPIA PRIMAX")) %>% 
-    ggplot() +
-    geom_line(aes(x = fecha, y = precio_promedio, linetype = tipo_bandera),
-              size = 1) +
-    geom_line(data = data_total %>%
-                  filter(fecha <= dmy("2-10-2018"),
-                         distrito %in% distritos_con_pecsa) %>%
-                  group_by(fecha, producto, tipo) %>%
-                  summarise(precio_promedio = mean(precio_de_venta)) ,
-              aes(x = fecha, y = precio_promedio, color = tipo),
-              size = 1.2) +
-    facet_grid(producto ~ .) +
-    geom_vline(xintercept = dmy("01-02-2018"),
-               linetype = "dashed",
-               size = 1.2, color = "grey55") +
-    geom_text(x = dmy("01-02-2018"), y = -Inf, vjust = -0.9, 
-              hjust = -0.1, aes(label = label), data = f_labels,
-              color = "grey55", fontface = "bold") +
-    labs(x = "Fecha", y = "Precio promedio", 
-         color = "Tipo de estación",
-         linetype = "Venta Pecsa") +
-    theme_bw() + 
-    scale_color_brewer(palette = "Set1") + 
-    theme(
-        panel.spacing.x = unit(0.8, "cm"),
-        legend.background = element_rect(fill = "grey85", colour = "black", size = 0.5),
-        legend.title = element_text(face = "bold", size = 10),
-        legend.text = element_text(colour = "black"),
-        legend.key = element_rect(colour = "black", size = 0.5),
-        axis.title = element_text(face = "bold"),
-        legend.position = "right"
-        
-    )
-)
-
-ggsave("precios-tipo-grifo.png", 
-       path = here::here("plots"), device = "png", unit = "cm",
-       height = 15,
-       width = 15,
-       dpi = 300)
     
 data_db5 %>% 
     mutate(fecha = lubridate::dmy(fecha)) %>% 
