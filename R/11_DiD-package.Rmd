@@ -1,0 +1,445 @@
+---
+title: "11_DiD-package"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Cargamos librerías
+
+```{r}
+library(did)
+library(tidyverse)
+library(lubridate)
+source(here::here("R","funcion04_formato-tablas-reproducibles.R"), encoding = "UTF-8")
+'%ni%' <- Negate('%in%')
+data(mpdta)
+```
+
+## Ejemplo de como usar el paqeute DID
+```{r}
+out <- att_gt(yname = "lemp",
+              gname = "first.treat",
+              idname = "countyreal",
+              tname = "year",
+              xformla = ~1,
+              data = mpdta,
+              est_method = "reg"
+              )
+mpdta
+summary(out)
+```
+
+```{r}
+ggdid(out, ylim = c(-.25,.1))
+```
+
+
+Event study
+
+```{r}
+es <- aggte(out, type = "dynamic")
+summary(es)
+ggdid(es)
+
+```
+
+Overall Effect of Participating in the Treatment
+
+
+```{r}
+group_effects <- aggte(out, type = "group")
+summary(group_effects)
+
+```
+
+
+
+
+## Evaluamos para mi data
+
+
+```{r cargar-datos}
+
+data_total <- readRDS(file = here::here("data", "processed", "data-final-regresiones.rds"))
+
+distritos_con_pecsa <- data_total %>% 
+  distinct(distrito, tipo_bandera) %>% 
+  filter(tipo_bandera == "PROPIA PECSA") %>% 
+  pull(distrito)
+
+
+distritos_con_primax <- data_total %>% 
+  distinct(distrito, tipo_bandera) %>% 
+  filter(tipo_bandera == "PROPIA PRIMAX") %>% 
+  pull(distrito)
+
+lista_vecinos <- data_total %>% 
+filter(vecino_pecsa_thiessen_did == 1) %>%
+  distinct(codigo_de_osinergmin) %>% 
+  pull()
+```
+
+### Caso base, sin controles y PECSA versus todas las demás
+Creamos las variables requeridas para DiD: first treated para estaciones de PECSA
+
+Necesitamos hacer que la variable fecha sea numérica. 
+
+```{r}
+skimr::skim(data_total_1$fecha)
+
+```
+Como va de 2017-01-01 al 2018-10-01
+
+
+Balanceamos el panel:
+
+```{r}
+data_g90 <- balancear_panel(data_total, prod = "G90", c("01-05-2017", "01-10-2018"))
+data_g90 <- data_g90 %>% 
+  mutate(mes = (year(fecha)-2017)*12 + month(fecha),
+         fecha_trat = if_else(tipo_bandera == "PROPIA PECSA", 14, 0))
+```
+
+
+Corremos la regresión:
+
+```{r}
+out_1 <- att_gt(yname = "precio_de_venta",
+              gname = "fecha_trat",
+              idname = "codigo_de_osinergmin",
+              tname = "mes",
+              xformla = ~1,
+              data = data_g90,
+              est_method = "reg"
+              )
+ggdid(out_1)
+summary(out_1)
+```
+
+```{r}
+group_effects <- aggte(out_1, type = "group")
+summary(group_effects)
+```
+
+Cambios intervalos
+
+```{r}
+data_g90 <- balancear_panel(data_total, prod = "G90", c("01-09-2017", "01-09-2018"))
+data_g90 <- data_g90 %>% 
+  mutate(mes = (year(fecha)-2017)*12 + month(fecha),
+         fecha_trat = if_else(tipo_bandera == "PROPIA PECSA", 14, 0))
+```
+
+
+```{r}
+out_1 <- att_gt(yname = "precio_de_venta",
+              gname = "fecha_trat",
+              idname = "codigo_de_osinergmin",
+              tname = "mes",
+              xformla = ~1,
+              data = data_g90,
+              est_method = "reg"
+              )
+ggdid(out_1)
+summary(out_1)
+group_effects <- aggte(out_1, type = "group")
+summary(group_effects)
+```
+
+Agreguemos controles
+
+```{r}
+out_1 <- att_gt(yname = "precio_de_venta",
+              gname = "fecha_trat",
+              idname = "codigo_de_osinergmin",
+              tname = "mes",
+              xformla = ~codigo_de_osinergmin,
+              data = data_g90,
+              est_method = "reg"
+              )
+ggdid(out_1)
+summary(out_1)
+group_effects <- aggte(out_1, type = "group")
+summary(group_effects)
+```
+
+## Probamos para el diesel
+
+Balanceamos el panel:
+
+```{r}
+data_diesel <- balancear_panel(data_total, prod = "DIESEL", c("01-09-2017", "01-10-2018"))
+data_diesel <- data_diesel %>% 
+  mutate(mes = (year(fecha)-2017)*12 + month(fecha),
+         fecha_trat = if_else(tipo_bandera == "PROPIA PECSA", 14, 0))
+```
+
+```{r}
+out_1 <- att_gt(yname = "precio_de_venta",
+              gname = "fecha_trat",
+              idname = "codigo_de_osinergmin",
+              tname = "mes",
+              xformla = ~codigo_de_osinergmin + distrito + bandera,
+              data = data_diesel,
+              est_method = "reg"
+              )
+ggdid(out_1)
+summary(out_1)
+group_effects <- aggte(out_1, type = "group")
+summary(group_effects)
+```
+
+## Ahora probemos ajustando mejor el grupo de control
+
+Para la gasolina, comparemos los precios de PECSA, versus los precios de los 
+distritos donde no está PECSA
+
+
+```{r}
+data_g90 <- balancear_panel(data_total, prod = "G90", c("01-09-2017", "01-09-2018"))
+data_g90 <- data_g90 %>% 
+  mutate(mes = (year(fecha)-2017)*12 + month(fecha),
+         fecha_trat = if_else(tipo_bandera == "PROPIA PECSA", 14, 0)) %>% 
+  filter(tipo_bandera != "PROPIA PRIMAX",
+        tipo_bandera == "PROPIA PECSA" | distrito %ni% distritos_con_pecsa)
+
+out_1 <- att_gt(yname = "precio_de_venta",
+              gname = "fecha_trat",
+              idname = "codigo_de_osinergmin",
+              tname = "mes",
+              xformla = ~codigo_de_osinergmin,
+              data = data_g90,
+              est_method = "reg"
+              )
+ggdid(out_1)
+group_effects <- aggte(out_1, type = "group")
+summary(group_effects)
+```
+
+
+```{r}
+data_g90 <- balancear_panel(data_total, prod = "G90", c("01-09-2017", "01-09-2018"))
+data_g90 <- data_g90 %>% 
+  mutate(mes = (year(fecha)-2017)*12 + month(fecha),
+         fecha_trat = if_else(tipo_bandera == "PROPIA PECSA", 14, 0)) %>% 
+  filter(tipo_bandera != "PROPIA PRIMAX",
+        tipo_bandera == "PROPIA PECSA" | codigo_de_osinergmin %ni% lista_vecinos)
+           
+out_1 <- att_gt(yname = "precio_de_venta",
+              gname = "fecha_trat",
+              idname = "codigo_de_osinergmin",
+              tname = "mes",
+              xformla = ~codigo_de_osinergmin,
+              data = data_g90,
+              est_method = "reg"
+              )
+ggdid(out_1)
+summary(out_1)
+group_effects <- aggte(out_1, type = "group")
+summary(group_effects)
+```
+
+
+para diesel
+
+
+```{r}
+data_diesel <- balancear_panel(data_total, prod = "DIESEL", c("01-05-2017", "01-09-2018"))
+data_diesel <- data_diesel %>% 
+  mutate(mes = (year(fecha)-2017)*12 + month(fecha),
+         fecha_trat = if_else(tipo_bandera == "PROPIA PECSA", 14, 0)) %>% 
+  filter(tipo_bandera != "PROPIA PRIMAX",
+         tipo_bandera != "PROPIA REPSOL",
+        tipo_bandera == "PROPIA PECSA" | codigo_de_osinergmin %ni% lista_vecinos & tipo_bandera=="INDEPENDIENTE")
+           
+out_1 <- att_gt(yname = "precio_de_venta",
+              gname = "fecha_trat",
+              idname = "codigo_de_osinergmin",
+              tname = "mes",
+              xformla = ~codigo_de_osinergmin,
+              data = data_diesel,
+              est_method = "reg"
+              )
+ggdid(out_1)
+summary(out_1)
+group_effects <- aggte(out_1, type = "group")
+summary(group_effects)
+```
+
+Remuevo Diciembre, Enero, Febro 
+
+```{r}
+data_diesel <- balancear_panel(data_total, prod = "DIESEL", c("01-01-2017", "01-10-2018"))
+data_diesel <- data_diesel %>% 
+  mutate(mes = (year(fecha)-2017)*12 + month(fecha),
+         fecha_trat = if_else(tipo_bandera == "PROPIA PECSA", 14, 0)) %>% 
+  filter(tipo_bandera != "PROPIA PRIMAX",
+         tipo_bandera != "PROPIA REPSOL",
+        tipo_bandera == "PROPIA PECSA" | distrito %ni% distritos_con_pecsa & tipo_bandera=="INDEPENDIENTE")
+        #fecha >= dmy("01/03/2018") | fecha <= dmy("01-09-2017"))
+           
+out_1 <- att_gt(yname = "precio_de_venta",
+              gname = "fecha_trat",
+              idname = "codigo_de_osinergmin",
+              tname = "mes",
+              xformla = ~1,
+              data = data_diesel,
+              est_method = "reg"
+              )
+ggdid(out_1)
+summary(out_1)
+
+```
+
+Regresamos a la especificación simple para Diesel, solo quitando PRIMAX y las estaciones vecinas a PRIMAX
+```{r}
+data_diesel <- balancear_panel(data_total, prod = "DIESEL", c("01-01-2017", "01-10-2018"))
+data_diesel <- data_diesel %>% 
+  mutate(mes = (year(fecha)-2017)*12 + month(fecha),
+         fecha_trat = if_else(tipo_bandera == "PROPIA PECSA", 14, 0)) %>% 
+  filter(tipo_bandera != "PROPIA PRIMAX",
+        tipo_bandera == "PROPIA PECSA" | distrito %ni% distritos_con_pecsa)
+        #fecha >= dmy("01/03/2018") | fecha <= dmy("01-09-2017"))
+           
+out_1 <- att_gt(yname = "precio_de_venta",
+              gname = "fecha_trat",
+              idname = "codigo_de_osinergmin",
+              tname = "mes",
+              xformla = ~1,
+              data = data_diesel,
+              est_method = "reg"
+              )
+ggdid(out_1)
+summary(out_1)
+
+```
+
+Lo mismo para G90
+
+```{r}
+data_g90 <- balancear_panel(data_total, prod = "G90", c("01-01-2017", "01-10-2018"))
+data_g90 <- data_g90 %>% 
+  mutate(mes = (year(fecha)-2017)*12 + month(fecha),
+         fecha_trat = if_else(tipo_bandera == "PROPIA PECSA", 14, 0)) %>% 
+  filter(tipo_bandera != "PROPIA PRIMAX",
+        tipo_bandera == "PROPIA PECSA" | distrito %ni% distritos_con_pecsa)
+        #fecha >= dmy("01/03/2018") | fecha <= dmy("01-09-2017"))
+           
+out_1 <- att_gt(yname = "precio_de_venta",
+              gname = "fecha_trat",
+              idname = "codigo_de_osinergmin",
+              tname = "mes",
+              xformla = ~1,
+              data = data_g90,
+              est_method = "reg"
+              )
+ggdid(out_1)
+summary(out_1)
+
+```
+
+Para Primax también hay efectos interesantes
+
+```{r}
+data_g90 <- balancear_panel(data_total, prod = "G90", c("01-01-2017", "01-10-2018"))
+data_g90 <- data_g90 %>% 
+  mutate(mes = (year(fecha)-2017)*12 + month(fecha),
+         fecha_trat = if_else(tipo_bandera == "PROPIA PRIMAX", 14, 0)) %>% 
+  filter(tipo_bandera != "PROPIA PECSA",
+        tipo_bandera == "PROPIA PRIMAX" | distrito %ni% distritos_con_primax)
+        #fecha >= dmy("01/03/2018") | fecha <= dmy("01-09-2017"))
+           
+out_1 <- att_gt(yname = "precio_de_venta",
+              gname = "fecha_trat",
+              idname = "codigo_de_osinergmin",
+              tname = "mes",
+              xformla = ~1,
+              data = data_g90,
+              est_method = "reg"
+              )
+ggdid(out_1)
+summary(out_1)
+```
+
+```{r}
+data_diesel <- balancear_panel(data_total, prod = "DIESEL", c("01-01-2017", "01-10-2018"))
+data_diesel <- data_diesel %>% 
+  mutate(mes = (year(fecha)-2017)*12 + month(fecha),
+         fecha_trat = if_else(tipo_bandera == "PROPIA PRIMAX", 14, 0)) %>% 
+  filter(tipo_bandera != "PROPIA PECSA",
+        tipo_bandera == "PROPIA PRIMAX" | distrito %ni% distritos_con_primax)
+        #fecha >= dmy("01/03/2018") | fecha <= dmy("01-09-2017"))
+           
+out_1 <- att_gt(yname = "precio_de_venta",
+              gname = "fecha_trat",
+              idname = "codigo_de_osinergmin",
+              tname = "mes",
+              xformla = ~1,
+              data = data_diesel,
+              est_method = "reg"
+              )
+ggdid(out_1)
+summary(out_1)
+```
+
+## Hagamos lo mismo para las vecinas
+
+Gasolina
+```{r}
+data_g90 <- balancear_panel(data_total, prod = "G90", c("01-01-2017", "01-10-2018"))
+data_g90 <- data_g90 %>% 
+  mutate(mes = (year(fecha)-2017)*12 + month(fecha),
+         vecina = if_else(codigo_de_osinergmin %in% lista_vecinos, 
+                          "vecina", 
+                          "no vecina"),
+         fecha_trat = if_else(vecina == "vecina", 14, 0)) %>% 
+  filter(tipo_bandera != "PROPIA PECSA",
+         tipo_bandera != "PROPIA PRIMAX")
+        #tipo_bandera == "PROPIA PRIMAX" | distrito %ni% distritos_con_primax)
+        #fecha >= dmy("01/03/2018") | fecha <= dmy("01-09-2017"))
+           
+out_1 <- att_gt(yname = "precio_de_venta",
+              gname = "fecha_trat",
+              idname = "codigo_de_osinergmin",
+              tname = "mes",
+              xformla = ~1,
+              data = data_g90,
+              est_method = "dr",
+              anticipation = 3,
+              bstrap = F,
+              cband = F)
+ggdid(out_1)
+summary(out_1)
+```
+
+Diesel
+
+```{r}
+data_diesel <- balancear_panel(data_total, prod = "DIESEL", c("01-01-2017", "01-10-2018"))
+data_diesel <- data_diesel %>% 
+  mutate(mes = (year(fecha)-2017)*12 + month(fecha),
+         vecina = if_else(codigo_de_osinergmin %in% lista_vecinos, 
+                          "vecina", 
+                          "no vecina"),
+         fecha_trat = if_else(vecina == "vecina", 14, 0)) %>% 
+  filter(tipo_bandera != "PROPIA PECSA",
+         tipo_bandera != "PROPIA PRIMAX")
+        #tipo_bandera == "PROPIA PRIMAX" | distrito %ni% distritos_con_primax)
+        #fecha >= dmy("01/03/2018") | fecha <= dmy("01-09-2017"))
+           
+out_1 <- att_gt(yname = "precio_de_venta",
+              gname = "fecha_trat",
+              idname = "codigo_de_osinergmin",
+              tname = "mes",
+              xformla = ~1,
+              data = data_diesel,
+              est_method = "dr",
+              anticipation = 3,
+              bstrap = F,
+              cband = F)
+ggdid(out_1)
+summary(out_1)
+```
