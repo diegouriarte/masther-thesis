@@ -104,7 +104,9 @@ data_g90 <- data_g90 %>%
 ```
 
 
-Corremos la regresión:
+1) Regresión similar a la corrida solo con el paqeute base.
+- Plazo recortado de tiempo
+- No se define adecuadamente el grupo de control
 
 ```{r}
 out_1 <- att_gt(yname = "precio_de_venta",
@@ -113,58 +115,146 @@ out_1 <- att_gt(yname = "precio_de_venta",
               tname = "mes",
               xformla = ~1,
               data = data_g90,
-              est_method = "reg"
+              est_method = "reg",
+              anticipation = 3,
+              bstrap = F,
+              cband = F
               )
-ggdid(out_1)
+ggdid(out_1, ylim = c(-.3,.3))
 summary(out_1)
 ```
 
-```{r}
-group_effects <- aggte(out_1, type = "group")
-summary(group_effects)
-```
+No se notan casi efectos.
 
-Cambios intervalos
+2) Lo mismo, cambiando intervalos
+
 
 ```{r}
 data_g90 <- balancear_panel(data_total, prod = "G90", c("01-09-2017", "01-09-2018"))
 data_g90 <- data_g90 %>% 
   mutate(mes = (year(fecha)-2017)*12 + month(fecha),
          fecha_trat = if_else(tipo_bandera == "PROPIA PECSA", 14, 0))
-```
-
-
-```{r}
 out_1 <- att_gt(yname = "precio_de_venta",
               gname = "fecha_trat",
               idname = "codigo_de_osinergmin",
               tname = "mes",
               xformla = ~1,
               data = data_g90,
-              est_method = "reg"
+              est_method = "reg",
+              anticipation = 3,
+              bstrap = F,
+              cband = F
               )
-ggdid(out_1)
+ggdid(out_1, ylim = c(-.3,.3))
 summary(out_1)
 group_effects <- aggte(out_1, type = "group")
 summary(group_effects)
 ```
 
-Agreguemos controles
+No se detectan efectos claros nuevamente.
 
+3) Intentamos agregando controles
+
+- Con codigo de osinergmin y bandera mejora
 ```{r}
+data_g90 <- balancear_panel(data_total, prod = "G90", c("01-09-2017", "01-09-2018"))
+data_g90 <- data_g90 %>% 
+  mutate(mes = (year(fecha)-2017)*12 + month(fecha),
+         fecha_trat = if_else(tipo_bandera == "PROPIA PECSA", 14, 0))
 out_1 <- att_gt(yname = "precio_de_venta",
               gname = "fecha_trat",
               idname = "codigo_de_osinergmin",
               tname = "mes",
-              xformla = ~codigo_de_osinergmin,
+              xformla = ~codigo_de_osinergmin + bandera,
               data = data_g90,
-              est_method = "reg"
+              est_method = "reg",
+              anticipation = 3,
+              bstrap = F,
+              cband = F
               )
-ggdid(out_1)
+ggdid(out_1, ylim = c(-.5,.5))
 summary(out_1)
 group_effects <- aggte(out_1, type = "group")
 summary(group_effects)
 ```
+
+4) Con codigo de osinergmin y bandera mejora y distrito, empeora
+
+```{r}
+data_g90 <- balancear_panel(data_total, prod = "G90", c("01-01-2017", "01-09-2018"))
+data_g90 <- data_g90 %>% 
+  mutate(mes = (year(fecha)-2017)*12 + month(fecha),
+         fecha_trat = if_else(tipo_bandera == "PROPIA PECSA", 14, 0))
+out_1 <- att_gt(yname = "precio_de_venta",
+              gname = "fecha_trat",
+              idname = "codigo_de_osinergmin",
+              tname = "mes",
+              xformla = ~codigo_de_osinergmin + bandera + distrito,
+              data = data_g90,
+              est_method = "reg",
+              anticipation = 3,
+              bstrap = F,
+              cband = F
+              )
+ggdid(out_1, ylim = c(-.5,.5))
+summary(out_1)
+group_effects <- aggte(out_1, type = "group")
+summary(group_effects)
+```
+
+5) Pero en ambos casos le metemos solo dos periodos de anticipación, y mejora 
+bastante, en ambos casos ya se parece. Y mejor si le ponemos toda la muestra
+
+```{r}
+data_g90 <- balancear_panel(data_total, prod = "G90", c("01-01-2017", "01-09-2018"))
+data_g90 <- data_g90 %>% 
+  mutate(mes = (year(fecha)-2017)*12 + month(fecha),
+         fecha_trat = if_else(tipo_bandera == "PROPIA PECSA", 14, 0))
+out_1 <- att_gt(yname = "precio_de_venta",
+              gname = "fecha_trat",
+              idname = "codigo_de_osinergmin",
+              tname = "mes",
+              xformla = ~codigo_de_osinergmin + bandera + distrito,
+              data = data_g90,
+              est_method = "reg",
+              anticipation = 2,
+              bstrap = F,
+              cband = F
+              )
+ggdid(out_1, ylim = c(-.5,.5))
+summary(out_1)
+group_effects <- aggte(out_1, type = "group")
+summary(group_effects)
+```
+
+
+6) Añadimos a la especificación anterior, tiene mecánico
+
+```{r}
+data_g90 <- balancear_panel(data_total, prod = "G90", c("01-01-2017", "01-09-2018"))
+data_g90 <- data_g90 %>% 
+  mutate(mes = (year(fecha)-2017)*12 + month(fecha),
+         fecha_trat = if_else(tipo_bandera == "PROPIA PECSA", 14, 0))
+out_1 <- att_gt(yname = "precio_de_venta",
+              gname = "fecha_trat",
+              idname = "codigo_de_osinergmin",
+              tname = "mes",
+              xformla = ~codigo_de_osinergmin + bandera + distrito +
+                tiene_mecanico ,
+              data = data_g90,
+              est_method = "reg",
+              anticipation = 2,
+              bstrap = F,
+              cband = F
+              )
+ggdid(out_1, ylim = c(-.5,.5))
+summary(out_1)
+group_effects <- aggte(out_1, type = "group")
+summary(group_effects)
+```
+No mejora mucho la situación. 
+
+Resumen: La mejor fue la opción 5).
 
 ## Probamos para el diesel
 
@@ -192,14 +282,44 @@ group_effects <- aggte(out_1, type = "group")
 summary(group_effects)
 ```
 
+
+Cogemos la que mejor funcionó para G90 con Diésel
+
+```{r}
+data_diesel <- balancear_panel(data_total, prod = "DIESEL", c("01-01-2017", "01-09-2018"))
+data_diesel <- data_diesel %>% 
+  mutate(mes = (year(fecha)-2017)*12 + month(fecha),
+         fecha_trat = if_else(tipo_bandera == "PROPIA PECSA", 14, 0))
+out_1 <- att_gt(yname = "precio_de_venta",
+              gname = "fecha_trat",
+              idname = "codigo_de_osinergmin",
+              tname = "mes",
+              xformla = ~codigo_de_osinergmin,
+              data = data_diesel,
+              est_method = "reg",
+              anticipation = 2,
+              bstrap = F,
+              cband = F
+              )
+ggdid(out_1, ylim = c(-.5,.5))
+summary(out_1)
+group_effects <- aggte(out_1, type = "group")
+summary(group_effects)
+
+conditional_did_pretest("precio_de_venta", "mes", "codigo_de_osinergmin", 
+                        "fecha_trat", xformla=~codigo_de_osinergmin + bandera + distrito,
+                        data=data_diesel)
+```
+
+
 ## Ahora probemos ajustando mejor el grupo de control
 
-Para la gasolina, comparemos los precios de PECSA, versus los precios de los 
-distritos donde no está PECSA
+1) Para la gasolina, comparemos los precios de PECSA, versus los precios de los 
+distritos donde no está PECSA. Retiramos también PRIMAX
 
 
 ```{r}
-data_g90 <- balancear_panel(data_total, prod = "G90", c("01-09-2017", "01-09-2018"))
+data_g90 <- balancear_panel(data_total, prod = "G90", c("01-01-2017", "01-10-2018"))
 data_g90 <- data_g90 %>% 
   mutate(mes = (year(fecha)-2017)*12 + month(fecha),
          fecha_trat = if_else(tipo_bandera == "PROPIA PECSA", 14, 0)) %>% 
@@ -210,18 +330,25 @@ out_1 <- att_gt(yname = "precio_de_venta",
               gname = "fecha_trat",
               idname = "codigo_de_osinergmin",
               tname = "mes",
-              xformla = ~codigo_de_osinergmin,
+              xformla = ~codigo_de_osinergmin + bandera,
               data = data_g90,
-              est_method = "reg"
+              est_method = "reg",
+              anticipation = 2,
+              bstrap = F,
+              cband = T
               )
 ggdid(out_1)
+summary(out_1)
 group_effects <- aggte(out_1, type = "group")
 summary(group_effects)
 ```
+Resultado: Aceptable con anticipacion 2. No corre si controlo por distritos
 
+2) Lo mismo que lo anterior, pero ahora meto todas las estaciones que no son
+vecinas
 
 ```{r}
-data_g90 <- balancear_panel(data_total, prod = "G90", c("01-09-2017", "01-09-2018"))
+data_g90 <- balancear_panel(data_total, prod = "G90", c("01-01-2017", "01-10-2018"))
 data_g90 <- data_g90 %>% 
   mutate(mes = (year(fecha)-2017)*12 + month(fecha),
          fecha_trat = if_else(tipo_bandera == "PROPIA PECSA", 14, 0)) %>% 
@@ -234,7 +361,10 @@ out_1 <- att_gt(yname = "precio_de_venta",
               tname = "mes",
               xformla = ~codigo_de_osinergmin,
               data = data_g90,
-              est_method = "reg"
+              est_method = "reg",
+              anticipation = 2,
+              bstrap = F,
+              cband = T
               )
 ggdid(out_1)
 summary(out_1)
@@ -242,18 +372,19 @@ group_effects <- aggte(out_1, type = "group")
 summary(group_effects)
 ```
 
+Se ve super bien.
 
-para diesel
 
+3) Lo mismo, para el diesel
+Ojo, si intento controlar por bandera, se incrementa los IC
 
 ```{r}
-data_diesel <- balancear_panel(data_total, prod = "DIESEL", c("01-05-2017", "01-09-2018"))
+data_diesel <- balancear_panel(data_total, prod = "DIESEL", c("01-01-2017", "01-10-2018"))
 data_diesel <- data_diesel %>% 
   mutate(mes = (year(fecha)-2017)*12 + month(fecha),
          fecha_trat = if_else(tipo_bandera == "PROPIA PECSA", 14, 0)) %>% 
   filter(tipo_bandera != "PROPIA PRIMAX",
-         tipo_bandera != "PROPIA REPSOL",
-        tipo_bandera == "PROPIA PECSA" | codigo_de_osinergmin %ni% lista_vecinos & tipo_bandera=="INDEPENDIENTE")
+        tipo_bandera == "PROPIA PECSA" | codigo_de_osinergmin %ni% lista_vecinos)
            
 out_1 <- att_gt(yname = "precio_de_venta",
               gname = "fecha_trat",
@@ -261,40 +392,20 @@ out_1 <- att_gt(yname = "precio_de_venta",
               tname = "mes",
               xformla = ~codigo_de_osinergmin,
               data = data_diesel,
-              est_method = "reg"
+              est_method = "reg",
+              anticipation = 2,
+              bstrap = F,
+              cband = T
               )
 ggdid(out_1)
 summary(out_1)
 group_effects <- aggte(out_1, type = "group")
 summary(group_effects)
-```
-
-Remuevo Diciembre, Enero, Febro 
-
-```{r}
-data_diesel <- balancear_panel(data_total, prod = "DIESEL", c("01-01-2017", "01-10-2018"))
-data_diesel <- data_diesel %>% 
-  mutate(mes = (year(fecha)-2017)*12 + month(fecha),
-         fecha_trat = if_else(tipo_bandera == "PROPIA PECSA", 14, 0)) %>% 
-  filter(tipo_bandera != "PROPIA PRIMAX",
-         tipo_bandera != "PROPIA REPSOL",
-        tipo_bandera == "PROPIA PECSA" | distrito %ni% distritos_con_pecsa & tipo_bandera=="INDEPENDIENTE")
-        #fecha >= dmy("01/03/2018") | fecha <= dmy("01-09-2017"))
-           
-out_1 <- att_gt(yname = "precio_de_venta",
-              gname = "fecha_trat",
-              idname = "codigo_de_osinergmin",
-              tname = "mes",
-              xformla = ~1,
-              data = data_diesel,
-              est_method = "reg"
-              )
-ggdid(out_1)
-summary(out_1)
 
 ```
 
-Regresamos a la especificación simple para Diesel, solo quitando PRIMAX y las estaciones vecinas a PRIMAX
+4) Similar, pero con las estaciones en distritos donde no está pecsa
+
 ```{r}
 data_diesel <- balancear_panel(data_total, prod = "DIESEL", c("01-01-2017", "01-10-2018"))
 data_diesel <- data_diesel %>% 
@@ -308,40 +419,27 @@ out_1 <- att_gt(yname = "precio_de_venta",
               gname = "fecha_trat",
               idname = "codigo_de_osinergmin",
               tname = "mes",
-              xformla = ~1,
+              xformla = ~codigo_de_osinergmin,
               data = data_diesel,
-              est_method = "reg"
+              est_method = "reg",
+              anticipation = 2,
+              bstrap = F,
+              cband = F
               )
 ggdid(out_1)
 summary(out_1)
+group_effects <- aggte(out_1, type = "group")
+summary(group_effects)
 
 ```
 
-Lo mismo para G90
+Se ve bien pero no tan bien.
 
-```{r}
-data_g90 <- balancear_panel(data_total, prod = "G90", c("01-01-2017", "01-10-2018"))
-data_g90 <- data_g90 %>% 
-  mutate(mes = (year(fecha)-2017)*12 + month(fecha),
-         fecha_trat = if_else(tipo_bandera == "PROPIA PECSA", 14, 0)) %>% 
-  filter(tipo_bandera != "PROPIA PRIMAX",
-        tipo_bandera == "PROPIA PECSA" | distrito %ni% distritos_con_pecsa)
-        #fecha >= dmy("01/03/2018") | fecha <= dmy("01-09-2017"))
-           
-out_1 <- att_gt(yname = "precio_de_venta",
-              gname = "fecha_trat",
-              idname = "codigo_de_osinergmin",
-              tname = "mes",
-              xformla = ~1,
-              data = data_g90,
-              est_method = "reg"
-              )
-ggdid(out_1)
-summary(out_1)
 
-```
+========================================================
 
-Para Primax también hay efectos interesantes
+
+## Para Primax también hay efectos interesantes
 
 ```{r}
 data_g90 <- balancear_panel(data_total, prod = "G90", c("01-01-2017", "01-10-2018"))
@@ -379,7 +477,8 @@ out_1 <- att_gt(yname = "precio_de_venta",
               tname = "mes",
               xformla = ~1,
               data = data_diesel,
-              est_method = "reg"
+              est_method = "reg",
+              anticipation = 3
               )
 ggdid(out_1)
 summary(out_1)
