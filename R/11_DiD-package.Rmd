@@ -306,9 +306,9 @@ summary(out_1)
 group_effects <- aggte(out_1, type = "group")
 summary(group_effects)
 
-conditional_did_pretest("precio_de_venta", "mes", "codigo_de_osinergmin", 
-                        "fecha_trat", xformla=~codigo_de_osinergmin + bandera + distrito,
-                        data=data_diesel)
+# conditional_did_pretest("precio_de_venta", "mes", "codigo_de_osinergmin", 
+#                         "fecha_trat", xformla=~codigo_de_osinergmin + bandera + distrito,
+#                         data=data_diesel)
 ```
 
 
@@ -374,8 +374,90 @@ summary(group_effects)
 
 Se ve super bien.
 
+3) Si no le pongo anticipación se ve igual de bien:
 
-3) Lo mismo, para el diesel
+```{r}
+data_g90 <- balancear_panel(data_total, prod = "G90", c("01-01-2017", "01-10-2018"))
+data_g90 <- data_g90 %>% 
+  mutate(mes = (year(fecha)-2017)*12 + month(fecha),
+         fecha_trat = if_else(tipo_bandera == "PROPIA PECSA", 14, 0)) %>% 
+  filter(tipo_bandera != "PROPIA PRIMAX",
+        tipo_bandera == "PROPIA PECSA" | codigo_de_osinergmin %ni% lista_vecinos)
+           
+out_1 <- att_gt(yname = "precio_de_venta",
+              gname = "fecha_trat",
+              idname = "codigo_de_osinergmin",
+              tname = "mes",
+              xformla = ~codigo_de_osinergmin,
+              data = data_g90,
+              est_method = "reg",
+              anticipation = 2,
+              bstrap = F,
+              cband = T
+              )
+ggdid(out_1)
+summary(out_1)
+group_effects <- aggte(out_1, type = "group")
+summary(group_effects)
+```
+
+Armemos la info para el HonestDiD
+
+```{r}
+library(HonestDiD)
+data('LWdata_EventStudy', package = "HonestDiD")
+betahat <- out_1$att
+sigma <- as.matrix(out_1$V_analytical)
+timeVec = c(seq(from = 1, to = 13, by = 1), seq(from = 15, to = 22, by = 1))
+referencePeriod = 14
+postPeriodIndices = which(timeVec > 14)
+prePeriodIndices = which(timeVec < 14)
+stdErrors = out_1$se
+EventStudy = list(
+  betahat = betahat,
+  sigma = sigma,
+  timeVec = timeVec,
+  referencePeriod = referencePeriod,
+  prePeriodIndices = prePeriodIndices,
+  postPeriodIndices = postPeriodIndices,
+  stdErrors = stdErrors)
+```
+
+```{r}
+#Create l_vec corresponding with 15 years of exposure
+
+l_vec = basisVector(5 , 21-13+1)
+# Construct robust confidence intervals for Delta^{SD}(M) for 15 years of exposure
+DeltaSD_RobustResults <- createSensitivityResults(
+  betahat = EventStudy$betahat,
+  sigma = EventStudy$sigma,
+  numPrePeriods = 12,
+  numPostPeriods = 21-13+1,
+  l_vec = l_vec,
+  Mvec = seq(from = 0, to = 0.025, by =0.005) 
+)
+
+
+OriginalResults <- constructOriginalCS(
+  betahat = EventStudy$betahat,
+  sigma = EventStudy$sigma,
+  numPrePeriods = 12,
+  numPostPeriods = 21-13+1,
+  l_vec = l_vec
+)
+
+DeltaSD_SensitivityPlot <- createSensitivityPlot(
+  robustResults = DeltaSD_RobustResults,
+  originalResults = OriginalResults
+)
+DeltaSD_SensitivityPlot
+
+head(DeltaSD_RobustResults)
+```
+
+DIESEL 
+
+4) Lo mismo, para el diesel
 Ojo, si intento controlar por bandera, se incrementa los IC
 
 ```{r}
@@ -404,7 +486,34 @@ summary(group_effects)
 
 ```
 
-4) Similar, pero con las estaciones en distritos donde no está pecsa
+5) Nuavemente, con cero se obtienen resultados tambien se bien
+
+```{r}
+data_diesel <- balancear_panel(data_total, prod = "DIESEL", c("01-01-2017", "01-10-2018"))
+data_diesel <- data_diesel %>% 
+  mutate(mes = (year(fecha)-2017)*12 + month(fecha),
+         fecha_trat = if_else(tipo_bandera == "PROPIA PECSA", 14, 0)) %>% 
+  filter(tipo_bandera != "PROPIA PRIMAX",
+        tipo_bandera == "PROPIA PECSA" | codigo_de_osinergmin %ni% lista_vecinos)
+           
+out_1 <- att_gt(yname = "precio_de_venta",
+              gname = "fecha_trat",
+              idname = "codigo_de_osinergmin",
+              tname = "mes",
+              xformla = ~codigo_de_osinergmin,
+              data = data_diesel,
+              est_method = "reg",
+              anticipation = 0,
+              bstrap = F,
+              cband = T
+              )
+ggdid(out_1)
+summary(out_1)
+group_effects <- aggte(out_1, type = "group")
+summary(group_effects)
+
+```
+5) Similar, pero con las estaciones en distritos donde no está pecsa
 
 ```{r}
 data_diesel <- balancear_panel(data_total, prod = "DIESEL", c("01-01-2017", "01-10-2018"))
@@ -422,7 +531,7 @@ out_1 <- att_gt(yname = "precio_de_venta",
               xformla = ~codigo_de_osinergmin,
               data = data_diesel,
               est_method = "reg",
-              anticipation = 2,
+              anticipation = 0,
               bstrap = F,
               cband = F
               )
@@ -433,14 +542,17 @@ summary(group_effects)
 
 ```
 
-Se ve bien pero no tan bien.
+No cambia mucho.
 
+Conclusión, poner anticipación 0 requiere menos malares y se bien igual de bien.
 
 ========================================================
 
 
 ## Para Primax también hay efectos interesantes
 
+1) Efecto en el precio para estaciones de Primax, descartando las de pecsa, y con control
+aquellas en distritos donde no está Primax
 ```{r}
 data_g90 <- balancear_panel(data_total, prod = "G90", c("01-01-2017", "01-10-2018"))
 data_g90 <- data_g90 %>% 
@@ -454,14 +566,20 @@ out_1 <- att_gt(yname = "precio_de_venta",
               gname = "fecha_trat",
               idname = "codigo_de_osinergmin",
               tname = "mes",
-              xformla = ~1,
+              xformla = ~codigo_de_osinergmin,
               data = data_g90,
-              est_method = "reg"
+              est_method = "reg",
+              anticipation = 0,
+              bstrap = F,
+              cband = F
               )
 ggdid(out_1)
 summary(out_1)
+group_effects <- aggte(out_1, type = "group")
+summary(group_effects)
 ```
 
+2) Efecto en el precio de diesel para estaciones de Primax, descartando las de pecsa, y con control
 ```{r}
 data_diesel <- balancear_panel(data_total, prod = "DIESEL", c("01-01-2017", "01-10-2018"))
 data_diesel <- data_diesel %>% 
@@ -475,18 +593,21 @@ out_1 <- att_gt(yname = "precio_de_venta",
               gname = "fecha_trat",
               idname = "codigo_de_osinergmin",
               tname = "mes",
-              xformla = ~1,
+              xformla = ~codigo_de_osinergmin,
               data = data_diesel,
               est_method = "reg",
-              anticipation = 3
+              anticipation = 0,
+              bstrap = F,
+              cband = T
               )
 ggdid(out_1)
 summary(out_1)
 ```
 
-## Hagamos lo mismo para las vecinas
+Para los precios mismos de Primax, se nota claramente el incremento
 
-Gasolina
+# Vecinas 
+5) Vecinas de Pecsa en Gasolina
 ```{r}
 data_g90 <- balancear_panel(data_total, prod = "G90", c("01-01-2017", "01-10-2018"))
 data_g90 <- data_g90 %>% 
@@ -504,17 +625,21 @@ out_1 <- att_gt(yname = "precio_de_venta",
               gname = "fecha_trat",
               idname = "codigo_de_osinergmin",
               tname = "mes",
-              xformla = ~1,
+              xformla = ~codigo_de_osinergmin,
               data = data_g90,
-              est_method = "dr",
-              anticipation = 3,
+              est_method = "reg",
+              anticipation = 0,
               bstrap = F,
-              cband = F)
+              cband = T)
 ggdid(out_1)
 summary(out_1)
+group_effects <- aggte(out_1, type = "group")
+summary(group_effects)
 ```
 
-Diesel
+Efectos positivos hacia el final, al inicio no. Pero se ven
+
+6) Vecinas de Pecsa, efecto en precio de Diesel
 
 ```{r}
 data_diesel <- balancear_panel(data_total, prod = "DIESEL", c("01-01-2017", "01-10-2018"))
@@ -533,12 +658,78 @@ out_1 <- att_gt(yname = "precio_de_venta",
               gname = "fecha_trat",
               idname = "codigo_de_osinergmin",
               tname = "mes",
-              xformla = ~1,
+              xformla = ~codigo_de_osinergmin,
               data = data_diesel,
-              est_method = "dr",
-              anticipation = 3,
+              est_method = "reg",
+              anticipation = 0,
               bstrap = F,
-              cband = F)
+              cband = T)
+ggdid(out_1, ylim = c(-.2,.2))
+summary(out_1)
+group_effects <- aggte(out_1, type = "group")
+summary(group_effects)
+```
+
+No hay efecto global, ni hacia el final
+
+7) Comparamos las estaciones donde no estaba Primax, contra las que estaba
+```{r}
+data_diesel <- balancear_panel(data_total, prod = "DIESEL", c("01-01-2017", "01-10-2018"))
+data_diesel <- data_diesel %>% 
+  mutate(mes = (year(fecha)-2017)*12 + month(fecha),
+         vecina = if_else(distrito %in% distritos_con_primax, 
+                          "vecina", 
+                          "no vecina"),
+         fecha_trat = if_else(vecina == "vecina", 14, 0)) %>% 
+  filter(tipo_bandera != "PROPIA PECSA",
+         tipo_bandera != "PROPIA PRIMAX")
+           
+out_1 <- att_gt(yname = "precio_de_venta",
+              gname = "fecha_trat",
+              idname = "codigo_de_osinergmin",
+              tname = "mes",
+              xformla = ~codigo_de_osinergmin,
+              data = data_diesel,
+              est_method = "reg",
+              anticipation = 0,
+              bstrap = F,
+              cband = T
+              )
 ggdid(out_1)
 summary(out_1)
 ```
+
+8) Efecto en el precio de G90 para vecinas de Primax, descartando las de pecsa, y con control
+```{r}
+data_G90 <- balancear_panel(data_total, prod = "G90", c("01-01-2017", "01-10-2018"))
+data_G90 <- data_G90 %>% 
+  mutate(mes = (year(fecha)-2017)*12 + month(fecha),
+         vecina = if_else(distrito %in% distritos_con_primax, 
+                          "vecina", 
+                          "no vecina"),
+         fecha_trat = if_else(vecina == "vecina", 14, 0)) %>% 
+  filter(tipo_bandera != "PROPIA PECSA",
+        tipo_bandera != "PROPIA PRIMAX" )
+
+out_1 <- att_gt(yname = "precio_de_venta",
+              gname = "fecha_trat",
+              idname = "codigo_de_osinergmin",
+              tname = "mes",
+              xformla = ~codigo_de_osinergmin,
+              data = data_G90,
+              est_method = "reg",
+              anticipation = 0,
+              bstrap = F,
+              cband = T
+              )
+ggdid(out_1)
+summary(out_1)
+```
+
+# HonestDiD
+
+```{r}
+data('LWdata_EventStudy', package = "HonestDiD")
+
+```
+

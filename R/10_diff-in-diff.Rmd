@@ -42,14 +42,17 @@ conflict_prefer("filter", "dplyr")
 data_total <- readRDS(file = here::here("data", "processed", "data-final-regresiones.rds"))
 
 data_total <- data_total %>% 
-  mutate(codigo_de_osinergmin = factor(codigo_de_osinergmin)) %>% 
+  mutate(codigo_de_osinergmin = factor(codigo_de_osinergmin),
+         mes = (year(fecha)-2017)*12 + month(fecha),
+         mes = factor(mes)) %>% 
   mutate(tri_menos_4 = if_else(fecha <= dmy("01-04-2017") & fecha >= dmy("01-02-2017"), 1, 0),
          tri_menos_3 = if_else(fecha <= dmy("01-07-2017") & fecha >= dmy("01-05-2017"), 1, 0),
          tri_menos_2 = if_else(fecha <= dmy("01-10-2017") & fecha >= dmy("01-08-2017"), 1, 0),
          tri_menos_1 = if_else(fecha <= dmy("01-01-2018") & fecha >= dmy("01-11-2017"), 1, 0),
          tri_mas_1 = if_else(fecha <= dmy("01-04-2018") & fecha >= dmy("01-02-2018"), 1, 0),
          tri_mas_2 = if_else(fecha <= dmy("01-07-2018") & fecha >= dmy("01-05-2018"),1,0),
-         tri_mas_3 = if_else(fecha <= dmy("01-10-2018") & fecha >= dmy("01-08-2018"),1,0))
+         tri_mas_3 = if_else(fecha <= dmy("01-10-2018") & fecha >= dmy("01-08-2018"),1,0)) 
+  
 ```
 
 ## Función para regresiones
@@ -61,7 +64,7 @@ Ahora especificamos modelos:
 reg_clust <- function(form, 
                       data, 
                       producto, 
-                      fecha_lim = c("01-05-2017", "01-10-2018"), 
+                      fecha_lim = c("01-01-2017", "01-10-2018"), 
                       filtrado = FALSE){
   if (filtrado == TRUE) {
     data_filtrada <- balancear_panel(data, prod = producto) %>% 
@@ -120,6 +123,11 @@ modelo_test_mensual <- precio_de_venta ~
   tipo_bandera + grifo_mas_cercano + distancia_min + num_grifos_cerc +
   tiene_mecanico + densidad_2017 + ingresos_2012 + 
   num_viajes_millon + distrito 
+
+modelo_comp <- precio_de_venta ~ 
+  COMPRADA_DID* mes +
+  tipo_bandera + distrito
+  
 ```
 
 
@@ -252,6 +260,30 @@ stargazer(map(lista_reg, 1),
           out = here::here("doc", "tables", "g90_did_compra.htm"))
 ```
 
+
+## Comparamos con el paquete DiD
+
+```{r}
+lista_vecinos <- data_total %>% 
+filter(vecino_pecsa_thiessen_did == 1) %>%
+  distinct(codigo_de_osinergmin) %>% 
+  pull()
+
+data_total_1 <- data_total %>% 
+  filter(tipo_bandera != "PROPIA PRIMAX",
+        tipo_bandera == "PROPIA PECSA" | codigo_de_osinergmin %ni% lista_vecinos)
+
+modelo_comp <- precio_de_venta ~ 
+  COMPRADA_DID* mes +
+  codigo_de_osinergmin
+g90_comp <- reg_clust(modelo_comp, data_total_1, "G90", c("01-01-2017","01-10-2018"))
+stargazer(g90_comp, type = "text",
+          omit = c("tipo_bandera", "fecha", 
+                   "codigo_de_osinergmin", "distrito", "^tri_m", "mes"))
+```
+No sale bien,
+
+Ahora intentemos con definiendo mejor el grupo de control:
 
 
 
