@@ -18,47 +18,8 @@ source(here::here("R","funcion04_formato-tablas-reproducibles.R"), encoding = "U
 data(mpdta)
 ```
 
-## Ejemplo de como usar el paqeute DID
-```{r}
-out <- att_gt(yname = "lemp",
-              gname = "first.treat",
-              idname = "countyreal",
-              tname = "year",
-              xformla = ~1,
-              data = mpdta,
-              est_method = "reg"
-              )
-mpdta
-summary(out)
-```
 
-```{r}
-ggdid(out, ylim = c(-.25,.1))
-```
-
-
-Event study
-
-```{r}
-es <- aggte(out, type = "dynamic")
-summary(es)
-ggdid(es)
-
-```
-
-Overall Effect of Participating in the Treatment
-
-
-```{r}
-group_effects <- aggte(out, type = "group")
-summary(group_effects)
-
-```
-
-
-
-
-## Evaluamos para mi data
+## Variables base
 
 
 ```{r cargar-datos}
@@ -80,28 +41,20 @@ lista_vecinos <- data_total %>%
 filter(vecino_pecsa_thiessen_did == 1) %>%
   distinct(codigo_de_osinergmin) %>% 
   pull()
+
+lista_no_vecino <- data_total %>% 
+filter(vecino_pecsa_thiessen_did == 0) %>%
+  distinct(codigo_de_osinergmin) %>% 
+  pull()
+
+lista_vecinos_km <- data_total %>% 
+filter(vecino_pecsa_dist_did == 1) %>%
+  distinct(codigo_de_osinergmin) %>% 
+  pull()
+
 ```
 
-### Caso base, sin controles y PECSA versus todas las demás
-Creamos las variables requeridas para DiD: first treated para estaciones de PECSA
-
-Necesitamos hacer que la variable fecha sea numérica. 
-
-```{r}
-skimr::skim(data_total_1$fecha)
-
-```
-Como va de 2017-01-01 al 2018-10-01
-
-
-Balanceamos el panel:
-
-```{r}
-data_g90 <- balancear_panel(data_total, prod = "G90", c("01-05-2017", "01-10-2018"))
-data_g90 <- data_g90 %>% 
-  mutate(mes = (year(fecha)-2017)*12 + month(fecha),
-         fecha_trat = if_else(tipo_bandera == "PROPIA PECSA", 14, 0))
-```
+## Caso base, sin controles y PECSA versus todas las demás
 
 
 1) Regresión similar a la corrida solo con el paqeute base.
@@ -109,6 +62,11 @@ data_g90 <- data_g90 %>%
 - No se define adecuadamente el grupo de control
 
 ```{r}
+data_g90 <- balancear_panel(data_total, prod = "G90", c("01-05-2017", "01-10-2018"))
+data_g90 <- data_g90 %>% 
+  mutate(mes = (year(fecha)-2017)*12 + month(fecha),
+         fecha_trat = if_else(tipo_bandera == "PROPIA PECSA", 14, 0))
+
 out_1 <- att_gt(yname = "precio_de_venta",
               gname = "fecha_trat",
               idname = "codigo_de_osinergmin",
@@ -297,7 +255,7 @@ out_1 <- att_gt(yname = "precio_de_venta",
               xformla = ~codigo_de_osinergmin,
               data = data_diesel,
               est_method = "reg",
-              anticipation = 2,
+              anticipation = 0,
               bstrap = F,
               cband = F
               )
@@ -312,7 +270,7 @@ summary(group_effects)
 ```
 
 
-## Ahora probemos ajustando mejor el grupo de control
+# Ahora probemos ajustando mejor el grupo de control
 
 1) Para la gasolina, comparemos los precios de PECSA, versus los precios de los 
 distritos donde no está PECSA. Retiramos también PRIMAX
@@ -388,17 +346,49 @@ out_1 <- att_gt(yname = "precio_de_venta",
               gname = "fecha_trat",
               idname = "codigo_de_osinergmin",
               tname = "mes",
-              xformla = ~codigo_de_osinergmin,
+              xformla = ~codigo_de_osinergmin + bandera,
               data = data_g90,
-              est_method = "reg",
-              anticipation = 2,
+              est_method = "dr",
+              anticipation = 0,
               bstrap = F,
-              cband = T
+              cband = F,
               )
+# dp <- pre_process_did(yname = "precio_de_venta",
+#               gname = "fecha_trat",
+#               idname = "codigo_de_osinergmin",
+#               tname = "mes",
+#               xformla = ~codigo_de_osinergmin + distrito,
+#               data = data_g90,
+#               allow_unbalanced_panel = F)
+# 
+# results <- compute.att_gt(dp)
 ggdid(out_1)
 summary(out_1)
 group_effects <- aggte(out_1, type = "group")
 summary(group_effects)
+```
+
+Por que la diferencia en los meses 6, 9 y 12?
+
+
+Comparemos los precios entre ambos grupos por meses:
+
+```{r}
+plot_precios_g90 <- data_g90 %>% 
+  mutate(mes = (year(fecha)-2017)*12 + month(fecha),
+         fecha_trat = if_else(tipo_bandera == "PROPIA PECSA", 14, 0)) %>% 
+  filter(tipo_bandera != "PROPIA PRIMAX",
+        tipo_bandera == "PROPIA PECSA" | codigo_de_osinergmin %ni% lista_vecinos_km) %>% 
+  mutate(pecsa = if_else(tipo_bandera == "PROPIA PECSA", "PECSA", "NO VECINA")) %>% 
+  group_by(pecsa, mes) %>% 
+  summarize(precio_prom = mean(precio_de_venta))
+
+plot_precios_g90 %>% 
+  ggplot(aes(x = mes, y = precio_prom, color = pecsa)) + 
+  geom_point()+
+  geom_line()+
+  geom_text(aes(label = mes), hjust=-0.002, vjust = -0.03)+
+  labs(title= "Efectos en el precio de G90 para estaciones de PECSA")
 ```
 
 Armemos la info para el HonestDiD

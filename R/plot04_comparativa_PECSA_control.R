@@ -7,7 +7,9 @@
 # Cargamos librerías y definición de tema ---------------------------
 library(tidyverse)
 library(lubridate)
+
 '%ni%' <- Negate('%in%')
+
 tema_grafica <- theme_bw() + 
   theme(
     panel.spacing.x = unit(0.8, "cm"),
@@ -35,15 +37,18 @@ formato_comun <- list(
             color = "grey55", fontface = "bold"),
   scale_color_brewer(palette = "Set1") )
 
+f_labels <- data.frame(producto = c("G90", "DIESEL"), label = c("", "Venta de Pecsa"))
+
+# Cargamos datos y definimos distritos donde esta PECSA ----------------------------
+data_total <- readRDS(file = here::here("data", "processed", "data-final-regresiones.rds"))
+
+
 #' Lista de grifos que son vecinos a estación de PECSA 
 #' 
 lista_vecinos <- data_total %>% 
 filter(vecino_pecsa_thiessen_did == 1) %>%
   distinct(codigo_de_osinergmin) %>% 
   pull()
-
-# Cargamos datos y definimos distritos donde esta PECSA ----------------------------
-data_total <- readRDS(file = here::here("data", "processed", "data-final-regresiones.rds"))
 
 distritos_con_pecsa <- data_total %>% 
   distinct(distrito, tipo_bandera) %>% 
@@ -57,7 +62,6 @@ distritos_con_primax <- data_total %>%
 # Generamos el gráfico original ----------- 
 #'Considerando todas las estaciones en distritos donde PECSA está
 
-f_labels <- data.frame(producto = c("G90", "DIESEL"), label = c("", "Venta de Pecsa"))
 
 (p2 <- data_total %>% 
     filter(fecha <= dmy("2-10-2018"), 
@@ -314,3 +318,154 @@ filter(fecha <= dmy("2-10-2018"),
   formato_comun
 
 )
+
+
+# ================================================
+# Ahora con datos semanales
+  
+data_total <- readRDS(file = here::here("data", "processed", "data-final-regresiones_semanal.rds")) %>% 
+  mutate(semana_cont = if_else(año == 2017, semana, semana + 53))
+
+
+
+formato_comun <- list(
+  ylim(10,13), 
+  geom_vline(xintercept = 53+5,
+             linetype = "dashed",
+             size = 0.5, color = "grey55"),
+  geom_rect(data = data.frame(xmin = 53,
+                              xmax = 53+10,
+                              ymin = -Inf,
+                              ymax = Inf),
+            aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+            fill = "grey", alpha = 0.5),
+  geom_text(x = 58, y = -Inf, vjust = -0.9, 
+            hjust = -0.1, aes(label = label), data = f_labels,
+            color = "grey55", fontface = "bold"),
+  scale_color_brewer(palette = "Set1") )
+
+#' Lista de grifos que son vecinos a estación de PECSA 
+#' 
+lista_vecinos <- data_total %>% 
+  filter(vecino_pecsa_thiessen_did == 1) %>%
+  distinct(codigo_de_osinergmin) %>% 
+  pull()
+
+distritos_con_pecsa <- data_total %>% 
+  distinct(distrito, tipo_bandera) %>% 
+  filter(tipo_bandera == "PROPIA PECSA") %>% 
+  pull(distrito)
+
+distritos_con_primax <- data_total %>% 
+  distinct(distrito, tipo_bandera) %>% 
+  filter(tipo_bandera == "PROPIA PRIMAX") %>% 
+  pull(distrito)
+
+# Gráfica de comparativa precios PECSA versus resto
+
+data_total %>% 
+    filter(tipo_bandera != "PROPIA PRIMAX",
+           codigo_de_osinergmin %ni% lista_vecinos) %>% 
+    mutate(producto = fct_relevel(producto,c("G90","DIESEL")),
+           pecsa_no = if_else(tipo_bandera == "PROPIA PECSA", "PECSA", "RESTO")) %>% 
+    filter(producto == "G90") %>% 
+    group_by(semana_cont, producto, pecsa_no) %>% 
+    summarise(precio_promedio = mean(precio_de_venta)) %>% 
+    ggplot() +
+    geom_line(aes(x = semana_cont, y = precio_promedio, linetype = pecsa_no),
+              size = 1) +
+    labs(x = "Fecha", 
+         y = "Precio promedio", 
+         linetype = "Venta Pecsa",
+         title = "Efecto en los precios promedio de Gasohol 90") +
+    scale_color_brewer(palette = "Set1") + 
+    tema_grafica +
+    formato_comun
+
+data_total %>% 
+  filter(tipo_bandera != "PROPIA PRIMAX",
+         codigo_de_osinergmin %ni% lista_vecinos) %>% 
+  mutate(producto = fct_relevel(producto,c("G90","DIESEL")),
+         pecsa_no = if_else(tipo_bandera == "PROPIA PECSA", "PECSA", "RESTO"),
+         semana_cont = if_else(año == 2017, semana, semana + 53)) %>% 
+  filter(producto == "DIESEL") %>% 
+  group_by(semana_cont, producto, pecsa_no) %>% 
+  summarise(precio_promedio = mean(precio_de_venta)) %>% 
+  ggplot() +
+  geom_line(aes(x = semana_cont, y = precio_promedio, linetype = pecsa_no),
+            size = 1) +
+  labs(x = "Fecha", 
+       y = "Precio promedio", 
+       linetype = "Venta Pecsa",
+       title = "Efecto en los precios promedio de DB5") +
+  scale_color_brewer(palette = "Set1") + 
+  tema_grafica +
+  formato_comun
+
+data_total %>% 
+  filter(tipo_bandera != "PROPIA PECSA",
+         codigo_de_osinergmin %ni% lista_vecinos) %>% 
+  mutate(producto = fct_relevel(producto,c("G90","DIESEL")),
+         primax_no = if_else(tipo_bandera == "PROPIA PRIMAX", "PRIMAX", "RESTO"),
+         semana_cont = if_else(año == 2017, semana, semana + 53)) %>% 
+  filter(producto == "G90") %>% 
+  group_by(semana_cont, producto, primax_no) %>% 
+  summarise(precio_promedio = mean(precio_de_venta)) %>% 
+  ggplot() +
+  geom_line(aes(x = semana_cont, y = precio_promedio, linetype = primax_no),
+            size = 1) +
+  labs(x = "Fecha", 
+       y = "Precio promedio", 
+       linetype = "Venta Pecsa",
+       title = "Efecto en los precios promedio de Primax para Gasohol 90") +
+  scale_color_brewer(palette = "Set1") + 
+  tema_grafica +
+  formato_comun
+
+data_total %>% 
+  filter(tipo_bandera != "PROPIA PECSA",
+         tipo_bandera == "PROPIA PRIMAX" | distrito %ni% distritos_con_primax) %>% 
+  mutate(producto = fct_relevel(producto,c("G90","DIESEL")),
+         primax_no = if_else(tipo_bandera == "PROPIA PRIMAX", "PRIMAX", "RESTO"),
+         semana_cont = if_else(año == 2017, semana, semana + 53)) %>% 
+  filter(producto == "G90") %>% 
+  group_by(semana_cont, producto, primax_no) %>% 
+  summarise(precio_promedio = mean(precio_de_venta)) %>% 
+  ggplot() +
+  geom_line(aes(x = semana_cont, y = precio_promedio, linetype = primax_no),
+            size = 1) +
+  labs(x = "Fecha", 
+       y = "Precio promedio", 
+       linetype = "Venta Pecsa",
+       title = "Efecto en los precios promedio de Primax para Gasohol 90") +
+  scale_color_brewer(palette = "Set1") + 
+  tema_grafica +
+  scale_x_continuous(minor_breaks = seq(0, 100, 5)) +
+  formato_comun  
+
+data_total %>% 
+  filter(tipo_bandera != "PROPIA PECSA",
+         codigo_de_osinergmin %ni% lista_vecinos) %>% 
+  mutate(producto = fct_relevel(producto,c("G90","DIESEL")),
+         primax_no = if_else(tipo_bandera == "PROPIA PRIMAX", "PRIMAX", "RESTO"),
+         semana_cont = if_else(año == 2017, semana, semana + 53)) %>% 
+  filter(producto == "DIESEL") %>% 
+  group_by(semana_cont, producto, primax_no) %>% 
+  summarise(precio_promedio = mean(precio_de_venta)) %>% 
+  ggplot() +
+  geom_line(aes(x = semana_cont, y = precio_promedio, linetype = primax_no),
+            size = 1) +
+  labs(x = "Fecha", 
+       y = "Precio promedio", 
+       linetype = "Venta Pecsa",
+       title = "Efecto en los precios promedio de Primax para Gasohol 90") +
+  scale_color_brewer(palette = "Set1") + 
+  tema_grafica +
+  formato_comun
+
+data_total %>% filter(semana_cont>=40 & semana_cont <= 45 , tipo_bandera=="PROPIA PECSA") %>% 
+  group_by(semana, distrito) %>% 
+  summarize(precio_distrito = mean(precio_de_venta)) %>% 
+  ggplot() +
+  geom_point(aes(x = semana, y = precio_distrito, colour = distrito))
+  
