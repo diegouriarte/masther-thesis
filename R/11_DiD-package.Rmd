@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(did)
 library(tidyverse)
 library(lubridate)
-source(here::here("R","funcion04_formato-tablas-reproducibles.R"), encoding = "UTF-8")
+source(here::here("R","funcion05_balancear-panel.R"), encoding = "UTF-8")
 '%ni%' <- Negate('%in%')
 data(mpdta)
 ```

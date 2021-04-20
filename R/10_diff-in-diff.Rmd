@@ -261,32 +261,6 @@ stargazer(map(lista_reg, 1),
 ```
 
 
-## Comparamos con el paquete DiD
-
-```{r}
-lista_vecinos <- data_total %>% 
-filter(vecino_pecsa_thiessen_did == 1) %>%
-  distinct(codigo_de_osinergmin) %>% 
-  pull()
-
-data_total_1 <- data_total %>% 
-  filter(tipo_bandera != "PROPIA PRIMAX",
-        tipo_bandera == "PROPIA PECSA" | codigo_de_osinergmin %ni% lista_vecinos)
-
-modelo_comp <- precio_de_venta ~ 
-  COMPRADA_DID* mes +
-  codigo_de_osinergmin
-g90_comp <- reg_clust(modelo_comp, data_total_1, "G90", c("01-01-2017","01-10-2018"))
-stargazer(g90_comp, type = "text",
-          omit = c("tipo_bandera", "fecha", 
-                   "codigo_de_osinergmin", "distrito", "^tri_m", "mes"))
-```
-No sale bien,
-
-Ahora intentemos con definiendo mejor el grupo de control:
-
-
-
 ## DiD efecto vecinos
 
 ```{r modelos-vecino}

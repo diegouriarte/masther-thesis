@@ -15,11 +15,7 @@
 #' 
 #' 
 #+ setup, include = FALSE, cache = FALSE
-knitr::opts_chunk$set(
-    collapse = TRUE,
-    comment = "#>",
-    error = TRUE
-)
+
 options(tidyverse.quiet = TRUE)
 
 #' ## Cargamos librerías
@@ -63,9 +59,8 @@ data_precios <- map_dfr(
         filter(
             precio_de_venta > 6,
             `año`== 2017 |(`año` == 2018 & semana <= 43) #luego ya se repiten los datos %>% 
-        ) %>% 
-        select(-precio_de_venta_1, -razon_social, -distrito)
-)
+        )
+    )
 
 #' ## Data distritos
 #' 
@@ -171,6 +166,10 @@ data_total <- data_total %>%
 head(data_total)
 #' ### Guardamos
 #' 
+data_total <- data_total %>% 
+  mutate(fecha = if_else(año == 2017, dmy("01-01-2017") + days((semana-1)*7),
+                         dmy("01-01-2018") + days((semana-1)*7))) %>% 
+  select(1, 2, fecha, everything()) 
 saveRDS(data_total, file = here::here("data", "processed", "data-final-regresiones_semanal.rds"))
 
 #write_excel_csv(data_total, here::here("data", "processed", "data-final-regresiones_semanal.csv"))

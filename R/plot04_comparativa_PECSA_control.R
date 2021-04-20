@@ -20,9 +20,10 @@ tema_grafica <- theme_bw() +
     axis.title = element_text(face = "bold"),
     legend.position = "right")
  
+f_labels <- data.frame(producto = c("G90", "DIESEL"), label = c("", "Venta de Pecsa"))
 
 formato_comun <- list(
-  ylim(10,13), 
+  #ylim(10,13), 
   geom_vline(xintercept = dmy("01-02-2018"),
              linetype = "dashed",
              size = 0.5, color = "grey55"),
@@ -37,8 +38,7 @@ formato_comun <- list(
             color = "grey55", fontface = "bold"),
   scale_color_brewer(palette = "Set1") )
 
-f_labels <- data.frame(producto = c("G90", "DIESEL"), label = c("", "Venta de Pecsa"))
-
+# ====================
 # Cargamos datos y definimos distritos donde esta PECSA ----------------------------
 data_total <- readRDS(file = here::here("data", "processed", "data-final-regresiones.rds"))
 
@@ -320,8 +320,7 @@ filter(fecha <= dmy("2-10-2018"),
 )
 
 
-# ================================================
-# Ahora con datos semanales
+#Ahora con datos semanales -----------------
   
 data_total <- readRDS(file = here::here("data", "processed", "data-final-regresiones_semanal.rds")) %>% 
   mutate(semana_cont = if_else(año == 2017, semana, semana + 53))
@@ -330,16 +329,18 @@ data_total <- readRDS(file = here::here("data", "processed", "data-final-regresi
 
 formato_comun <- list(
   ylim(10,13), 
-  geom_vline(xintercept = 53+5,
-             linetype = "dashed",
-             size = 0.5, color = "grey55"),
-  geom_rect(data = data.frame(xmin = 53,
-                              xmax = 53+10,
-                              ymin = -Inf,
-                              ymax = Inf),
-            aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
-            fill = "grey", alpha = 0.5),
-  geom_text(x = 58, y = -Inf, vjust = -0.9, 
+  geom_vline(
+    # xintercept = 53+5,
+    xintercept = dmy("01/02/2018"),
+    linetype = "dashed",
+    size = 0.5, color = "grey55"),
+  # geom_rect(data = data.frame(xmin = 53,
+  #                             xmax = 53+10,
+  #                             ymin = -Inf,
+  #                             ymax = Inf),
+  #           aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+  #           fill = "grey", alpha = 0.5),
+  geom_text(x = dmy("01/02/2018"), y = -Inf, vjust = -0.9, 
             hjust = -0.1, aes(label = label), data = f_labels,
             color = "grey55", fontface = "bold"),
   scale_color_brewer(palette = "Set1") )
@@ -364,23 +365,71 @@ distritos_con_primax <- data_total %>%
 # Gráfica de comparativa precios PECSA versus resto
 
 data_total %>% 
-    filter(tipo_bandera != "PROPIA PRIMAX",
-           codigo_de_osinergmin %ni% lista_vecinos) %>% 
+    filter(
+           codigo_de_osinergmin %ni% lista_vecinos,
+           fecha >= dmy("01/07/2017") & fecha <= dmy("01/11/2018")) %>% 
     mutate(producto = fct_relevel(producto,c("G90","DIESEL")),
-           pecsa_no = if_else(tipo_bandera == "PROPIA PECSA", "PECSA", "RESTO")) %>% 
+           pecsa_no = case_when(
+             tipo_bandera == "PROPIA PECSA" ~ "PECSA",
+             tipo_bandera == "PROPIA PRIMAX" ~ "PRIMAX",
+             TRUE ~ "NO VECINOS")) %>% 
     filter(producto == "G90") %>% 
-    group_by(semana_cont, producto, pecsa_no) %>% 
+    group_by(fecha, producto, pecsa_no) %>% 
     summarise(precio_promedio = mean(precio_de_venta)) %>% 
     ggplot() +
-    geom_line(aes(x = semana_cont, y = precio_promedio, linetype = pecsa_no),
+    geom_line(aes(x = fecha, y = precio_promedio, color = pecsa_no),
               size = 1) +
     labs(x = "Fecha", 
          y = "Precio promedio", 
-         linetype = "Venta Pecsa",
-         title = "Efecto en los precios promedio de Gasohol 90") +
-    scale_color_brewer(palette = "Set1") + 
+         color = "Estaciones",
+         title = "Precios promedio de Gasohol 90") +
+    ylim(10.5,12.5) + 
     tema_grafica +
-    formato_comun
+    formato_comun  
+  # scale_x_continuous(minor_breaks = seq(0, 100, 5))
+
+data_total %>% 
+  filter(
+         codigo_de_osinergmin %ni% lista_vecinos,
+         fecha >= dmy("01/06/2017") & fecha <= dmy("01/11/2018")) %>% 
+  mutate(producto = fct_relevel(producto,c("G90","DIESEL")),
+         pecsa_no = if_else(tipo_bandera == "PROPIA PECSA", "PECSA", "NO VECINOS")) %>% 
+  filter(producto == "G90") %>% 
+  group_by(fecha, producto, pecsa_no) %>% 
+  summarise(precio_promedio = mean(precio_de_venta)) %>% 
+  ggplot() +
+  geom_line(aes(x = fecha, y = precio_promedio, linetype = pecsa_no),
+            size = 1) +
+  labs(x = "Fecha", 
+       y = "Precio promedio", 
+       linetype = "Venta Pecsa",
+       title = "Precios promedio de Gasohol 90") +
+  ylim(10.5,12.5) + 
+  tema_grafica +
+  formato_comun  
+# scale_x_continuous(minor_breaks = seq(0, 100, 5))
+
+
+data_total %>% 
+  filter(tipo_bandera != "PROPIA PRIMAX",
+         codigo_de_osinergmin %ni% lista_vecinos,
+         fecha >= dmy("01/10/2017") & fecha <= dmy("01/06/2018")) %>% 
+  mutate(producto = fct_relevel(producto,c("G90","DIESEL")),
+         pecsa_no = if_else(tipo_bandera == "PROPIA PECSA", "PECSA", "RESTO")) %>% 
+  filter(producto == "DIESEL") %>% 
+  group_by(fecha, producto, pecsa_no) %>% 
+  summarise(precio_promedio = mean(precio_de_venta)) %>% 
+  ggplot() +
+  geom_line(aes(x = fecha, y = precio_promedio, linetype = pecsa_no),
+            size = 1) +
+  labs(x = "Fecha", 
+       y = "Precio promedio", 
+       linetype = "Venta Pecsa",
+       title = "Efecto en los precios promedio de Diesel para PECSA") +
+  # ylim(10,12) + 
+  tema_grafica +
+  formato_comun  
+# scale_x_continuous(minor_breaks = seq(0, 100, 5))
 
 data_total %>% 
   filter(tipo_bandera != "PROPIA PRIMAX",
@@ -418,7 +467,6 @@ data_total %>%
        y = "Precio promedio", 
        linetype = "Venta Pecsa",
        title = "Efecto en los precios promedio de Primax para Gasohol 90") +
-  scale_color_brewer(palette = "Set1") + 
   tema_grafica +
   formato_comun
 
@@ -438,7 +486,6 @@ data_total %>%
        y = "Precio promedio", 
        linetype = "Venta Pecsa",
        title = "Efecto en los precios promedio de Primax para Gasohol 90") +
-  scale_color_brewer(palette = "Set1") + 
   tema_grafica +
   scale_x_continuous(minor_breaks = seq(0, 100, 5)) +
   formato_comun  
