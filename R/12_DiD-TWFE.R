@@ -196,7 +196,7 @@ event_study_1 <- function(df, producto, cadena1,cadena2, leads, lags) {
             paste(paste("lead", leads, sep = ""), collapse = " + "),
             paste(paste("lag", lags, sep = ""), collapse = " + "), sep = " + "),
           # "| mes + codigo_de_osinergmin + tipo_bandera + distrito| 0 | codigo_de_osinergmin"
-          "| codigo_de_osinergmin + mes | 0 | 0"
+          "| codigo_de_osinergmin + mes + bandera| 0 | codigo_de_osinergmin"
           
     ),
   )
@@ -265,21 +265,27 @@ g90_pecsa <- event_study(data_total_mensual, producto = "G90",
                             cadena1 = "PROPIA PECSA",
                             cadena2 = "PROPIA PRIMAX", 
                             leads = 1:12, 
-                            lags = 1:8) 
+                            lags = 0:8) 
+
+g90_pecsa <- event_study_1(data_total_mensual, producto = "G90",
+                         cadena1 = "PROPIA PECSA",
+                         cadena2 = "PROPIA PRIMAX", 
+                         leads = 2:12, 
+                         lags = 0:8) 
 
 # Event study  G90 PRIMAX ==============
 
 g90_primax <- event_study(data_total_mensual, producto = "G90",
                          cadena1 = "PROPIA PRIMAX",
                          cadena2 = "PROPIA PECSA", 
-                         leads = 1:13, 
+                         leads = 2:12, 
                          lags = 0:8) 
 
 g90_primax <- event_study_1(data_total_mensual, producto = "G90",
                           cadena1 = "PROPIA PRIMAX",
                           cadena2 = "PROPIA PECSA", 
-                          leads = 1:8, 
-                          lags = 1:8) 
+                          leads = 3:13, 
+                          lags = 0:8) 
 # Event study  Diesel PECSA ==============
 
 diesel_pecsa <- event_study(data_total_mensual, producto = "DIESEL",
