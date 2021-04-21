@@ -19,27 +19,6 @@ class: middle, center
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
-```{css, echo = FALSE}
-
-/* Block math */ 
-.mjx-math {
-    font-size: 100%;
-}
-
-/* Block math 
-   Only this is unique to block (display) math
-*/
-.MJXc-display {
-    font-size: 100% !important;
-}
-
-
-/* Inline math */ 
-.mjx-chtml {
-    font-size: 100%; 
-}
-
-```
 
 ```{r carga-datos, include=FALSE}
 library(tidyverse)
@@ -348,31 +327,87 @@ class: middle, center
 
 # Resultados
 ---
-## Para Pecsa
+## Estudio de eventos para estaciones de Pecsa - G90
 
-```{r echo=FALSE, fig.align='center', message=FALSE, warning=FALSE, dpi=600, fig.height=3,fig.width=7}
-data_g90 <- balancear_panel(data_total_mensual, prod = "G90", c("01-01-2017", "01-10-2018"))
-data_g90 <- data_g90 %>% 
+```{r}
+data_g90 <- data_total_mensual %>% 
+  filter(producto == "G90")
+
+data_g90_reg <- data_g90 %>% 
   mutate(mes = (year(fecha)-2017)*12 + month(fecha),
          fecha_trat = if_else(tipo_bandera == "PROPIA PECSA", 14, 0)) %>% 
   filter(tipo_bandera != "PROPIA PRIMAX",
-        tipo_bandera == "PROPIA PECSA" | codigo_de_osinergmin %ni% lista_vecinos)
-           
+        tipo_bandera == "PROPIA PECSA" | codigo_de_osinergmin %ni% lista_vecinos,
+        mes >= 1
+        )
+
 out_1 <- att_gt(yname = "precio_de_venta",
               gname = "fecha_trat",
               idname = "codigo_de_osinergmin",
               tname = "mes",
-              xformla = ~codigo_de_osinergmin,
-              data = data_g90,
+              xformla = ~codigo_de_osinergmin + bandera,
+              data = data_g90_reg,
               est_method = "dr",
               anticipation = 0,
-              bstrap = F,
+              bstrap = T,
+              biters = 10000,
+              clustervars = "codigo_de_osinergmin",
               cband = F,
               )
- 
-ggdid(out_1, title = "Estudio de Evento para G90 - PECSA") 
+ggdid(out_1)
+
+leadslags_plot <- tibble(
+    sd = out_1$se,
+    mean = out_1$att,
+    label = out_1$t-14
+  )
+
+leadslags_plot %>%
+    ggplot(aes(x = label, y = mean,
+               ymin = mean-1.96*sd, 
+               ymax = mean+1.96*sd)) +
+    # geom_hline(yintercept = 0.035169444, color = "red") +
+    geom_pointrange() +
+    theme_minimal() +
+    xlab("Meses antes y después de la consolidación") +
+    ylab("Precio") +
+    geom_hline(yintercept = 0,
+               linetype = "dashed") +
+    geom_vline(xintercept = 0,
+               linetype = "dashed")
+eventstudy.plot_1 <- function(event_study_reg, leads, lags) {
+  #' event_study_reg <- resultado de la func event_study
+  #' 
+  plot_order <- c(paste("lead", rev(leads), sep = ""), 
+                  paste("lag", lags, sep = ""))
+  leadslags_plot <- tibble(
+    sd = c(event_study_reg$coefficients[plot_order,2]),
+    mean = c(event_study_reg$coefficients[plot_order,1]),
+    label = c(as.integer(c(paste(-rev(leads)), paste(lags))))
+  )
+  
+  leadslags_plot %>%
+    ggplot(aes(x = label, y = mean,
+               ymin = mean-1.96*sd, 
+               ymax = mean+1.96*sd)) +
+    # geom_hline(yintercept = 0.035169444, color = "red") +
+    geom_pointrange() +
+    theme_minimal() +
+    xlab("Meses antes y después de la consolidación") +
+    ylab("Precio") +
+    geom_hline(yintercept = 0,
+               linetype = "dashed") +
+    geom_vline(xintercept = 0,
+               linetype = "dashed")
+}
+summary(out_1)
 
 ```
 
 
 ---
+
+## Estudio de eventos para estaciones de Pecsa - Diésel
+
+```{r}
+```

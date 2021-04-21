@@ -587,7 +587,7 @@ out_1 <- att_gt(yname = "precio_de_venta",
               data = data_diesel,
               est_method = "reg",
               anticipation = 0,
-              bstrap = F,
+              bstrap = T,
               cband = T
               )
 ggdid(out_1)
