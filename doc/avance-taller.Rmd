@@ -11,6 +11,8 @@ output:
       highlightStyle: github
       highlightLines: true
       countIncrementalSlides: false
+editor_options: 
+  chunk_output_type: console
 ---
 class: middle, center
 
@@ -19,6 +21,12 @@ class: middle, center
 knitr::opts_chunk$set(echo = FALSE, 
                       fig.align='center',fig.height=3, fig.width=7,
                       message=FALSE, warning=FALSE, dpi=600 )
+
+xaringanExtra::use_xaringan_extra(c("tile_view", "tachyons"))
+
+Sys.setenv(CHROMOTE_CHROME = "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe")
+Sys.setenv(PAGEDOWN_CHROME = "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe")
+
 # knitr::opts_chunk$set(
 #   comment = "#>", echo = FALSE, fig.width = 6
 # )  echo=FALSE, fig.align='center', fig.height=3, fig.width=7, message=FALSE, warning=FALSE, dpi=600
@@ -32,8 +40,8 @@ library(lubridate)
 source(here::here("R","funcion05_balancear-panel.R"), encoding = "UTF-8")
 '%ni%' <- Negate('%in%')
 library(did)
-
-
+library(ggtext)
+library(tidyquant)
 '%ni%' <- Negate('%in%')
 
 tema_grafica <- theme_bw() + 
@@ -55,22 +63,25 @@ data_total_semanal <- readRDS(file = here::here("data", "processed", "data-final
 data_total_mensual <- readRDS(file = here::here("data", "processed", "data-final-regresiones.rds"))
 
 formato_comun <- list(
-  ylim(10,13), 
-  geom_vline(
-    # xintercept = 53+5,
-    xintercept = dmy("01/02/2018"),
-    linetype = "dashed",
-    size = 0.5, color = "grey55"),
-  # geom_rect(data = data.frame(xmin = 53,
-  #                             xmax = 53+10,
-  #                             ymin = -Inf,
-  #                             ymax = Inf),
-  #           aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
-  #           fill = "grey", alpha = 0.5),
-  geom_text(x = dmy("01/02/2018"), y = -Inf, vjust = -0.9, 
-            hjust = -0.1, aes(label = label), data = f_labels,
-            color = "grey55", fontface = "bold"),
-  scale_color_brewer(palette = "Set1") )
+  ylim(10, 13),
+  # geom_vline(
+  #   xintercept = dmy("15/01/2018"),
+  #   linetype = "dashed",
+  #   size = 0.5, color = "grey55"
+  # ),
+  geom_rect(data = data.frame(xmin = dmy("01-01-2018"),
+                              xmax = dmy("01-02-2018"),
+                              ymin = -Inf,
+                              ymax = Inf),
+            aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+            fill = "grey", alpha = 0.5),
+  geom_text(
+    x = dmy("01/02/2018"), y = -Inf, vjust = -0.9,
+    hjust = -0.1, aes(label = label), data = f_labels,
+    color = "grey55", fontface = "bold"
+  )
+  # scale_color_brewer(palette = "Set1")
+)
 
 #' Lista de grifos que son vecinos a estación de PECSA 
 #' 
@@ -224,9 +235,9 @@ class: middle, center
 * Se determinan vecinos utilizando definición de vecinos de Thiessen.
 
 ---
-### Comparativa de precios entre estaciones propias de Primax y Pecsa, y las no vecinas.
+### Comparativa de precios entre estaciones propias de Primax y Pecsa, y las no vecinas para G90
 
-```{r echo=FALSE, fig.align='center', fig.height=3, fig.width=7, message=FALSE, warning=FALSE, dpi=600}
+```{r grafico_g90_estatico, echo=FALSE, fig.align='center', fig.height=3, fig.width=7, message=FALSE, warning=FALSE, dpi=600}
 data_total_semanal %>% 
     filter(
            codigo_de_osinergmin %ni% lista_vecinos,
@@ -238,7 +249,7 @@ data_total_semanal %>%
              TRUE ~ "NO VECINOS")) %>% 
     filter(producto == "G90") %>% 
     group_by(fecha, producto, pecsa_no) %>% 
-    summarise(precio_promedio = mean(precio_de_venta)) %>% 
+    summarise(precio_promedio = mean(precio_de_venta), .groups = "drop") %>% 
     ggplot() +
     geom_line(aes(x = fecha, y = precio_promedio, color = pecsa_no),
               size = 1) +
@@ -246,16 +257,166 @@ data_total_semanal %>%
          y = "Precio promedio", 
          color = "Estaciones",
          title = "Precios promedio de Gasohol 90") +
-    ylim(10.5,12.5) + 
     tema_grafica +
-    formato_comun
+    formato_comun + 
+    scale_color_manual(values=c("#2ecc71", "#e74c3c", "#f1c40f"))
 
 ```
 
 ---
+### Comparativa con medias móviles
+
+```{r}
+data_total_semanal %>% 
+    filter(
+           codigo_de_osinergmin %ni% lista_vecinos,
+           fecha >= dmy("01/07/2017") & fecha <= dmy("01/11/2018")) %>% 
+    mutate(producto = fct_relevel(producto,c("G90","DIESEL")),
+           pecsa_no = case_when(
+             tipo_bandera == "PROPIA PECSA" ~ "PECSA",
+             tipo_bandera == "PROPIA PRIMAX" ~ "PRIMAX",
+             TRUE ~ "NO VECINOS")) %>% 
+    filter(producto == "G90") %>% 
+    group_by(fecha, pecsa_no) %>% 
+    summarise(precio_promedio = mean(precio_de_venta), .groups = "drop") %>% 
+    group_by(pecsa_no) %>% 
+    tq_mutate(
+        # tq_mutate args
+        select     = precio_promedio,
+        mutate_fun = rollapply, 
+        # rollapply args
+        width      = 4,
+        align      = "right",
+        FUN        = mean,
+        # mean args
+        na.rm      = TRUE,
+        # tq_mutate args
+        col_rename = "media_movil"
+    ) %>% 
+    ggplot() +
+    geom_line(aes(x = fecha, y = media_movil, color = pecsa_no),
+              size = 1) +
+    labs(x = "Fecha", 
+         y = "Precio promedio", 
+         color = "Estaciones",
+         title = "Precios promedio de Gasohol 90") +
+    tema_grafica +
+    formato_comun + 
+    scale_color_manual(values=c("#2ecc71", "#e74c3c", "#f1c40f"))
+```
+
+---
+
+### Gráfica de los vecinos versus Primax y Pecsa para ver si hay un tracking
+
+```{r}
+data_total_semanal %>% 
+    filter(
+           fecha >= dmy("01/07/2017") & fecha <= dmy("01/11/2018")) %>% 
+    mutate(producto = fct_relevel(producto,c("G90","DIESEL")),
+           pecsa_no = case_when(
+             tipo_bandera == "PROPIA PECSA" ~ "PECSA",
+             tipo_bandera == "PROPIA PRIMAX" ~ "PRIMAX",
+             codigo_de_osinergmin %in% lista_vecinos  ~ "VECINO",
+             TRUE ~ "NO VECINOS")) %>% 
+    filter(producto == "G90", pecsa_no %ni% c("NO VECINOS","PECSA")) %>% 
+    group_by(fecha, pecsa_no) %>% 
+    summarise(precio_promedio = mean(precio_de_venta), .groups = "drop") %>% 
+    group_by(pecsa_no) %>% 
+    tq_mutate(
+        # tq_mutate args
+        select     = precio_promedio,
+        mutate_fun = rollapply, 
+        # rollapply args
+        width      = 4,
+        align      = "right",
+        FUN        = mean,
+        # mean args
+        na.rm      = TRUE,
+        # tq_mutate args
+        col_rename = "media_movil"
+    ) %>% 
+    ggplot() +
+    geom_line(aes(x = fecha, y = media_movil, color = pecsa_no),
+              size = 1) +
+    labs(x = "Fecha", 
+         y = "Precio promedio", 
+         color = "Estaciones",
+         title = "Precios promedio de Gasohol 90") +
+    tema_grafica +
+    formato_comun 
+    # scale_color_manual(values=c("#2ecc71", "#e74c3c", "#f1c40f"))
+```
+
+```{r}
+data_total_semanal %>% 
+    filter(
+           fecha >= dmy("01/07/2017") & fecha <= dmy("01/11/2018")) %>% 
+    mutate(producto = fct_relevel(producto,c("G90","DIESEL")),
+           pecsa_no = case_when(
+             tipo_bandera == "PROPIA PECSA" ~ "PECSA",
+             tipo_bandera == "PROPIA PRIMAX" ~ "PRIMAX",
+             codigo_de_osinergmin %in% lista_vecinos  ~ "VECINO",
+             TRUE ~ "NO VECINOS")) %>% 
+    filter(producto == "G90", pecsa_no %ni% c("PRIMAX","PECSA")) %>% 
+    group_by(fecha, pecsa_no) %>% 
+    summarise(precio_promedio = mean(precio_de_venta), .groups = "drop") %>% 
+    group_by(pecsa_no) %>% 
+    tq_mutate(
+        # tq_mutate args
+        select     = precio_promedio,
+        mutate_fun = rollapply, 
+        # rollapply args
+        width      = 4,
+        align      = "right",
+        FUN        = mean,
+        # mean args
+        na.rm      = TRUE,
+        # tq_mutate args
+        col_rename = "media_movil"
+    ) %>% 
+    ggplot() +
+    geom_line(aes(x = fecha, y = media_movil, color = pecsa_no),
+              size = 1) +
+    labs(x = "Fecha", 
+         y = "Precio promedio", 
+         color = "Estaciones",
+         title = "Precios promedio de Gasohol 90") +
+    tema_grafica +
+    formato_comun 
+    # scale_color_manual(values=c("#2ecc71", "#e74c3c", "#f1c40f"))
+```
+
+```{r}
+data_total_semanal %>% 
+    filter(
+           fecha >= dmy("01/07/2017") & fecha <= dmy("01/11/2018")) %>% 
+    mutate(producto = fct_relevel(producto,c("G90","DIESEL")),
+           pecsa_no = case_when(
+             tipo_bandera == "PROPIA PECSA" ~ "PECSA",
+             tipo_bandera == "PROPIA PRIMAX" ~ "PRIMAX",
+             codigo_de_osinergmin %in% lista_vecinos  ~ "VECINO",
+             TRUE ~ "NO VECINOS")) %>% 
+    filter(producto == "G90", pecsa_no %ni% c("NO VECINOS","PECSA")) %>% 
+    group_by(fecha, producto, pecsa_no) %>% 
+    summarise(precio_promedio = mean(precio_de_venta), .groups = "drop") %>% 
+    ggplot() +
+    geom_line(aes(x = fecha, y = precio_promedio, color = pecsa_no),
+              size = 1) +
+    labs(x = "Fecha", 
+         y = "Precio promedio", 
+         color = "Estaciones",
+         title = "Precios promedio de Gasohol 90") +
+    tema_grafica +
+    formato_comun 
+    # scale_color_manual(values=c("#2ecc71", "#e74c3c", "#f1c40f"))
+```
+
+---
+
 ### Comparativa de precios entre estaciones propias de Primax y Pecsa, y las no vecinas.
 
-```{r echo=FALSE, fig.align='center', message=FALSE, warning=FALSE, dpi=600, fig.height=3,fig.width=7}
+```{r grafico_diesel_estatico, echo=FALSE, fig.align='center', message=FALSE, warning=FALSE, dpi=600, fig.height=3,fig.width=7}
 data_total_semanal %>% 
     filter(
            codigo_de_osinergmin %ni% lista_vecinos,
@@ -267,7 +428,7 @@ data_total_semanal %>%
              TRUE ~ "NO VECINOS")) %>% 
     filter(producto == "DIESEL") %>% 
     group_by(fecha, producto, pecsa_no) %>% 
-    summarise(precio_promedio = mean(precio_de_venta)) %>% 
+    summarise(precio_promedio = mean(precio_de_venta), .groups = "drop") %>% 
     ggplot() +
     geom_line(aes(x = fecha, y = precio_promedio, color = pecsa_no),
               size = 1) +
@@ -275,9 +436,10 @@ data_total_semanal %>%
          y = "Precio promedio", 
          color = "Estaciones",
          title = "Precios promedio de Diésel DB5") +
-    ylim(10.5,12.5) + 
     tema_grafica +
-    formato_comun  
+    formato_comun  +
+    scale_color_manual(values=c("#2ecc71", "#e74c3c", "#f1c40f"))
+
 ```
 
 ---
@@ -337,9 +499,8 @@ class: middle, center
 
 
 ```{r functions_did, message=FALSE, warning=FALSE, include=FALSE}
-library(ggtext)
 
-plot_did <- function(did_obj, aggte_ef) {
+plot_did <- function(did_obj, aggte_ef, mes_trat = 14) {
   min_value <- aggte_ef$overall.att-1.96*aggte_ef$overall.se
   if (min_value >= 0) {
     signi <-  "*"
@@ -349,7 +510,7 @@ plot_did <- function(did_obj, aggte_ef) {
   leadslags_plot <- tibble(
     sd = did_obj$se,
     mean = did_obj$att,
-    label = did_obj$t-14
+    label = did_obj$t-mes_trat
   )
     
   leadslags_plot %>%
@@ -357,10 +518,11 @@ plot_did <- function(did_obj, aggte_ef) {
                ymin = mean-1.96*sd, 
                ymax = mean+1.96*sd)) +
     geom_hline(yintercept = aggte_ef$overall.att, color = "red", size = 1.5, alpha = 0.5) +
-    geom_pointrange() +
+    geom_point() +
+    geom_errorbar(width = 0.2) +
     theme_minimal() +
-    xlab("Meses antes y después de la consolidación") +
-    ylab("Precio") +
+    xlab("Meses antes y después de la adqusición") +
+    ylab("Variación en precio") +
     geom_hline(yintercept = 0,
                linetype = "dashed") +
     geom_vline(xintercept = 0,
@@ -372,36 +534,63 @@ plot_did <- function(did_obj, aggte_ef) {
              ) 
 }
 
-reg_did <- function(df, producto, bandera) {
+reg_did <- function(df, producto, band, vecino = FALSE, mes_trat = 14) {
   df_producto <- df %>% 
     filter(producto == !!producto) %>% 
+    mutate(mes = (year(fecha)-2017)*12 + month(fecha)) %>% 
     select(codigo_de_osinergmin, fecha, producto, mes, año, precio_de_venta, 
            bandera, tipo_bandera, distrito)
   
-  if (bandera == "PROPIA PECSA") {
+  if (band == "PROPIA PECSA" & vecino == FALSE) {
     data_reg <- df_producto %>% 
-    mutate(mes = (year(fecha)-2017)*12 + month(fecha),
-         fecha_trat = if_else(tipo_bandera == "PROPIA PECSA", 14, 0)) %>% 
+    mutate(
+         fecha_trat = if_else(tipo_bandera == "PROPIA PECSA", mes_trat, 0),
+         ) %>% 
     filter(tipo_bandera != "PROPIA PRIMAX",
         tipo_bandera == "PROPIA PECSA" | codigo_de_osinergmin %ni% lista_vecinos,
         mes >= 1
         )
-  } else if (bandera == "PROPIA PRIMAX") {
+  } else if (band == "PROPIA PRIMAX" & vecino == FALSE) {
       data_reg <- df_producto %>% 
-      mutate(mes = (year(fecha)-2017)*12 + month(fecha),
-         fecha_trat = if_else(tipo_bandera == "PROPIA PRIMAX", 14, 0)) %>% 
+      mutate(
+         fecha_trat = if_else(tipo_bandera == "PROPIA PRIMAX", mes_trat, 0)) %>% 
       filter(tipo_bandera != "PROPIA PECSA",
-        tipo_bandera == "PROPIA PRIMAX" | distrito %ni% distritos_con_primax,
-        mes >= 1
+             tipo_bandera == "PROPIA PRIMAX" | distrito %ni% distritos_con_primax,
+             mes >= 1
         ) 
+  } else if (band == "PROPIA PECSA" & vecino == TRUE) {
+    data_reg <- df_producto %>% 
+      mutate(
+         vecina = if_else(codigo_de_osinergmin %in% lista_vecinos,
+                          "vecina",
+                          "no vecina"),
+         fecha_trat = if_else(vecina == "vecina", mes_trat, 0)
+         ) %>%
+      filter(tipo_bandera != "PROPIA PECSA",
+             tipo_bandera != "PROPIA PRIMAX")
+  } else if (band == "PROPIA PRIMAX" & vecino == TRUE) {
+      data_reg <- df_producto %>%
+        mutate(
+         vecina = if_else(distrito %in% distritos_con_primax,
+                          "vecina",
+                          "no vecina"),
+         fecha_trat = if_else(vecina == "vecina", mes_trat, 0)
+         ) %>%
+        filter(tipo_bandera != "PROPIA PECSA",
+             tipo_bandera != "PROPIA PRIMAX")
   }
-
-
+  
+  if (vecino == FALSE) {
+    cov <- as.formula(paste0("~codigo_de_osinergmin","+ bandera" ))
+  } else {
+    cov <- as.formula("~codigo_de_osinergmin")
+  }
+  
   producto_did <- att_gt(yname = "precio_de_venta",
                          gname = "fecha_trat",
                          idname = "codigo_de_osinergmin",
                          tname = "mes",
-                         xformla = ~codigo_de_osinergmin + bandera,
+                         xformla = cov,
                          data = data_reg,
                          est_method = "dr",
                          anticipation = 0,
@@ -416,16 +605,18 @@ reg_did <- function(df, producto, bandera) {
   list("event study" = producto_did, "agregado" = aggte_ef)
 
 }
-
+# Definimos mes de tratamiento o 13 o 14
+mesventa <- 13
 ```
 
 ```{r g90-reg-pecsa}
 
 pecsa_g90 <- reg_did(df = data_total_mensual,
-                  producto = "G90", 
-                  bandera = "PROPIA PECSA" )
+                     producto = "G90", 
+                     band = "PROPIA PECSA",
+                     mes_trat = mesventa)
 
-plot_did(pecsa_g90$`event study`, pecsa_g90$agregado)
+plot_did(pecsa_g90$`event study`, pecsa_g90$agregado, mes_trat = mesventa)
 
 
 ```
@@ -437,22 +628,28 @@ plot_did(pecsa_g90$`event study`, pecsa_g90$agregado)
 
 ```{r diesel_reg_pecsa}
 
-pecsa_diesel <- reg_did(df = data_total_mensual,
-                  producto = "DIESEL", 
-                  bandera = "PROPIA PECSA" )
+pecsa_diesel <- reg_did(
+  df = data_total_mensual,
+  producto = "DIESEL",
+  band = "PROPIA PECSA",
+  mes_trat = mesventa
+)
 
-plot_did(pecsa_diesel$`event study`, pecsa_diesel$agregado)
+plot_did(pecsa_diesel$`event study`, pecsa_diesel$agregado, mes_trat = mesventa)
 
 ```
 ---
 ## Estudio de eventos para estaciones de Primax - G90
 
 ```{r g90-reg-primax}
-primax_g90 <- reg_did(df = data_total_mensual,
-                  producto = "G90", 
-                  bandera = "PROPIA PRIMAX" )
+primax_g90 <- reg_did(
+  df = data_total_mensual,
+  producto = "G90",
+  band = "PROPIA PRIMAX",
+  mes_trat = mesventa
+)
 
-plot_did(primax_g90$`event study`, primax_g90$agregado)
+plot_did(primax_g90$`event study`, primax_g90$agregado, mes_trat = mesventa)
 
 ```
 
@@ -462,11 +659,14 @@ plot_did(primax_g90$`event study`, primax_g90$agregado)
 ## Estudio de eventos para estaciones de Primax - Diésel
 
 ```{r diesel_reg_primax}
-primax_diesel <- reg_did(df = data_total_mensual,
-                  producto = "DIESEL", 
-                  bandera = "PROPIA PRIMAX" )
+primax_diesel <- reg_did(
+  df = data_total_mensual,
+  producto = "DIESEL",
+  band = "PROPIA PRIMAX",
+  mes_trat = mesventa
+)
 
-plot_did(primax_diesel$`event study`, primax_diesel$agregado)
+plot_did(primax_diesel$`event study`, primax_diesel$agregado, mes_trat = mesventa)
 ```
 
 ---
@@ -476,95 +676,38 @@ plot_did(primax_diesel$`event study`, primax_diesel$agregado)
 Bajo una especificación similar, se evalúa si las estaciones vecinas Primax o Pecsa también 
 muestran incremento de precios luego del evento.
 
+### Estaciones vecinas a Pecsa
 ```{r vecinos_pecsa_g90}
-data_g90 <- data_total_mensual %>% 
-  filter(producto == "G90") %>% 
-  mutate(mes = (year(fecha)-2017)*12 + month(fecha),
-         vecina = if_else(codigo_de_osinergmin %in% lista_vecinos, 
-                          "vecina", 
-                          "no vecina"),
-         fecha_trat = if_else(vecina == "vecina", 14, 0)) %>% 
-  filter(tipo_bandera != "PROPIA PECSA",
-         tipo_bandera != "PROPIA PRIMAX")
-           
-out_1 <- att_gt(yname = "precio_de_venta",
-              gname = "fecha_trat",
-              idname = "codigo_de_osinergmin",
-              tname = "mes",
-              xformla = ~codigo_de_osinergmin,
-              data = data_g90,
-              est_method = "dr",
-               anticipation = 0,
-               bstrap = T,
-               biters = 10000,
-               clustervars = "codigo_de_osinergmin",
-               cband = F
+# set.seed(23169)
+
+vecino_pecsa <- reg_did(
+  df = data_total_mensual,
+  producto = "G90",
+  band = "PROPIA PECSA",
+  vecino = TRUE,
+  mes_trat = mesventa
 )
 
-ggdid(out_1)
+plot_did(vecino_pecsa$`event study`, vecino_pecsa$agregado, mes_trat = mesventa)
+```
 
-set.seed(23169)
+---
 
-data_g90 <- balancear_panel(data_total_mensual, prod = "G90", c("01-01-2017", "01-10-2018"))
-data_g90 <- data_g90 %>% 
-  mutate(mes = (year(fecha)-2017)*12 + month(fecha),
-         vecina = if_else(codigo_de_osinergmin %in% lista_vecinos, 
-                          "vecina", 
-                          "no vecina"),
-         fecha_trat = if_else(vecina == "vecina", 14, 0)
-  ) %>% 
-  filter(tipo_bandera != "PROPIA PECSA",
-         tipo_bandera != "PROPIA PRIMAX")
-        #tipo_bandera == "PROPIA PRIMAX" | distrito %ni% distritos_con_primax)
-        #fecha >= dmy("01/03/2018") | fecha <= dmy("01-09-2017"))
-           
-out_1 <- att_gt(yname = "precio_de_venta",
-              gname = "fecha_trat",
-              idname = "codigo_de_osinergmin",
-              tname = "mes",
-              xformla = ~codigo_de_osinergmin,
-              data = data_g90,
-              est_method = "reg",
-              anticipation = 0,
-              bstrap = T,
-              biters = 10000,
-              clustervars = "codigo_de_osinergmin",
-              cband = F)
-ggdid(out_1)
+### Estaciones vecinas a Primax
+
+```{r vecinos_primax_g90}
+vecino_primax <- reg_did(
+  df = data_total_mensual,
+  producto = "G90",
+  band = "PROPIA PRIMAX",
+  vecino = TRUE,
+  mes_trat = mesventa
+)
+
+plot_did(vecino_primax$`event study`, vecino_primax$agregado, mes_trat = mesventa)
 
 
 ```
 
 ---
 
-```{r vecinos_primax_g90}
-data_g90 <- balancear_panel(data_total_mensual,
-                            prod = "G90", 
-                            c("01-01-2017", "01-10-2018")) %>%
-  filter(producto == "G90") %>%
-  mutate(mes = (year(fecha)-2017)*12 + month(fecha),
-         vecina = if_else(distrito %in% distritos_con_primax,
-                          "vecina",
-                          "no vecina"),
-         fecha_trat = if_else(vecina == "vecina", 14, 0)) %>%
-  filter(tipo_bandera != "PROPIA PECSA",
-        tipo_bandera != "PROPIA PRIMAX" )
-
-out_1 <- att_gt(yname = "precio_de_venta",
-              gname = "fecha_trat",
-              idname = "codigo_de_osinergmin",
-              tname = "mes",
-              xformla = ~codigo_de_osinergmin,
-              data = data_g90,
-              est_method = "dr",
-               anticipation = 0,
-               bstrap = T,
-               biters = 10000,
-               clustervars = "codigo_de_osinergmin",
-               cband = F
-)
-
-ggdid(out_1)
-
-
-```

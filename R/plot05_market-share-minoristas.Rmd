@@ -1,0 +1,85 @@
+---
+title: "Gráfica market share"
+output: html_notebook
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+library(tidyverse)
+library(readxl)
+minoristas <- read_excel("data/participacion-mercado-minorista.xlsx", sheet = "minoristas")
+minoristas
+mayoristas <- read_excel("data/participacion-mercado-minorista.xlsx", sheet = "mayoristas")
+```
+
+```{r}
+minoristas %>% filter(Tipo != "Total") %>% 
+  mutate(Año = factor(Año),
+         Cadena = fct_relevel(Cadena, "Petroperú", "Primax", "Repsol", "Pecsa")) %>% 
+  group_by(Año) %>% 
+  ggplot(aes(x = Año, y = Participación, fill = Tipo)) + 
+  geom_col(position = "stack", width = 0.5) +
+  # geom_text(position = position_dodge(width = 1), aes(x=Cadena, y=0))
+  facet_wrap(~Cadena, ncol = 1,
+             strip.position = "left")+
+  coord_flip() + 
+  scale_y_continuous(labels = scales::percent) +
+  labs(y = "Participación en el mercado minorista (%)", x = NULL) + 
+    theme(strip.placement = "outside",                      # Place facet labels outside x axis labels.
+        strip.background = element_rect(fill = "white"),  # Make facet label background white.
+        )     
+```
+
+```{r}
+minoristas %>% filter(Tipo != "Total", Año == 2017) %>% 
+  mutate(Año = factor(Año),
+         Cadena = fct_relevel(Cadena, "Petroperú", "Primax", "Repsol", "Pecsa", "Independiente")) %>% 
+  group_by(Año) %>% 
+    ggplot(aes(x = Cadena, y = Participación, fill = Tipo)) + 
+  geom_col(position = "stack", width = 0.1) +
+  # geom_text(position = position_dodge(width = 1), aes(x=Cadena, y=0))
+  # facet_wrap(~Cadena, ncol = 1,
+  #            strip.position = "left")+
+  coord_flip() + 
+  scale_y_continuous(labels = scales::percent) +
+
+  labs(y = "Participación en el mercado minorista (%)", x = NULL) 
+
+```
+
+## Gráfica para mayoristas y cálculo de HHI
+
+```{r}
+mayoristas %>% 
+  pivot_longer(-Empresa, names_to = "Año", values_to = "Galones vendidos") %>% 
+  mutate(Año = factor(Año)) %>% 
+  ggplot(aes(x = Año, y = `Galones vendidos`)) + 
+  geom_col(position = "stack", width = 0.5) +
+  facet_wrap(~Empresa, ncol = 1,
+             strip.position = "left")+
+  coord_flip() + 
+  scale_y_continuous(labels = scales::percent) +
+  labs(y = "Participación en el mercado minorista (%)", x = NULL) + 
+    theme(strip.placement = "outside",                      # Place facet labels outside x axis labels.
+        strip.background = element_rect(fill = "white"),  # Make facet label background white.
+        )  
+```
+
+
+```{r}
+mayoristas %>% 
+  pivot_longer(-Empresa, names_to = "Año", values_to = "Galones vendidos") %>% 
+  filter(Año == 2017) %>% 
+  mutate(Año = factor(Año),
+         Empresa = fct_reorder(Empresa, `Galones vendidos`)) %>% 
+  ggplot(aes(x = Empresa, y = `Galones vendidos`)) + 
+  geom_col(position = "stack", width = 0.5) +
+  coord_flip() + 
+  ylim(c(0,0.3)) + 
+  scale_y_continuous(labels = scales::percent, limits = c(0, 0.3)) +
+  labs(y = "Participación en el mercado mayorista (%)", x = NULL) + 
+    theme(strip.placement = "outside",                      # Place facet labels outside x axis labels.
+        strip.background = element_rect(fill = "white"),  # Make facet label background white.
+        )  
+```

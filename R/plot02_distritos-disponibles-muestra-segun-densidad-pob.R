@@ -115,7 +115,7 @@ tmap_save(tm_arrange, filename = here::here("plots", paste("muestra-distritos_1"
           width = 1600, height = 1000, dpi = 200 )
 
 
-#' Gráfico vecinos thiessen
+## Gráfico vecinos thiessen ======================
 #' 
 grifos_thissen <- readRDS(here::here("data", "processed", "shape_file_grifos_thiessen.rds"))
 lista_grifos_sp <- st_as_sf(lista_grifos_sp)  
@@ -168,4 +168,13 @@ heigth_in <- 12 / 2.54
 tmap_save(thiessen_plot, filename = here::here("plots", paste("san-isidro-thiessen_",st, ".png", sep = "")),
           width = width_in*DPI, height = heigth_in*DPI , dpi = DPI, scale = 0.5)
 
+#Tabla con estaciones por distritos
 
+data_total %>% 
+  distinct(codigo_de_osinergmin, .keep_all = T) %>% 
+  select(razon_social, direccion, distrito, bandera, tipo, tipo_bandera) %>% 
+  ggplot(aes(x = distrito, fill = tipo_bandera)) +
+  geom_bar() + 
+  coord_flip()
+  
+  
