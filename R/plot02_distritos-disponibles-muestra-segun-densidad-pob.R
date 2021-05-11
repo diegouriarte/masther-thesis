@@ -68,9 +68,24 @@ distritos_muestra <- unique(data_total$distrito)
 
 # Ahora los grifos
 lista_grifos <- data_total %>% 
-    distinct(codigo_de_osinergmin, lon, lat) %>% 
+    distinct(codigo_de_osinergmin, lon, lat, tipo, tipo_bandera, distrito) %>% 
     mutate(grifo = "grifo") %>% 
-    filter(codigo_de_osinergmin != 7563) #grifo inubicable
+    filter(codigo_de_osinergmin != 7563) %>% #grifo inubicable
+    mutate(tipo_r = case_when(
+      tipo_bandera == "PROPIA PRIMAX" ~ "PROPIA PRIMAX",
+      tipo_bandera == "PROPIA PECSA" ~ "PROPIA PECSA",
+      tipo_bandera == "PROPIA REPSOL" ~ "PROPIA REPSOL",
+      tipo == "ABANDERADA" ~ "ABANDERADA",
+      TRUE ~ "INDEPENDIENTE"
+      ),
+      tipo2 = case_when(
+        tipo_bandera == "PROPIA PRIMAX" ~ "PROPIA PRIMAX",
+        tipo_bandera == "PROPIA PECSA" ~ "PROPIA PECSA",
+        TRUE ~ "OTRA"
+      ),
+      alpha1 = if_else(tipo2 == "OTRA", 0.5, 1)
+      )
+      
 lista_grifos_sp <- lista_grifos
 coordinates(lista_grifos_sp) = c("lon", "lat")
 #Proyectamos en UTM
@@ -102,7 +117,112 @@ tm2 <- tm_shape(distritos_lima) +
                   labels=c("Ubicación de grifos"), 
                   title="")
 
+tm2
 
+distritos_lima %>% 
+  filter(`En muestra` == "Sí") %>% 
+  mutate(tipo_r = case_when(
+    tipo_bandera == "PROPIA PRIMAX" ~ "PROPIA PRIMAX",
+    tipo_bandera == "PROPIA PECSA" ~ "PROPIA PECSA",
+    tipo_bandera == "PROPIA REPSOL" ~ "PROPIA REPSOL",
+    bandera == "ABANDERADA" ~ "ABANDERADA",
+    TRUE ~ "INDEPENDIENTE"
+  ))
+  tm_shape() + 
+  tm_polygons(alpha = 0.5) +
+  tm_shape(lista_grifos_sp) + 
+  tm_dots(col = "tipo",  size = 0.1, alpha = 0.8,
+          palette = c(INDEPENDIENTE = "green", PROPIA = "blue", ABANDERADA = "purple")) +
+  tm_scale_bar(breaks = c(0, 5, 10), size = 0.5, position = c("right", "top"))+
+  tm_add_legend(type="symbol", 
+                col="red", 
+                labels=c("Ubicación de grifos"), 
+                title="")
+
+
+tm_shape(distritos_lima) + 
+    tm_polygons(col = "En muestra", palette = "Greys", alpha = 0.25) +
+    tm_shape(lista_grifos_sp) + 
+    tm_dots(col = "tipo_r",  size = 0.1, alpha = 0.5,
+            palette = c(INDEPENDIENTE = "yellow", 
+                        `PROPIA PRIMAX` = "orange",
+                        `PROPIA PECSA` = "red",
+                        `PROPIA REPSOL` = "blue",
+                        ABANDERADA = "purple",
+                        INDEPENDIENTE = "green")) +
+    tm_scale_bar(breaks = c(0, 5, 10), size = 0.5, position = c("right", "top"))+
+    tm_add_legend(type="symbol", 
+                  col="red", 
+                  labels=c("Ubicación de grifos"), 
+                  title="")
+
+
+distritos_lima %>% 
+  filter(`En muestra` == "Sí") %>% 
+tm_shape() + 
+  tm_polygons(alpha = 0.5) +
+  tm_text("distrito", size = 0.5, remove.overlap = T, 
+          auto.placement = F
+) +
+  tm_shape(lista_grifos_sp) + 
+  tm_dots(col = "tipo_r",  size = 0.1, alpha = 0.5,
+          palette = c(INDEPENDIENTE = "yellow", 
+                      `PROPIA PRIMAX` = "orange",
+                      `PROPIA PECSA` = "red",
+                      `PROPIA REPSOL` = "blue",
+                      ABANDERADA = "purple",
+                      INDEPENDIENTE = "green")) +
+  tm_scale_bar(breaks = c(0, 1, 2), size = 0.5, position = c("right", "top"))+
+  tm_add_legend(type="symbol", 
+                col="red", 
+                labels=c("Ubicación de grifos"), 
+                title="")
+
+distritos_lima %>% 
+  filter(`En muestra` == "Sí") %>% 
+  tm_shape() + 
+  tm_polygons(alpha = 0.25) +
+  tm_text("distrito", size = 0.5, remove.overlap = T, 
+          auto.placement = F
+  ) +
+  tm_shape(lista_grifos_sp) + 
+  tm_dots(col = "tipo2",  size = 0.1, alpha = 0.4,
+          palette = c(OTRA = "darkgreen", 
+                      `PROPIA PRIMAX` = "blue",
+                      `PROPIA PECSA` = "red"),
+          border.lwd = 1,
+          border.col = "black") +
+  tm_scale_bar(breaks = c(0, 5, 10), size = 0.5, position = c("right", "bottom"))+
+  tm_add_legend(type="symbol", 
+                labels=c("Ubicación de grifos"), 
+                title="")
+
+#Grafico solo algunos distritos este es el que uso en la tesis ============
+
+lista_grifos_sp <- lista_grifos %>% 
+  filter(distrito %in% c("SURQUILLO", "MIRAFLORES", "SAN ISIDRO", "SAN BORJA"
+  )) %>% 
+  mutate(tipo2 = fct_rev(tipo2))
+coordinates(lista_grifos_sp) = c("lon", "lat")
+distritos_lima %>% 
+  filter(distrito %in% c("SURQUILLO", "MIRAFLORES", "SAN ISIDRO", "SAN BORJA"
+                         )) %>% 
+  tm_shape() + 
+  tm_polygons(alpha = 0.25) +
+  tm_text("distrito", size = 0.7, remove.overlap = T, 
+          auto.placement = F
+  ) +
+  tm_shape(lista_grifos_sp) + 
+  tm_dots(col = "tipo2",  size = 0.3, alpha = 0.4,
+          palette = c(OTRA = "darkgreen", 
+                      `PROPIA PRIMAX` = "blue",
+                      `PROPIA PECSA` = "red"),
+          border.lwd = 1,
+          border.col = "black",
+          title = "Estaciones") +
+  tm_scale_bar(breaks = c(0, 1, 2), size = 0.5, position = c("right", "bottom"))+
+  tm_add_legend(title="",
+                )
 
 tm_arrange <- tmap_arrange(tm1, tm2)
 tm_arrange

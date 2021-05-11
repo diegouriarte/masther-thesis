@@ -326,9 +326,7 @@ grifos_con_vecinos %>%
   filter(razon_social.princ == "INVERSIONES MAVU S.A.C.") %>%
   select(ends_with("vec"))
 
-grifos_con_vecinos %>%
-  filter(str_detect(razon_social.princ, "REPSOL")) %>%
-  count(razon_social.princ)
+
 ```
 
 
@@ -336,6 +334,48 @@ grifos_con_vecinos %>%
 saveRDS(grifos_con_vecinos, file = here::here("data","processed","grifo_con_vecinos_pre.RDS"))
 ```
 
+
+#Cargamos dataset con grifos y vecinos de Thiessen
+Cargamos dos archivos generados previamente:
+ - File con los vecinos de Thiessen generado en `r "2.5_estaciones-thiessen.Rmd"`. 
+ - File con la lista de grifos y sus características generado en `r "1.6_base-datos-grifos-para-regresion.R"`
+
+```{r}
+grifos_coding_clean <- readRDS(here::here("data","processed","grifo_coding_clean.rds"))
+
+```
+
+# A nivel razón social
+
+## Calculo pre-venta
+
+
+```{r}
+grifos <- readRDS(here::here("data","processed","grifo_con_vecinos_pre.RDS"))
+
+grifos_sc <- grifos %>%
+    distinct(codigo_de_osinergmin.princ) %>%
+    mutate(sc = NA)
+# 
+# ptm <- proc.time()
+# sc_vector <- map_dbl(grifos_sc$codigo_de_osinergmin.princ, calcular_sc, "razon_social")
+# proc.time() - ptm
+# 
+# grifos_sc$sc <- sc_vector
+
+grifos_pre <- left_join(grifos_coding_clean, 
+                           grifos_sc, 
+                           c("codigo_de_osinergmin" = "codigo_de_osinergmin.princ")) 
+
+```
+
+
+Grabamos el dataset para ser usado luego:
+
+```{r}
+saveRDS(grifos_pre, file = here::here("data","processed","grifos_con_sc_razon_social.RDS"))
+
+```
 
 <!-- # Ahora post merger a nivel banderas -->
 <!-- ```{r} -->
@@ -371,44 +411,44 @@ saveRDS(grifos_con_vecinos, file = here::here("data","processed","grifo_con_veci
 <!-- saveRDS(grifos_con_vecinos_post, file = here::here("data","processed","grifo_con_vecinos_post_bandera.RDS")) -->
 <!-- ``` -->
 
-# Ahora post merger a nivel razon_social
+<!-- # Ahora post merger a nivel razon_social -->
 
-Cambiaré la razón social de los grifos Pecsa a Coesti, para efectos del cálculo (se manejan como empresas distintas)
+<!-- Cambiaré la razón social de los grifos Pecsa a Coesti, para efectos del cálculo (se manejan como empresas distintas) -->
 
-```{r}
-grifos_thiessen_irr <- readRDS(here::here("data", "processed","grifos_thiessen_irr.Rds"))
+<!-- ```{r} -->
+<!-- grifos_thiessen_irr <- readRDS(here::here("data", "processed","grifos_thiessen_irr.Rds")) -->
 
-library(stringr)
-grifos_post_razon <- grifos %>%
-  mutate(razon_social = if_else(str_detect(razon_social, "PERUANA DE"),
-                                "COESTI S.A.",
-                                razon_social))
+<!-- library(stringr) -->
+<!-- grifos_post_razon <- grifos %>% -->
+<!--   mutate(razon_social = if_else(str_detect(razon_social, "PERUANA DE"), -->
+<!--                                 "COESTI S.A.", -->
+<!--                                 razon_social)) -->
 
-grifos_con_vecinos_post_razon <- left_join(
-  grifos_thiessen_irr,
-  select(
-    grifos_post_razon,
-    codigo_de_osinergmin,
-    bandera.princ = bandera,
-    razon_social.princ = razon_social
-  ),
-  by = c("codigo_de_osinergmin.princ" = "codigo_de_osinergmin")
-) %>%
-  left_join(
-    select(
-      grifos_post_razon,
-      codigo_de_osinergmin,
-      bandera.vec = bandera,
-      razon_social.vec = razon_social
-    ),
-    by = c("codigo_de_osinergmin.vec" = "codigo_de_osinergmin")
-  )
-```
-
-
+<!-- grifos_con_vecinos_post_razon <- left_join( -->
+<!--   grifos_thiessen_irr, -->
+<!--   select( -->
+<!--     grifos_post_razon, -->
+<!--     codigo_de_osinergmin, -->
+<!--     bandera.princ = bandera, -->
+<!--     razon_social.princ = razon_social -->
+<!--   ), -->
+<!--   by = c("codigo_de_osinergmin.princ" = "codigo_de_osinergmin") -->
+<!-- ) %>% -->
+<!--   left_join( -->
+<!--     select( -->
+<!--       grifos_post_razon, -->
+<!--       codigo_de_osinergmin, -->
+<!--       bandera.vec = bandera, -->
+<!--       razon_social.vec = razon_social -->
+<!--     ), -->
+<!--     by = c("codigo_de_osinergmin.vec" = "codigo_de_osinergmin") -->
+<!--   ) -->
+<!-- ``` -->
 
 
-```{r}
-saveRDS(grifos_con_vecinos_post_razon, 
-        file = here::here("data","processed","grifo_con_vecinos_post_razon.RDS"))
-```
+
+
+<!-- ```{r} -->
+<!-- saveRDS(grifos_con_vecinos_post_razon,  -->
+<!--         file = here::here("data","processed","grifo_con_vecinos_post_razon.RDS")) -->
+<!-- ``` -->

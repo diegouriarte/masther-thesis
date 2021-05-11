@@ -1,6 +1,8 @@
 ---
 title: "Base de datos de grifos limpia"
 output: html_notebook
+editor_options: 
+  chunk_output_type: console
 ---
 
 # Cargamos librerías y funciones
@@ -289,6 +291,9 @@ grifo_full_2 <- grifo_full_1 %>%
     con_glp = as.numeric(con_glp) - 1,
     con_gnv = as.numeric(con_gnv) - 1
   )
+
+grifo_full_2 %>% 
+  filter(distrito == "SAN JUAN DE LURIGANCHO")
 ```
 
 

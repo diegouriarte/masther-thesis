@@ -111,7 +111,7 @@ saveRDS(data_distrital_clean, here::here("data", "processed", "data_distrital_co
 data_total <- data_precios %>% 
     left_join(grifos_sc, by = "codigo_de_osinergmin") %>% 
     left_join(data_distrital_clean, by = "distrito") %>% 
-    mutate(sc = if_else(`año` == 2017, sc_pre, sc_post),
+    mutate(
            ingresos_2012 = ingresos_2012 / 1000,
            densidad_2017 = densidad_2017/10000)
 
@@ -136,7 +136,7 @@ data_total <- data_total %>%
 #' Variable relacionada con vecinos utilizando otra definición de vecino
 #' 
 #' 
-#+ vecinos-thiessen
+#+ vecinos-thiessen-pecsa
 grifos_vecinos <- readRDS(here::here("data", "processed", "grifo_con_vecinos_pre.RDS"))
 
 vecinos_pecsa_thissen <- grifos_vecinos %>%
@@ -149,12 +149,23 @@ vecinos_pecsa_thissen <- grifos_vecinos %>%
     distinct(codigo_de_osinergmin.princ, .keep_all = TRUE) %>%
     select("codigo_de_osinergmin" = codigo_de_osinergmin.princ, vecino_pecsa_thiessen)
 
+vecinos_primax_thissen <- grifos_vecinos %>%
+    group_by(codigo_de_osinergmin.princ) %>%
+    mutate(vecino_primax_thiessen = if_else(str_detect(razon_social.vec, "COESTI"),
+                                           1,
+                                           0
+    )) %>%
+    arrange(codigo_de_osinergmin.princ, desc(vecino_primax_thiessen)) %>%
+    distinct(codigo_de_osinergmin.princ, .keep_all = TRUE) %>%
+    select("codigo_de_osinergmin" = codigo_de_osinergmin.princ, vecino_primax_thiessen)
+
 # solo toma el valor de 1 para las estaciones que tienen como vecino 
 # una estación de Pecsa luego de la compra para las variables de la esp. efectos fijos
 # y siempre para la esp. diff-in-diff
 
 data_total <- data_total %>% 
     left_join(vecinos_pecsa_thissen, by = "codigo_de_osinergmin") %>% 
+    left_join(vecinos_primax_thissen, by = "codigo_de_osinergmin") %>% 
     mutate(vecino_pecsa_dist_fe = if_else(`año` == 2017, 0, vecino_pecsa_dist),
            vecino_pecsa_thiessen_fe = if_else(`año` == 2017, 0, vecino_pecsa_thiessen)) %>% 
     rename("vecino_pecsa_dist_did" = vecino_pecsa_dist, 
@@ -169,8 +180,6 @@ data_total <- data_total %>%
         -llanteria,-islas_comb_liq,
         -mecanico,
         -aceite,
-        -sc_pre,
-        -sc_post,
     ) %>%
     select(1, 3, 2, everything())
 
