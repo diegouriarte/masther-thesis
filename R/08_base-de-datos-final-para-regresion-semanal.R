@@ -33,7 +33,7 @@ conflict_prefer("filter", "dplyr")
 
 # data grifos
 grifos_sc <-
-    readRDS(here::here("data", "processed", "grifos_con_sc_razon_social.RDS")) %>% 
+    readRDS(here::here("data","processed","grifos_data_final.RDS")) %>% 
     mutate(codigo_de_osinergmin = as.character(codigo_de_osinergmin))
 
 # cargamos los precios para 2017 de DB5
@@ -106,7 +106,7 @@ saveRDS(data_distrital_clean, here::here("data", "processed", "data_distrital_co
 data_total <- data_precios %>% 
     left_join(grifos_sc, by = "codigo_de_osinergmin") %>% 
     left_join(data_distrital_clean, by = "distrito") %>% 
-    mutate(sc = if_else(`año` == 2017, sc_pre, sc_post),
+    mutate(
            ingresos_2012 = ingresos_2012 / 1000,
            densidad_2017 = densidad_2017/10000)
 
@@ -122,36 +122,6 @@ data_total <- data_total %>%
     )
 
 
-
-#' Variable relacionada con vecinos utilizando otra definición de vecino
-#' 
-#' 
-#+ vecinos-thiessen
-grifos_vecinos <- readRDS(here::here("data", "processed", "grifo_con_vecinos_pre.RDS"))
-
-vecinos_pecsa_thissen <- grifos_vecinos %>%
-  group_by(codigo_de_osinergmin.princ) %>%
-  mutate(
-    vecino_pecsa_thiessen = if_else(str_detect(razon_social.vec, "PERUANA DE ESTACIONES"),
-      1,
-      0
-    ),
-    codigo_de_osinergmin.princ = as.character(codigo_de_osinergmin.princ)
-  ) %>%
-  arrange(codigo_de_osinergmin.princ, desc(vecino_pecsa_thiessen)) %>%
-  distinct(codigo_de_osinergmin.princ, .keep_all = TRUE) %>%
-  select("codigo_de_osinergmin" = codigo_de_osinergmin.princ, vecino_pecsa_thiessen)
-
-# solo toma el valor de 1 para las estaciones que tienen como vecino 
-# una estación de Pecsa luego de la compra para las variables de la esp. efectos fijos
-# y siempre para la esp. diff-in-diff
-
-data_total <- data_total %>% 
-    left_join(vecinos_pecsa_thissen, by = "codigo_de_osinergmin") %>% 
-    rename("vecino_pecsa_dist_did" = vecino_pecsa_dist, 
-           "vecino_pecsa_thiessen_did" = vecino_pecsa_thiessen)
-
-
 data_total <- data_total %>%
     select(
         -orden_original,
@@ -160,8 +130,6 @@ data_total <- data_total %>%
         -llanteria,-islas_comb_liq,
         -mecanico,
         -aceite,
-        -sc_pre,
-        -sc_post,
     )
 head(data_total)
 #' ### Guardamos
@@ -172,5 +140,4 @@ data_total <- data_total %>%
   select(1, 2, fecha, everything()) 
 saveRDS(data_total, file = here::here("data", "processed", "data-final-regresiones_semanal.rds"))
 
-#write_excel_csv(data_total, here::here("data", "processed", "data-final-regresiones_semanal.csv"))
 

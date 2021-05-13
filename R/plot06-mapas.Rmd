@@ -199,7 +199,7 @@ geom_text_repel(
 
 ```{r}
 grifos_thissen <- readRDS(here::here("data", "processed", "shape_file_grifos_thiessen.rds"))
-lista_grifos_sp <- st_as_sf(lista_grifos_sp)  
+# lista_grifos_sp <- st_as_sf(lista_grifos_sp)  
 grifos_thissen <- st_as_sf(grifos_thissen)
 
 grifos_thiessen_1 <- grifos_thissen %>%
@@ -234,7 +234,7 @@ cols1 <- c(
   tm_text("distrito", col = "black", ymod = 3.5, fontface = "bold", size = 0.8) +
   tm_scale_bar(
     breaks = c(0, 1, 2),
-    size = 0.8,
+    text.size = 0.8,
     position = c("left", "bottom")
   ) +
   tm_shape(grifos_thiessen_1) +
@@ -246,7 +246,7 @@ cols1 <- c(
   ) +
   tm_layout(
     legend.outside = T,
-    legend.outside.position = "bottom",
+    legend.outside.position = "right",
     legend.stack = "horizontal",
     legend.frame = ,
     legend.bg.color = T,
@@ -254,7 +254,7 @@ cols1 <- c(
     legend.title.size = 1,
     legend.title.fontface = "bold"
   ) +
-  tm_shape(lista_grifos_sp) +
+  # tm_shape(lista_grifos_sp) +
   tm_dots(col = "black", border.col = "black", size = 0.1, alpha = 0.5)
 )
 
