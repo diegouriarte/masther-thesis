@@ -345,6 +345,40 @@ grifos_coding_clean <- readRDS(here::here("data","processed","grifo_coding_clean
 
 ```
 
+
+# Calculamos los vecinos de thiessen
+
+```{r}
+grifos_vecinos <- readRDS(here::here("data", "processed", "grifo_con_vecinos_pre.RDS"))
+
+vecinos_pecsa_thissen <- grifos_vecinos %>%
+    group_by(codigo_de_osinergmin.princ) %>%
+    mutate(vecino_pecsa_thiessen = if_else(str_detect(razon_social.vec, "PERUANA DE ESTACIONES"),
+                                           1,
+                                           0
+    )) %>%
+    arrange(codigo_de_osinergmin.princ, desc(vecino_pecsa_thiessen)) %>%
+    distinct(codigo_de_osinergmin.princ, .keep_all = TRUE) %>%
+    select("codigo_de_osinergmin" = codigo_de_osinergmin.princ, vecino_pecsa_thiessen)
+
+vecinos_primax_thissen <- grifos_vecinos %>%
+    group_by(codigo_de_osinergmin.princ) %>%
+    mutate(vecino_primax_thiessen = if_else(str_detect(razon_social.vec, "COESTI"),
+                                           1,
+                                           0
+    )) %>%
+    arrange(codigo_de_osinergmin.princ, desc(vecino_primax_thiessen)) %>%
+    distinct(codigo_de_osinergmin.princ, .keep_all = TRUE) %>%
+    select("codigo_de_osinergmin" = codigo_de_osinergmin.princ, vecino_primax_thiessen)
+
+grifos_data_final <- grifos_coding_clean %>% 
+    left_join(vecinos_pecsa_thissen, by = "codigo_de_osinergmin") %>% 
+    left_join(vecinos_primax_thissen, by = "codigo_de_osinergmin") 
+
+saveRDS(grifos_data_final, file = here::here("data","processed","grifos_data_final.RDS"))
+
+```
+
 # A nivel razón social
 
 ## Calculo pre-venta

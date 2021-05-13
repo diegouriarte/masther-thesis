@@ -532,7 +532,7 @@ plot_did <- function(did_obj, aggte_ef, mes_trat = 14) {
                linetype = "dashed") +
     geom_vline(xintercept = 0,
                linetype = "dashed") +
-    annotate(geom='richtext', x=0, y=aggte_ef$overall.att + 0.1, 
+    annotate(geom='richtext', x=0, y=aggte_ef$overall.att + 0.08, 
              label= paste0("Coeficiente DD = ",sprintf("%.2f", aggte_ef$overall.att),
                            "<b>",signi,"</b>",
                            "<br>(s.e. = ", sprintf("%.2f", aggte_ef$overall.se), ")")
@@ -552,7 +552,7 @@ reg_did <- function(df, producto, band, vecino = FALSE, mes_trat = 14) {
          fecha_trat = if_else(tipo_bandera == "PROPIA PECSA", mes_trat, 0),
          ) %>% 
     filter(tipo_bandera != "PROPIA PRIMAX",
-        tipo_bandera == "PROPIA PECSA" | codigo_de_osinergmin %ni% lista_vecinos,
+        tipo_bandera == "PROPIA PECSA" | codigo_de_osinergmin %ni% lista_vecinos | codigo_de_osinergmin %ni% lista_vecinos_primax,
         mes >= 1
         )
   } else if (band == "PROPIA PRIMAX" & vecino == FALSE) {
@@ -573,17 +573,23 @@ reg_did <- function(df, producto, band, vecino = FALSE, mes_trat = 14) {
          fecha_trat = if_else(vecina == "vecina", mes_trat, 0)
          ) %>%
       filter(tipo_bandera != "PROPIA PECSA",
-             tipo_bandera != "PROPIA PRIMAX")
+             tipo_bandera != "PROPIA PRIMAX"
+             # codigo_de_osinergmin %ni% lista_vecinos_primax
+             )
   } else if (band == "PROPIA PRIMAX" & vecino == TRUE) {
       data_reg <- df_producto %>%
         mutate(
-         vecina = if_else(distrito %in% distritos_con_primax,
+         vecina = if_else(
+                          # distrito %in% distritos_con_primax,
+                           codigo_de_osinergmin %in% lista_vecinos_primax,
                           "vecina",
                           "no vecina"),
          fecha_trat = if_else(vecina == "vecina", mes_trat, 0)
          ) %>%
         filter(tipo_bandera != "PROPIA PECSA",
-             tipo_bandera != "PROPIA PRIMAX")
+             tipo_bandera != "PROPIA PRIMAX"
+             # codigo_de_osinergmin %ni% lista_vecinos
+             )
   }
   
   if (vecino == FALSE) {
@@ -638,7 +644,7 @@ pecsa_diesel <- reg_did(
   df = data_total_mensual,
   producto = "DIESEL",
   band = "PROPIA PECSA",
-  mes_trat = 14
+  mes_trat = mesventa
 )
 
 plot_did(pecsa_diesel$`event study`, pecsa_diesel$agregado, mes_trat = mesventa)
@@ -719,3 +725,43 @@ plot_did(vecino_primax$`event study`, vecino_primax$agregado, mes_trat = mesvent
 
 ---
 
+
+## Vecinos
+
+Bajo una especificación similar, se evalúa si las estaciones vecinas Primax o Pecsa también 
+muestran incremento de precios luego del evento.
+
+### Estaciones vecinas a Pecsa
+```{r vecinos_pecsa_diesel}
+# set.seed(23169)
+
+vecino_pecsa <- reg_did(
+  df = data_total_mensual,
+  producto = "DIESEL",
+  band = "PROPIA PECSA",
+  vecino = TRUE,
+  mes_trat = mesventa
+)
+
+plot_did(vecino_pecsa$`event study`, vecino_pecsa$agregado, mes_trat = mesventa)
+```
+
+---
+
+### Estaciones vecinas a Primax
+
+```{r vecinos_primax_diesel}
+vecino_primax <- reg_did(
+  df = data_total_mensual,
+  producto = "DIESEL",
+  band = "PROPIA PRIMAX",
+  vecino = TRUE,
+  mes_trat = mesventa
+)
+
+plot_did(vecino_primax$`event study`, vecino_primax$agregado, mes_trat = mesventa)
+
+
+```
+
+---

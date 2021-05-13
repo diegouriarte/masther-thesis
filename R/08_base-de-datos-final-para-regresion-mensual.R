@@ -37,7 +37,8 @@ conflict_prefer("filter", "dplyr")
 
 # data grifos
 grifos_sc <-
-    readRDS(here::here("data", "processed", "grifos_con_sc_razon_social.RDS"))
+    # readRDS(here::here("data", "processed", "grifos_con_sc_razon_social.RDS"))
+    read_rds(here::here("data","processed","grifos_data_final.RDS"))
 
 # cargamos los precios para 2017 de DB5
 rutas_fuel <- list(
@@ -55,7 +56,6 @@ data_precios <- map_dfr(
         filter(
             `año` >= 2017,
             codigo_de_osinergmin %in% grifos_sc$codigo_de_osinergmin,
-            mes != 13
         ) %>%
         mutate(dia = 1) %>%
         unite(fecha, dia, mes, `año`, sep = "-", remove = FALSE) %>%
@@ -119,17 +119,17 @@ data_total <- data_precios %>%
 #' ## Creamos variables relacionadas con la venta:
 #' Variable que toma el valor de 1 luego de que el grifo fue adquirido
 #+ variable-comprada
-data_total <- data_total %>%
-    mutate(
-        COMPRADA_FE = case_when(fecha <= dmy("31-01-2018")  ~ 0,
-                             tipo_bandera == "PROPIA PECSA" ~ 1,
-                             TRUE ~ 0),
-        COMPRADA_DID = if_else(tipo_bandera == "PROPIA PECSA", 1, 0),
-        SUMINISTRO = case_when(fecha <= dmy("31-01-2018")  ~ 0,
-                               tipo_bandera == "ABANDERADA PECSA" ~ 1,
-                               TRUE ~ 0),
-        timing_did = if_else(fecha > dmy("31-01-2018"), 1, 0)
-    )
+# data_total <- data_total %>%
+#     mutate(
+#         COMPRADA_FE = case_when(fecha <= dmy("31-01-2018")  ~ 0,
+#                              tipo_bandera == "PROPIA PECSA" ~ 1,
+#                              TRUE ~ 0),
+#         COMPRADA_DID = if_else(tipo_bandera == "PROPIA PECSA", 1, 0),
+#         SUMINISTRO = case_when(fecha <= dmy("31-01-2018")  ~ 0,
+#                                tipo_bandera == "ABANDERADA PECSA" ~ 1,
+#                                TRUE ~ 0),
+#         timing_did = if_else(fecha > dmy("31-01-2018"), 1, 0)
+#     )
 
 
 
@@ -137,39 +137,40 @@ data_total <- data_total %>%
 #' 
 #' 
 #+ vecinos-thiessen-pecsa
-grifos_vecinos <- readRDS(here::here("data", "processed", "grifo_con_vecinos_pre.RDS"))
 
-vecinos_pecsa_thissen <- grifos_vecinos %>%
-    group_by(codigo_de_osinergmin.princ) %>%
-    mutate(vecino_pecsa_thiessen = if_else(str_detect(razon_social.vec, "PERUANA DE ESTACIONES"),
-                                           1,
-                                           0
-    )) %>%
-    arrange(codigo_de_osinergmin.princ, desc(vecino_pecsa_thiessen)) %>%
-    distinct(codigo_de_osinergmin.princ, .keep_all = TRUE) %>%
-    select("codigo_de_osinergmin" = codigo_de_osinergmin.princ, vecino_pecsa_thiessen)
-
-vecinos_primax_thissen <- grifos_vecinos %>%
-    group_by(codigo_de_osinergmin.princ) %>%
-    mutate(vecino_primax_thiessen = if_else(str_detect(razon_social.vec, "COESTI"),
-                                           1,
-                                           0
-    )) %>%
-    arrange(codigo_de_osinergmin.princ, desc(vecino_primax_thiessen)) %>%
-    distinct(codigo_de_osinergmin.princ, .keep_all = TRUE) %>%
-    select("codigo_de_osinergmin" = codigo_de_osinergmin.princ, vecino_primax_thiessen)
+# grifos_vecinos <- readRDS(here::here("data", "processed", "grifo_con_vecinos_pre.RDS"))
+# 
+# vecinos_pecsa_thissen <- grifos_vecinos %>%
+#     group_by(codigo_de_osinergmin.princ) %>%
+#     mutate(vecino_pecsa_thiessen = if_else(str_detect(razon_social.vec, "PERUANA DE ESTACIONES"),
+#                                            1,
+#                                            0
+#     )) %>%
+#     arrange(codigo_de_osinergmin.princ, desc(vecino_pecsa_thiessen)) %>%
+#     distinct(codigo_de_osinergmin.princ, .keep_all = TRUE) %>%
+#     select("codigo_de_osinergmin" = codigo_de_osinergmin.princ, vecino_pecsa_thiessen)
+# 
+# vecinos_primax_thissen <- grifos_vecinos %>%
+#     group_by(codigo_de_osinergmin.princ) %>%
+#     mutate(vecino_primax_thiessen = if_else(str_detect(razon_social.vec, "COESTI"),
+#                                            1,
+#                                            0
+#     )) %>%
+#     arrange(codigo_de_osinergmin.princ, desc(vecino_primax_thiessen)) %>%
+#     distinct(codigo_de_osinergmin.princ, .keep_all = TRUE) %>%
+#     select("codigo_de_osinergmin" = codigo_de_osinergmin.princ, vecino_primax_thiessen)
 
 # solo toma el valor de 1 para las estaciones que tienen como vecino 
 # una estación de Pecsa luego de la compra para las variables de la esp. efectos fijos
 # y siempre para la esp. diff-in-diff
 
-data_total <- data_total %>% 
-    left_join(vecinos_pecsa_thissen, by = "codigo_de_osinergmin") %>% 
-    left_join(vecinos_primax_thissen, by = "codigo_de_osinergmin") %>% 
-    mutate(vecino_pecsa_dist_fe = if_else(`año` == 2017, 0, vecino_pecsa_dist),
-           vecino_pecsa_thiessen_fe = if_else(`año` == 2017, 0, vecino_pecsa_thiessen)) %>% 
-    rename("vecino_pecsa_dist_did" = vecino_pecsa_dist, 
-           "vecino_pecsa_thiessen_did" = vecino_pecsa_thiessen)
+# data_total <- data_total %>% 
+#     left_join(vecinos_pecsa_thissen, by = "codigo_de_osinergmin") %>% 
+#     left_join(vecinos_primax_thissen, by = "codigo_de_osinergmin") %>% 
+#     mutate(vecino_pecsa_dist_fe = if_else(`año` == 2017, 0, vecino_pecsa_dist),
+#            vecino_pecsa_thiessen_fe = if_else(`año` == 2017, 0, vecino_pecsa_thiessen)) %>% 
+#     rename("vecino_pecsa_dist_did" = vecino_pecsa_dist, 
+#            "vecino_pecsa_thiessen_did" = vecino_pecsa_thiessen)
 
 
 data_total <- data_total %>%
@@ -183,7 +184,6 @@ data_total <- data_total %>%
     ) %>%
     select(1, 3, 2, everything())
 
-head(data_total)
 #' ### Guardamos
 #' 
 saveRDS(data_total, file = here::here("data", "processed", "data-final-regresiones.rds"))

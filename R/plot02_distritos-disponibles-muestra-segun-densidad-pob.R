@@ -177,11 +177,15 @@ tm_shape() +
                 col="red", 
                 labels=c("Ubicación de grifos"), 
                 title="")
+tm_shape(distritos_lima) + 
+  tm_polygons(col = "En muestra", palette = "Greys", alpha = 0.5) +
 
 distritos_lima %>% 
-  filter(`En muestra` == "Sí") %>% 
+  # filter(`En muestra` == "Sí") %>% 
   tm_shape() + 
-  tm_polygons(alpha = 0.25) +
+  tm_polygons(
+    col = "En muestra", palette = "Greys",
+    alpha = 0.25) +
   tm_text("distrito", size = 0.5, remove.overlap = T, 
           auto.placement = F
   ) +
@@ -192,10 +196,7 @@ distritos_lima %>%
                       `PROPIA PECSA` = "red"),
           border.lwd = 1,
           border.col = "black") +
-  tm_scale_bar(breaks = c(0, 5, 10), size = 0.5, position = c("right", "bottom"))+
-  tm_add_legend(type="symbol", 
-                labels=c("Ubicación de grifos"), 
-                title="")
+  tm_scale_bar(breaks = c(0, 5, 10), size = 0.5, position = c("right", "bottom"))
 
 #Grafico solo algunos distritos este es el que uso en la tesis ============
 
@@ -239,15 +240,18 @@ tmap_save(tm_arrange, filename = here::here("plots", paste("muestra-distritos_1"
 #' 
 grifos_thissen <- readRDS(here::here("data", "processed", "shape_file_grifos_thiessen.rds"))
 lista_grifos_sp <- st_as_sf(lista_grifos_sp)  
-grifos_thissen <- st_as_sf(c)
+grifos_thissen <- st_as_sf(grifos_thissen)
+
+
 
 
 (thiessen_plot <-
-  tm_shape(distritos_lima %>% filter(distrito %in% c("SAN ISIDRO", "MIRAFLORES"))) +
+  tm_shape(distritos_lima %>% 
+             filter(distrito %in% c("SAN ISIDRO", "MIRAFLORES",
+                                    "SURQUILLO", "SAN BORJA",
+                                    "LA VICTORIA"))) +
   tm_borders(col = NULL) + 
-  tm_shape(distritos_lima %>% filter(distrito == "SAN ISIDRO")) +
-  tm_borders(col = "black", lwd = 2) +
-  tm_text("distrito", col = "black", ymod = 3.5, fontface = "bold") + 
+  tm_text("distrito", col = "black", ymod = 3.5, fontface = "bold", size = 0.8) + 
   tm_scale_bar(
     breaks = c(0, 0.5, 1),
     size = 0.8,

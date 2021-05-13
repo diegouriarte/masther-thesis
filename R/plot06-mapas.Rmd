@@ -1,0 +1,279 @@
+---
+title: "Gráfica estaciones en la muestra"
+output: html_notebook
+editor_options: 
+  chunk_output_type: console
+---
+
+Cargamos archivos
+
+```{r}
+knitr::opts_chunk(
+    collapse = TRUE,
+    comment = "#>",
+    error = TRUE
+)
+options(tidyverse.quiet = TRUE)
+
+library(conflicted)
+library(tidyverse)
+library(sf)
+library(maptools)
+library(tmap)
+library(ggrepel)
+'%ni%' <- Negate('%in%')
+
+conflict_prefer("filter", "dplyr")
+```
+
+Cargamos la data
+
+```{r}
+
+data_total <- readRDS(file = here::here("data", "processed", "data-final-regresiones.rds"))
+```
+
+
+# Creamos el mapa de Lima con las estaciones
+
+```{r}
+crs <- CRS("+init=epsg:32718")
+
+distritos <- st_read(here::here("data","shapes-files","data-mapa-peru", "PER_adm3.shp"))
+# distritos_no <- c("Ancon", "San Juan de Lurigancho", "Carabayllo", 
+#                   "Puente Piedra", "Comas", "Villa Maria del Triunfo", 
+#                   "Cieneguilla", "Pachacamac", "Punta Hermosa", "Punta Negra",
+#                   "San Bartolo", "Santa Maria del Mar", "Santa Rosa", "Lurin",
+#                   "Pucusana", "Lurigancho", "Chaclacayo")
+
+
+distritos_lima <- distritos %>% 
+    filter( NAME_1 == "Lima Province", NAME_2 == "Lima") %>% 
+    select("distrito" = NAME_3) %>% 
+    mutate(distrito = str_to_upper(distrito),
+           distrito = if_else(distrito == "MAGDALENA VIEJA", 
+                              "PUEBLO LIBRE", 
+                              distrito))
+provincia <- st_read(here::here("data","shapes-files","data-mapa-peru", "PER_adm2.shp")) %>% 
+  filter()
+
+```
+
+
+Obtenemos la lista de distritos en la muestra, e indicamos cuales estan y no están en el DF espacial
+```{r}
+
+data_distrital_clean <- readRDS(here::here("data", "processed", "data_distrital_completa.rds"))
+data_distrital_clean
+
+
+distritos_muestra <- unique(data_total$distrito)
+
+distritos_lima <- distritos_lima %>% 
+    mutate("En muestra" = if_else(distrito %in% distritos_muestra, "Sí", "No")) %>% 
+    left_join(data_distrital_clean, by = "distrito")
+```
+
+Ahora los categorizamos los grifos por tipo de bandera (creo que podría usar forcats)
+
+```{r}
+# lista_grifos <- data_total %>% 
+#     distinct(codigo_de_osinergmin, .keep_all = T) %>%
+#     select(codigo_de_osinergmin, lon, lat, tipo, tipo_bandera, distrito, vecino_pecsa_thiessen_did, vecino_primax_thiessen) %>% 
+#     # mutate(grifo = "grifo") %>% 
+#     # filter(codigo_de_osinergmin != 7563) %>% #grifo inubicable
+#     mutate(tipo_r = case_when(
+#       tipo_bandera == "PROPIA PRIMAX" ~ "PROPIA PRIMAX",
+#       tipo_bandera == "PROPIA PECSA" ~ "PROPIA PECSA",
+#       tipo_bandera == "PROPIA REPSOL" ~ "PROPIA REPSOL",
+#       tipo == "ABANDERADA" ~ "ABANDERADA",
+#       TRUE ~ "INDEPENDIENTE"
+#       ),
+#       tipo2 = case_when(
+#         tipo_bandera == "PROPIA PRIMAX" ~ "PROPIA PRIMAX",
+#         tipo_bandera == "PROPIA PECSA" ~ "PROPIA PECSA",
+#         TRUE ~ "OTRA"
+#       ),
+#       alpha1 = if_else(tipo2 == "OTRA" | tipo2 == "PROPIA REPSOL", 0.9, 1),
+#       tipo_r = fct_relevel(tipo_r, "PROPIA PRIMAX", "PROPIA PECSA", "PROPIA REPSOL")
+#       )
+
+lista_grifos <- read_rds(here::here("data", "processed", "grifos_data_final.RDS")) %>%
+  mutate(
+    tipo_r = case_when(
+      tipo_bandera == "PROPIA PRIMAX" ~ "PROPIA PRIMAX",
+      tipo_bandera == "PROPIA PECSA" ~ "PROPIA PECSA",
+      tipo_bandera == "PROPIA REPSOL" ~ "PROPIA REPSOL",
+      tipo == "ABANDERADA" ~ "ABANDERADA",
+      TRUE ~ "INDEPENDIENTE"
+    ),
+    tipo2 = case_when(
+      tipo_bandera == "PROPIA PRIMAX" ~ "PROPIA PRIMAX",
+      tipo_bandera == "PROPIA PECSA" ~ "PROPIA PECSA",
+      TRUE ~ "OTRA"
+    ),
+    alpha1 = if_else(tipo2 == "OTRA" | tipo2 == "PROPIA REPSOL", 0.9, 1),
+    tipo_r = fct_relevel(tipo_r, "PROPIA PRIMAX", "PROPIA PECSA", "PROPIA REPSOL")
+  )
+
+
+```
+
+
+```{r}
+cols <- c("PROPIA REPSOL" = "#1354FF", 
+          "PROPIA PECSA"  = "#e74c3c", 
+          "PROPIA PRIMAX" = "#f1c40f",
+          "ABANDERADA" = "grey",
+          "INDEPENDIENTE" = "#2ecc71")
+
+  # filter(`En muestra` == "Sí") %>% 
+ggplot() +
+  # geom_sf(data = provincia, colour = "black", size = 1) + 
+  geom_sf(data = distritos_lima, fill = colors()[250]) +
+  coord_sf(xlim = c(-77.2, -76.8), ylim = c(-12.25, -11.9)) +  
+  geom_point(data = lista_grifos, aes(x = lon, y = lat, alpha = alpha1 == 0.9,
+                                      fill = tipo_r
+                                      ), shape = 21, size = 2) +
+  scale_fill_manual(name = "Tipo de estación", values = cols) + 
+  scale_alpha_manual(values = c(1, 0.4), guide = FALSE) +
+  
+  theme(panel.background = element_blank(), axis.line = element_blank(),
+        axis.title = element_blank(), axis.ticks = element_blank(), 
+        axis.text = element_blank(),
+        panel.border = element_rect(colour = "black", fill=NA, size=0.5),
+        legend.key=element_blank()
+        )
+ggsave("doc/figures/distribucion-estaciones.png")
+
+```
+
+Este nunca usamos
+
+```{r}
+distritos_lima %>% 
+ggplot() +
+  geom_sf(fill = colors()[250]) +
+  coord_sf(xlim = c(-77.2, -76.8), ylim = c(-12.25, -11.9)) +  
+  geom_text_repel(
+  )
+
+lima_sf <-
+  distritos_lima %>%
+  mutate(
+    CENTROID = map(geometry, st_centroid),
+    COORDS = map(CENTROID, st_coordinates),
+    COORDS_X = map_dbl(COORDS, 1),
+    COORDS_Y = map_dbl(COORDS, 2)
+  ) %>%
+  as_tibble() %>%
+  st_as_sf()
+
+lima_sf$nudge_x <- 0
+lima_sf$nudge_y <- 0
+
+x_range <- abs(Reduce("-", range(lima_sf$COORDS_X)))
+y_range <- abs(Reduce("-", range(lima_sf$COORDS_Y)))
+
+ix <- usa_sf$name %in% c("New Hampshire", "Vermont", "Massachusetts")
+usa_sf$nudge_x[ix] <- -1 * 0.15 * x_range
+usa_sf$nudge_y[ix] <- 1 * 0.15 * y_range
+
+
+lima_sf %>% 
+  filter(`En muestra` == "Sí") %>% 
+ggplot() +
+  geom_sf(fill = colors()[250]) +
+  coord_sf(xlim = c(-77.2, -76.8), ylim = c(-12.25, -11.9)) +  
+geom_text_repel(
+    mapping = aes(
+      x = COORDS_X,
+      y = COORDS_Y,
+      label = distrito
+    ),
+    size = 3,
+    min.segment.length = 0)
+```
+
+# Mapa de thiessen para algunos distritos
+
+```{r}
+grifos_thissen <- readRDS(here::here("data", "processed", "shape_file_grifos_thiessen.rds"))
+lista_grifos_sp <- st_as_sf(lista_grifos_sp)  
+grifos_thissen <- st_as_sf(grifos_thissen)
+
+grifos_thiessen_1 <- grifos_thissen %>%
+  left_join(lista_grifos %>%
+    select(codigo_de_osinergmin, vecino_pecsa_thiessen, vecino_primax_thiessen, tipo_bandera),
+  by = "codigo_de_osinergmin"
+  ) %>%
+  filter(!is.na(vecino_primax_thiessen)) %>%
+  mutate(tipo_estacion = case_when(
+    tipo_bandera.y == "PROPIA PECSA" ~ "PECSA",
+    tipo_bandera.y == "PROPIA PRIMAX" ~ "PRIMAX",
+    vecino_pecsa_thiessen == 1 ~ "VECINA",
+    vecino_primax_thiessen == 1 ~ "VECINA",
+    TRUE ~ "NO VECINA"
+  ),
+  tipo_estacion = fct_relevel(tipo_estacion, "PRIMAX", "PECSA", "VECINA", "NO VECINA"))
+
+cols1 <- c(
+  "PRIMAX" = "#f1c40f",
+  "PECSA"  = "#e74c3c",
+  "VECINA" = "#6689A1",
+  "NO VECINA" = "#60495A"
+)
+
+
+(thiessen_plot <-
+  tm_shape(distritos_lima %>%
+             filter(distrito %in% c("SAN ISIDRO", "MIRAFLORES",
+                                    "SURQUILLO", "SAN BORJA"))) +
+  # tm_shape(distritos_lima) + 
+  tm_borders(col = NULL) + 
+  tm_text("distrito", col = "black", ymod = 3.5, fontface = "bold", size = 0.8) +
+  tm_scale_bar(
+    breaks = c(0, 1, 2),
+    size = 0.8,
+    position = c("left", "bottom")
+  ) +
+  tm_shape(grifos_thiessen_1) +
+  tm_polygons(
+    col = "tipo_estacion",
+    title = "Razon social de estación",
+    palette = cols1,
+    alpha = 0.4
+  ) +
+  tm_layout(
+    legend.outside = T,
+    legend.outside.position = "bottom",
+    legend.stack = "horizontal",
+    legend.frame = ,
+    legend.bg.color = T,
+    legend.text.size	= 0.9,
+    legend.title.size = 1,
+    legend.title.fontface = "bold"
+  ) +
+  tm_shape(lista_grifos_sp) +
+  tm_dots(col = "black", border.col = "black", size = 0.1, alpha = 0.5)
+)
+
+```
+
+Pendiente, porque hay estaciones que se dropean:
+
+ya se porqué, pq retiré algunas pq nunca se actulizan o lo hacian muy poco,
+
+```{r}
+grifos_thissen %>%
+  left_join(lista_grifos %>%
+    select(codigo_de_osinergmin, vecino_pecsa_thiessen, vecino_primax_thiessen, tipo_bandera),
+  by = "codigo_de_osinergmin"
+  ) %>%
+  filter(is.na(vecino_primax_thiessen)) %>% view()
+```
+
+```{r}
+data_total %>% filter(codigo_de_osinergmin == 17947)
+```
+
