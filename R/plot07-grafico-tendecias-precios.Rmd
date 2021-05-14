@@ -162,7 +162,8 @@ Solo Primax y sus vecinas y no vecinas
   ) %>%
   filter(producto == "G90") %>%
   group_by(fecha, primax_no) %>%
-  summarise(precio_promedio = mean(precio_de_venta), .groups = "drop") %>%
+  summarise(precio_promedio = mean(precio_de_venta),
+            .groups = "drop") %>%
   group_by(primax_no) %>%
   tq_mutate(
     # tq_mutate args
@@ -189,7 +190,13 @@ Solo Primax y sus vecinas y no vecinas
   ) +
   tema_grafica +
   formato_comun +
-  scale_color_manual(values = cols1))
+  scale_color_manual(
+    values = cols1,
+    labels = c(paste("PRIMAX","\n(",tabla_vecinos$n[tabla_vecinos$tabla == "PRIMAX"],")", sep = ""),
+               paste("VECINA","\n(",tabla_vecinos$n[tabla_vecinos$tabla == "SOLO VECINA A PRIMAX"], ")", sep = "" ),
+               paste("NO VECINA","\n(",tabla_vecinos$n[tabla_vecinos$tabla == "NO VECINA A NINGUNA"], ")", sep = ""))
+    )
+ )
 ```
 
 ```{r}
@@ -236,9 +243,16 @@ Solo Primax y sus vecinas y no vecinas
   ) +
   tema_grafica +
   formato_comun +
-  scale_color_manual(values = cols1))
+  scale_color_manual(
+    values = cols1,
+    labels = c(paste("PECSA","\n(",tabla_vecinos$n[tabla_vecinos$tabla == "PECSA"],")", sep = ""),
+               paste("VECINA","\n(",tabla_vecinos$n[tabla_vecinos$tabla == "SOLO VECINA A PECSA"], ")", sep = "" ),
+               paste("NO VECINA","\n(",tabla_vecinos$n[tabla_vecinos$tabla == "NO VECINA A NINGUNA"], ")", sep = ""))
+    )
+)
 
-p_primax_g90 + p_pecsa_g90 
+p_primax_g90 + p_pecsa_g90 + plot_annotation(
+  captio = "Entre paréntesis se muestran el total de estaciones en cada grupo.")
 ggsave(filename = "doc/figures/precios-g90-comparacion.png", 
        height = 4, width = 7)
 
@@ -346,3 +360,154 @@ ggsave(filename = "doc/figures/precios-diesel-comparacion.png",
 
 
 ```
+
+# Tabla de estaciones
+
+Tabla contando estaciones
+
+```{r}
+tabla_vecinos <- data_total_mensual %>% 
+  distinct(codigo_de_osinergmin, .keep_all = T) %>% 
+  mutate(tabla = case_when(
+    tipo_bandera == "PROPIA PRIMAX" ~ "PRIMAX",
+    tipo_bandera == "PROPIA PECSA" ~ "PECSA",
+    vecino_pecsa_thiessen == 1 & vecino_primax_thiessen == 1 ~ "VECINA A AMBOS",
+    vecino_pecsa_thiessen == 1 ~ "SOLO VECINA A PECSA",
+    vecino_primax_thiessen == 1 ~ "SOLO VECINA A PRIMAX",
+    TRUE ~ "NO VECINA A NINGUNA"
+  ),
+  tabla = fct_relevel(factor(tabla), "PRIMAX", "PECSA", 
+                      "SOLO VECINA A PRIMAX", "SOLO VECINA A PECSA",
+                      "VECINA A AMBOS", "NO VECINA A NINGUNA")
+  ) %>% 
+  count(tabla) 
+
+tabla_vecinos
+```
+
+Tabla con precios según vecindad
+
+```{r}
+data_total_mensual %>% 
+  mutate(tabla = case_when(
+    tipo_bandera == "PROPIA PRIMAX" ~ "PRIMAX",
+    tipo_bandera == "PROPIA PECSA" ~ "PECSA",
+    vecino_pecsa_thiessen == 1 & vecino_primax_thiessen == 1 ~ "VECINA A AMBOS",
+    vecino_pecsa_thiessen == 1 ~ "SOLO VECINA A PECSA",
+    vecino_primax_thiessen == 1 ~ "SOLO VECINA A PRIMAX",
+    TRUE ~ "NO VECINA A NINGUNA"
+  ),
+  tabla = fct_relevel(factor(tabla), "PRIMAX", "PECSA", 
+                      "SOLO VECINA A PRIMAX", "SOLO VECINA A PECSA",
+                      "VECINA A AMBOS", "NO VECINA A NINGUNA")
+  ) %>% 
+  group_by(tabla) %>% 
+  summarise(Precio = mean(precio_de_venta))
+```
+
+Tabla con precios según bandera
+
+```{r}
+resumen_g90 <- data_total_mensual %>%
+  mutate(
+    tabla = case_when(
+      tipo_bandera == "PROPIA PRIMAX" ~ "PRIMAX",
+      tipo_bandera == "PROPIA PECSA" ~ "PECSA",
+      tipo_bandera == "PROPIA REPSOL" ~ "REPSOL",
+      str_detect(tipo_bandera, "ABANDERADA") ~ "ABANDERADA",
+      TRUE ~ "INDEPENDIENTE"
+    ),
+    tabla = fct_relevel(
+      factor(tabla), "PRIMAX", "PECSA",
+      "REPSOL", "ABANDERADA"
+    )
+  ) %>%
+  group_by(tabla, producto) %>%
+  summarise(Obs = n(), Precio = mean(precio_de_venta), 
+            Std = sd(precio_de_venta), Min. = min(precio_de_venta), 
+            Max. = max(precio_de_venta)) %>% 
+  filter(producto == "G90") %>% 
+  select(-producto)
+
+resumen_diesel <- data_total_mensual %>%
+  mutate(
+    tabla = case_when(
+      tipo_bandera == "PROPIA PRIMAX" ~ "PRIMAX",
+      tipo_bandera == "PROPIA PECSA" ~ "PECSA",
+      tipo_bandera == "PROPIA REPSOL" ~ "REPSOL",
+      str_detect(tipo_bandera, "ABANDERADA") ~ "ABANDERADA",
+      TRUE ~ "INDEPENDIENTE"
+    ),
+    tabla = fct_relevel(
+      factor(tabla), "PRIMAX", "PECSA",
+      "REPSOL", "ABANDERADA"
+    )
+  ) %>%
+  group_by(tabla, producto) %>%
+  summarise(Obs = n(), Precio = mean(precio_de_venta), 
+            Std = sd(precio_de_venta), Min. = min(precio_de_venta), 
+            Max. = max(precio_de_venta)) %>% 
+  filter(producto == "DIESEL") %>% 
+  select(-producto, -Obs)
+
+tipos_estaciones <- data_total_mensual %>%
+  distinct(codigo_de_osinergmin, .keep_all = T) %>% 
+  mutate(
+    tabla = case_when(
+      tipo_bandera == "PROPIA PRIMAX" ~ "PRIMAX",
+      tipo_bandera == "PROPIA PECSA" ~ "PECSA",
+      tipo_bandera == "PROPIA REPSOL" ~ "REPSOL",
+      str_detect(tipo_bandera, "ABANDERADA") ~ "ABANDERADA",
+      TRUE ~ "INDEPENDIENTE"
+    ),
+    tabla = fct_relevel(
+      factor(tabla), "PRIMAX", "PECSA",
+      "REPSOL", "ABANDERADA"
+    )
+  ) %>% 
+  count(tabla)
+
+tabla2 <- full_join(resumen_g90, resumen_diesel, by = "tabla", suffix = c("_G90", "_DIESEL")) %>% 
+  full_join(tipos_estaciones, by = "tabla") %>% 
+  select(tabla, n, everything())
+
+tabla2
+
+
+
+colnames(tabla2)
+
+my_header <- data.frame(
+  col_keys = colnames(tabla2),
+  line1 = c("", "", "",  rep("Gasohol 90", 4), rep("Diésel", 4)),
+  line2 = c("Tipo de Estación", "Nº Estaciones", "Obs.", 
+            "Precio", "SD", "Min.", "Max.", 
+            "Precio", "SD", "Min.", "Max."),
+  stringsAsFactors = FALSE
+)
+
+set_flextable_defaults(
+  font.family = "Times New Roman", 
+  font.size = 10,
+  font.color = "black",
+  table.layout = "fixed",
+  digits = 1,
+  theme_fun = "theme_box"
+  )
+
+tabla2 %>%
+  mutate(tabla = str_to_title(tabla)) %>% 
+  flextable(col_keys = my_header$col_keys) %>% 
+  set_header_df(mapping = my_header, key = "col_keys") %>%
+  colformat_double(j = colnames(tabla2)[3:11], digits = 2 ) %>% 
+  theme_booktabs() %>% 
+  merge_v(part = "header") %>%
+  merge_h(part = "header") %>%
+  align(align = "center", part = "all") %>% 
+  set_table_properties( width = .5, layout = "autofit") %>% 
+  print(preview = "docx")
+```
+
+
+
+
