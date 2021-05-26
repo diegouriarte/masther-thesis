@@ -193,9 +193,10 @@ Solo Primax y sus vecinas y no vecinas
   scale_color_manual(
     values = cols1,
     labels = c(paste("PRIMAX","\n(",tabla_vecinos$n[tabla_vecinos$tabla == "PRIMAX"],")", sep = ""),
-               paste("VECINA","\n(",tabla_vecinos$n[tabla_vecinos$tabla == "SOLO VECINA A PRIMAX"], ")", sep = "" ),
-               paste("NO VECINA","\n(",tabla_vecinos$n[tabla_vecinos$tabla == "NO VECINA A NINGUNA"], ")", sep = ""))
-    )
+               paste("VECINAS A PRIMAX","\n(",tabla_vecinos$n[tabla_vecinos$tabla == "SOLO VECINA A PRIMAX"], ")", sep = "" ),
+               paste("NO VECINAS A NINGUNA","\n(",tabla_vecinos$n[tabla_vecinos$tabla == "NO VECINA A NINGUNA"], ")", sep = ""))
+    ) + 
+ theme(legend.text = element_text(size = 7))
  )
 ```
 
@@ -213,7 +214,7 @@ Solo Primax y sus vecinas y no vecinas
       vecino_pecsa_thiessen == 1 ~ "VECINA",
       TRUE ~ "NO VECINA"
     ),
-    pecsa_no = fct_relevel(pecsa_no, "PRIMAX", "PECSA", "VECINA")
+    pecsa_no = fct_relevel(pecsa_no, "PECSA", "VECINA")
   ) %>%
   group_by(fecha, pecsa_no) %>%
   summarise(precio_promedio = mean(precio_de_venta), .groups = "drop") %>%
@@ -246,15 +247,16 @@ Solo Primax y sus vecinas y no vecinas
   scale_color_manual(
     values = cols1,
     labels = c(paste("PECSA","\n(",tabla_vecinos$n[tabla_vecinos$tabla == "PECSA"],")", sep = ""),
-               paste("VECINA","\n(",tabla_vecinos$n[tabla_vecinos$tabla == "SOLO VECINA A PECSA"], ")", sep = "" ),
-               paste("NO VECINA","\n(",tabla_vecinos$n[tabla_vecinos$tabla == "NO VECINA A NINGUNA"], ")", sep = ""))
-    )
-)
+               paste("VECINAS A PECSA","\n(",tabla_vecinos$n[tabla_vecinos$tabla == "SOLO VECINA A PECSA"], ")", sep = "" ),
+               paste("NO VECINAS A NINGUNA","\n(",tabla_vecinos$n[tabla_vecinos$tabla == "NO VECINA A NINGUNA"], ")", sep = ""))
+    ) +
+ theme(legend.text = element_text(size = 7))
+) 
 
 p_primax_g90 + p_pecsa_g90 + plot_annotation(
-  captio = "Entre paréntesis se muestran el total de estaciones en cada grupo.")
+  caption = "Entre paréntesis se muestran el total de estaciones en cada grupo.")
 ggsave(filename = "doc/figures/precios-g90-comparacion.png", 
-       height = 4, width = 7)
+       height = 3, width = 5.5, scale = 1.5)
 
 ```
 
@@ -305,7 +307,15 @@ ggsave(filename = "doc/figures/precios-g90-comparacion.png",
   ) +
   tema_grafica +
   formato_comun +
-  scale_color_manual(values = cols1))
+  scale_color_manual(
+    values = cols1,
+    labels = c(paste("PRIMAX","\n(",tabla_vecinos$n[tabla_vecinos$tabla == "PRIMAX"],")", sep = ""),
+               paste("VECINAS A PRIMAX","\n(",tabla_vecinos$n[tabla_vecinos$tabla == "SOLO VECINA A PRIMAX"], ")", sep = "" ),
+               paste("NO VECINAS A NINGUNA","\n(",tabla_vecinos$n[tabla_vecinos$tabla == "NO VECINA A NINGUNA"], ")", sep = ""))
+    ) + 
+ theme(legend.text = element_text(size = 7))
+ )
+
 ```
 
 ```{r}
@@ -352,10 +362,20 @@ ggsave(filename = "doc/figures/precios-g90-comparacion.png",
   ) +
   tema_grafica +
   formato_comun +
-  scale_color_manual(values = cols1))
+  scale_color_manual(
+    values = cols1,
+    labels = c(paste("PECSA","\n(",tabla_vecinos$n[tabla_vecinos$tabla == "PECSA"],")", sep = ""),
+               paste("VECINAS A PECSA","\n(",tabla_vecinos$n[tabla_vecinos$tabla == "SOLO VECINA A PECSA"], ")", sep = "" ),
+               paste("NO VECINAS A NINGUNA","\n(",tabla_vecinos$n[tabla_vecinos$tabla == "NO VECINA A NINGUNA"], ")", sep = ""))
+    ) +
+ theme(legend.text = element_text(size = 7))
+) 
+
+p_primax_diesel + p_pecsa_diesel + plot_annotation(
+  caption = "Entre paréntesis se muestran el total de estaciones en cada grupo.")
 
 ggsave(filename = "doc/figures/precios-diesel-comparacion.png", 
-       height = 4, width = 7)
+       height = 3, width = 5.5, scale = 1.5)
 
 
 
