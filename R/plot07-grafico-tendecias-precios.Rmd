@@ -17,7 +17,7 @@ library(ggtext)
 library(tidyquant)
 '%ni%' <- Negate('%in%')
 library(patchwork)
-
+library(flextable)
 ```
 
 # Temas y carga de datos
@@ -529,5 +529,50 @@ tabla2 %>%
 ```
 
 
+# Gráfica market share
 
 
+```{r}
+data_total_mensual %>%
+  distinct(codigo_de_osinergmin, .keep_all = T) %>% 
+  select(codigo_de_osinergmin, tipo, bandera) %>% 
+  group_by(tipo, bandera) %>% 
+  summarise(count = n()) %>% 
+  ungroup() %>% 
+  mutate(perc = count/sum(count),
+         tipo = fct_relevel(tipo, "PROPIA", "ABANDERADA")) %>% 
+  ggplot(aes(x = bandera, y = perc)) + 
+  geom_col(aes(fill = tipo), width = 0.5) + 
+  coord_flip() +
+  scale_y_continuous(breaks = c(0,0.10,0.2,0.3), 
+                     labels = scales::percent,
+                     limits = c(0,0.3)) +
+  labs(y = "Participación en el mercado minorista por cantidad de estaciones (%)", 
+       x = NULL,
+       fill = "Tipo de estación") + 
+  scale_fill_brewer(type = "qual", direction = -1) + 
+  theme_minimal() + 
+  theme(axis.text = element_text(
+    size = 12, lineheight = .9,
+    face = "bold"
+  ))
+  ggsave(filename = "doc/figures/market-share-lima.png", 
+       height = 3, width = 5.5, scale = 1.5)
+
+data_total_mensual %>%
+  distinct(codigo_de_osinergmin, .keep_all = T) %>% 
+  select(codigo_de_osinergmin, tipo, bandera) %>% 
+  group_by(tipo, bandera) %>% 
+  summarise(count = n()) %>% 
+  ungroup() %>% 
+  mutate(perc = count/sum(count),
+         tipo = fct_relevel(tipo, "PROPIA", "ABANDERADA")) 
+
+data_total_mensual %>%
+  distinct(codigo_de_osinergmin, .keep_all = T) %>% 
+  select(codigo_de_osinergmin, tipo, bandera) %>% 
+  group_by(tipo) %>% 
+  summarise(count = n()) %>% 
+  ungroup() %>% 
+  mutate(perc = count/sum(count))
+```
