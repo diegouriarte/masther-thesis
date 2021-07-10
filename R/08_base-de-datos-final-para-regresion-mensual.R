@@ -186,6 +186,16 @@ data_total <- data_total %>%
 
 #' ### Guardamos
 #' 
+#' 
+#' 
+#' Cargamos precios de lista
+#' 
+
+precios_lista <- read_rds(here::here("data","processed","precios_lista.rds"))
+
+data_total %>% count(producto
+                     )
+
 saveRDS(data_total, file = here::here("data", "processed", "data-final-regresiones.rds"))
 
 write_excel_csv(data_total, here::here("data", "processed", "data-final-regresiones.csv"))

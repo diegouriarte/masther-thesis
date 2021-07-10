@@ -109,7 +109,12 @@ precios_lista_2 %>%
   summarise(promedio = mean(precio)) %>% 
   arrange(desc(promedio))
 
-precios_lista_2 %>% 
+precios_lista_final <- precios_lista_2 %>% 
   filter(planta %in% c("CALLAO"),
-         fecha >= dmy("1/1/2017") & fecha <= dmy("1/12/2018"),
-         producto == "GASOHOL 90" | str_detect(producto, "DIESEL B5 UV"))
+         fecha >= dmy("1/11/2016") & fecha <= dmy("1/12/2018"),
+         producto == "GASOHOL 90" | str_detect(producto, "DIESEL B5 UV")) %>% 
+  mutate(producto = if_else(producto == "GASOHOL 90", "G90", "DIESEL")
+    
+  )
+
+saveRDS(precios_lista_final, file = here::here("data", "processed", "precios_lista.rds"))
