@@ -187,7 +187,7 @@ left_join(
 
 
 
-Creamos variable con distancia mínima al grifo competidor más cercano
+# Creamos variable con distancia mínima al grifo competidor más cercano
 
 ```{r remedy008}
 #' Pendiente, como hacer para que no considere si el grifo más cercano tiene el mismo ruc
@@ -204,7 +204,7 @@ grifos_distancia_minima <- as_tibble(matriz_distancias, rownames = "codigo_de_os
 
 ```
 
-Distancia promedio a grifos a menos de `distancia_competencia`
+# Distancia promedio a grifos a menos de `distancia_competencia`
 
 Creamos df con dist promedio a grifos, número de grifos vecinos (1.5 km), y si el grifo tiene grifo propio de Pecsa vecino.
 
@@ -325,12 +325,51 @@ grifo_full_2 %>%
   filter(distrito == "SAN JUAN DE LURIGANCHO")
 ```
 
+# Realizamos la matriz de distancias a los puntos de venta
+
+```{r}
+lista_terminales <- c("Callao","Pampilla","Conchan")
+terminales <- tibble(name = lista_terminales, 
+       lat = c(-12.038859641394353, -11.919635654091762, -12.2538367359577),
+       lon = c(-77.12722709481619, -77.12977045738286, -76.92312446782478) )
+
+matriz_distancias_terminal <- grifo_full_2 %>%
+  select("name" = codigo_de_osinergmin , lat, lon) %>%
+  distinct() %>%
+  mutate(name = as.character(name)) %>% 
+  bind_rows(terminales) %>% 
+  GeoDistanceInMetresMatrix(.) / 1000
+
+df_distancias_terminal <- as_tibble(matriz_distancias_terminal, 
+                           rownames = "codigo_de_osinergmin") %>%
+  gather(key = "grifo_distancia", value = "distancia", -codigo_de_osinergmin) %>%
+  filter(distancia != 0,
+         grifo_distancia %in% lista_terminales,
+         codigo_de_osinergmin %ni% lista_terminales) %>% 
+  arrange(codigo_de_osinergmin) %>% 
+  group_by(codigo_de_osinergmin) %>%
+  mutate(distancia_min_term = min(distancia)) %>%
+  mutate(distancia_prom_term = mean(distancia)) %>% 
+  ungroup() %>%
+  mutate(codigo_de_osinergmin = as.numeric(codigo_de_osinergmin)) %>%
+  arrange(as.numeric(codigo_de_osinergmin)) %>%
+  filter(distancia == distancia_min_term) %>%
+  arrange(distancia_min_term) %>% 
+  select(-distancia) %>% 
+  rename(terminal_cercano = grifo_distancia)
+
+
+grifo_full_3 <- grifo_full_2 %>% 
+  left_join(df_distancias_terminal, by = "codigo_de_osinergmin")
+
+
+```
 
 
 #Guardamos
 ```{r remedy011}
 
-saveRDS(grifo_full_2, file = here::here("data","processed","grifo_coding_clean.rds"))
+saveRDS(grifo_full_3, file = here::here("data","processed","grifo_coding_clean.rds"))
 
 
 ```

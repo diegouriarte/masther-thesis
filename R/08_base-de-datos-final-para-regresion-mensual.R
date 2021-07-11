@@ -182,7 +182,8 @@ data_total <- data_total %>%
         -mecanico,
         -aceite,
     ) %>%
-    select(1, 3, 2, everything())
+    select(1, 3, 2, everything()) %>% 
+    mutate(mes = (year(fecha)-2017)*12 + month(fecha))
 
 #' ### Guardamos
 #' 
@@ -193,10 +194,22 @@ data_total <- data_total %>%
 
 precios_lista <- read_rds(here::here("data","processed","precios_lista.rds"))
 
-data_total %>% count(producto
-                     )
+precio_lista_mensual <- precios_lista %>% 
+    mutate(mes = (year(fecha)-2017)*12 + month(fecha)) %>% 
+    group_by(mes, producto) %>% 
+    summarise(precio_lista = mean(precio))
 
-saveRDS(data_total, file = here::here("data", "processed", "data-final-regresiones.rds"))
+precio_lista_mensual %>% 
+    filter(mes >= 1, producto == "DIESEL")
+
+data_total %>% 
+    left_join(precio_lista_mensual, by = c("producto", "mes")) %>% 
+    select(codigo_de_osinergmin, fecha, producto, mes, precio_de_venta, precio_lista)
+
+data_total_1 <- data_total %>% 
+    left_join(precio_lista_mensual, by = c("producto", "mes"))
+
+saveRDS(data_total_1, file = here::here("data", "processed", "data-final-regresiones.rds"))
 
 write_excel_csv(data_total, here::here("data", "processed", "data-final-regresiones.csv"))
 
