@@ -57,7 +57,7 @@ reg_lineal <- function(df, fecha_char, modelo, prod) {
 fechas <- list("01-08-2017", "01-12-2017", "01-03-2018", "01-07-2018")
 
 
-modelo_1 <- precio_de_venta ~ tipo_bandera + sc + distancia_avg + distancia_min +
+modelo_1 <- precio_de_venta ~ tipo_bandera  + distancia_avg + distancia_min +
   num_grifos_cerc + tiene_mecanico + lavado + cajero + con_gnv + con_glp +
   ingresos_2012 + densidad_2017 
 
@@ -74,7 +74,7 @@ names(ols_modelo_1_DB5) <- fechas
 #' Hacemos otra regresión con otro modelo
 
 #+ diesel-modelo2
-modelo_2 <- precio_de_venta ~ tipo_bandera + sc + distancia_avg + distancia_min +
+modelo_2 <- precio_de_venta ~ tipo_bandera + distancia_avg + distancia_min +
   num_grifos_cerc + tiene_mecanico + lavado + cajero + con_gnv + con_glp +
   ingresos_2012 + densidad_2017 + log(num_viajes)
 
@@ -84,7 +84,7 @@ names(ols_modelo_2_DB5) <- fechas
 
 #' Controlamos por distrito
 #' 
-modelo_3 <- precio_de_venta ~ tipo_bandera + sc + distancia_avg + distancia_min +
+modelo_3 <- precio_de_venta ~ tipo_bandera + distancia_avg + distancia_min +
   num_grifos_cerc + tiene_mecanico + lavado + cajero + con_gnv + con_glp +
   ingresos_2012 + densidad_2017 + log(num_viajes) + distrito
 
@@ -282,7 +282,7 @@ res_tabla %>%
 #+ durbin, results = 'asis'
 
 reg_durbin <- function(df, fecha_char, sp_grifos, durbin = T, prod) {
-  modelo_2 <- precio_de_venta ~ tipo_bandera + sc + distancia_avg + distancia_min +
+  modelo_2 <- precio_de_venta ~ tipo_bandera + distancia_avg + distancia_min +
     num_grifos_cerc + tiene_mecanico + lavado + cajero + con_gnv + con_glp +
     ingresos_2012 + densidad_2017 + log(num_viajes)
 
@@ -495,3 +495,45 @@ imprimir_impacto(diesel_2_durbin_imp, ols_modelo_2_DB5)
 #+ g90-tercer-periodo
 imprimir_impacto(g90_2_durbin_imp, ols_modelo_2_G90)
 imprimir_impacto(g90_3_durbin_imp, ols_modelo_2_G90)
+
+
+#§' Probamos solo dos cortes, antes y después de la adquisición
+
+modelo_2 <- precio_de_venta ~ tipo_bandera + distancia_avg + distancia_min +
+  num_grifos_cerc + tiene_mecanico + lavado + cajero + con_gnv + con_glp +
+  ingresos_2012 + densidad_2017 + log(num_viajes) + distancia_min_term  + num_vecinos_pecsa +
+  num_vecinos_primax
+
+data_mes <- data_total %>%
+  filter(producto == "G90", 
+         mes == 10) %>%
+  drop_na()
+
+resultado <- spatialreg::lagsarlm(formula = modelo_2,
+         data = data_mes,
+         listw = sp_grifos_G90$`01-12-2017`,
+         Durbin = FALSE,
+         tol.solve = 1e-13)
+
+summary(resultado)
+
+data_mes <- data_total %>%
+  filter(producto == "G90", 
+         mes == 20) %>%
+  drop_na()
+
+resultado <- spatialreg::lagsarlm(formula = modelo_2,
+                                  data = data_mes,
+                                  listw = sp_grifos_G90$`01-12-2017`,
+                                  Durbin = FALSE,
+                                  tol.solve = 1e-13)
+
+summary(resultado)
+
+resultado <- spatialreg::lagsarlm(formula = modelo_2,
+                                  data = data_mes,
+                                  listw = sp_grifos_G90$`01-12-2017`,
+                                  Durbin = TRUE,
+                                  tol.solve = 1e-13)
+
+summary(resultado)

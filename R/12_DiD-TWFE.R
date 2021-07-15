@@ -10,7 +10,8 @@ library(lmtest)
 library(multiwayvcov) 
 # For a package way to do FE
 library(lfe)
-
+library(broom)
+library(fixest)
 # Cargamos datos ===========
 
 data_total <- readRDS(file = here::here("data", "processed", "data-final-regresiones.rds"))
@@ -235,8 +236,7 @@ g90_primax <- event_study(data_cocina_2 %>% filter(mes >= 2), producto = "G90",
 
 # Metodo TWFE de acuerdo con libro====
 
-library(broom)
-library(fixest)
+
 
 #' Variable de tratamiento
 #' 
@@ -331,7 +331,7 @@ clfe <- feols(precio_de_venta ~ i(mes, est_trat, ref = 13) | codigo_de_osinergmi
 
 coefplot(clfe)
 
-# Ahora, hagamos lo mismo pero agrupando
+# Ahora, hagamos lo mismo pero agrupando, un solo efecto
 
 #Primax G90
 
@@ -345,5 +345,39 @@ data_total_1 <- data_total %>%
 clfe <- feols(precio_de_venta ~ est_trat | codigo_de_osinergmin + mes,
               data = data_total_1)
 
-coefplot(clfe)
+summary(clfe)
+
+
+# Ahora con time trends:
+
+data_total_1 <- data_total %>% 
+  mutate(est_trat = tipo_bandera == "PROPIA PRIMAX",
+         at = mes>= 14, 
+         at = factor(at),
+         est_trat = factor(est_trat),
+         mes_factor = factor(mes)) %>% 
+  filter(mes >= 8 & mes <= 22,
+         tipo_bandera != "PROPIA PECSA",
+         tipo_bandera == "PROPIA PRIMAX" | codigo_de_osinergmin %ni% vecinos_primax_thiessen,
+         producto == "G90") #%>% 
+  # mutate(
+  #   mes = relevel(factor(mes), ref = 13)
+  # )
+
+clfe <- feols(precio_de_venta ~ est_trat*mes  |codigo_de_osinergmin,
+              data = data_total_1)
+
+summary(clfe)
+
+data_total_1 <- data_total %>% 
+  mutate(est_trat = tipo_bandera == "PROPIA PRIMAX" & mes >= 14, 
+         tau = if_else(tipo_bandera == "PROPIA PRIMAX", 1*mes, 0*mes)) %>% 
+  filter(mes >= 8 & mes <= 22,
+         tipo_bandera != "PROPIA PECSA",
+         tipo_bandera == "PROPIA PRIMAX" | codigo_de_osinergmin %ni% vecinos_primax_thiessen,
+         producto == "G90") 
+
+clfe <- feols(precio_de_venta ~ est_trat + tau| codigo_de_osinergmin + mes,
+              data = data_total_1)
+
 summary(clfe)

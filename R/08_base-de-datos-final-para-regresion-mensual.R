@@ -209,7 +209,31 @@ data_total %>%
 data_total_1 <- data_total %>% 
     left_join(precio_lista_mensual, by = c("producto", "mes"))
 
-saveRDS(data_total_1, file = here::here("data", "processed", "data-final-regresiones.rds"))
+#añadimos precios por distritos
 
-write_excel_csv(data_total, here::here("data", "processed", "data-final-regresiones.csv"))
+# lista de distritos
+
+library(readxl)
+
+
+#' Hay dos hojas que requieren ser importadas del primer archivo, las demas 
+#' contienen data de GN o GLP
+
+precios_distritos <- read_excel(here::here("data","lista_precios_distritos.xlsx"), 
+                                    col_names = TRUE,
+                                    skip = 0,
+                                    progress = readxl_progress()) %>% 
+    rename(precio_m2 = precio)
+
+
+data_total_2 <-  data_total_1 %>% 
+    left_join(precios_distritos, by = "distrito")
+
+data_total_2 %>% 
+    select(codigo_de_osinergmin, distrito, bandera, tipo, tipo_bandera, vecino_pecsa_thiessen, vecino_primax_thiessen) %>% 
+    distinct(codigo_de_osinergmin, .keep_all = T)
+
+saveRDS(data_total_2, file = here::here("data", "processed", "data-final-regresiones.rds"))
+
+write_excel_csv(data_total_2, here::here("data", "processed", "data-final-regresiones.csv"))
 
